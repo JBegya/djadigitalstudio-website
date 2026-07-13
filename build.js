@@ -167,7 +167,7 @@ ${headBlock({
 <body>
 
 <nav>
-  <a href="/" class="nav-logo"><img src="/brand/logo-horizontal-web.png" alt="DJ&amp;A Digital Studio" class="nav-logo-img"></a>
+  <a href="/" class="nav-logo"><img src="/brand/logo-horizontal-web.png?v=2" alt="DJ&amp;A Digital Studio" class="nav-logo-img"></a>
   <a href="/" class="nav-back">← All Apps</a>
 </nav>
 
@@ -254,7 +254,7 @@ ${headBlock({
 </head>
 <body>
 <nav>
-  <a href="/" class="nav-logo"><img src="/brand/logo-horizontal-web.png" alt="DJ&amp;A Digital Studio" class="nav-logo-img"></a>
+  <a href="/" class="nav-logo"><img src="/brand/logo-horizontal-web.png?v=2" alt="DJ&amp;A Digital Studio" class="nav-logo-img"></a>
 </nav>
 <main>
   <p class="eyebrow">${app.name}</p>
@@ -352,7 +352,7 @@ ${headBlock({
 <body>
 
 <nav>
-  <a href="/" class="nav-logo"><img src="/brand/logo-horizontal-web.png" alt="DJ&amp;A Digital Studio" class="nav-logo-img"></a>
+  <a href="/" class="nav-logo"><img src="/brand/logo-horizontal-web.png?v=2" alt="DJ&amp;A Digital Studio" class="nav-logo-img"></a>
   <a href="/apps/${app.id}/" class="nav-back">← ${app.name}</a>
 </nav>
 
