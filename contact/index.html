@@ -27,12 +27,12 @@
   nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 24px 60px; background: linear-gradient(to bottom, rgba(8,8,8,0.97), transparent); }
   .nav-logo { text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
   .nav-logo span { color: var(--gold-light); font-style: italic; }
-  .nav-logo-img { height: 56px; width: auto; display: block; }
+  .nav-logo-img { height: 84px; width: auto; display: block; }
   .nav-back { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
   .nav-back:hover { color: var(--gold); }
-  @media (max-width: 768px) { nav { padding: 20px 24px; } }
+  @media (max-width: 768px) { nav { padding: 20px 24px; } .nav-logo-img { height: 48px; } }
 
-  main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 140px 60px 80px; max-width: 900px; }
+  main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 160px 60px 80px; max-width: 900px; }
   .eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; display: flex; align-items: center; gap: 14px; }
   .eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--gold); }
   h1 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(3rem, 7vw, 5rem); line-height: 1.0; margin-bottom: 24px; }
@@ -57,14 +57,14 @@
   footer { display: flex; align-items: center; justify-content: space-between; padding: 32px 60px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px; }
   .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--text-muted); letter-spacing: 0.05em; }
   .footer-logo span { color: var(--gold-light); font-style: italic; }
-  .footer-logo-img { height: 42px; width: auto; display: block; }
+  .footer-logo-img { height: 64px; width: auto; display: block; }
   .footer-brand { display: flex; flex-direction: column; gap: 4px; }
   .footer-copy { font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-dim); }
   .footer-company { font-size: 0.58rem; letter-spacing: 0.08em; color: var(--text-dim); }
   .footer-links { display: flex; gap: 22px; flex-wrap: wrap; list-style: none; }
   .footer-links a { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); text-decoration: none; transition: color 0.3s; }
   .footer-links a:hover { color: var(--gold); }
-  @media (max-width: 768px) { main { padding: 110px 24px 60px; } .contact-item { padding: 28px 24px; } footer { padding: 32px 24px; flex-direction: column; text-align: center; } .footer-links { justify-content: center; } }
+  @media (max-width: 768px) { main { padding: 110px 24px 60px; } .contact-item { padding: 28px 24px; } footer { padding: 32px 24px; flex-direction: column; text-align: center; } .footer-logo-img { height: 36px; } .footer-links { justify-content: center; } }
 </style>
 </head>
 <body>
