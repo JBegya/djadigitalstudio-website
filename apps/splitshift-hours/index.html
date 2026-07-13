@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#080808">
+<title>SplitShift Hours — Track Shifts, Hours & Pay</title>
+<meta name="description" content="SplitShift Hours is the shift worker's timesheet. Track shifts from multiple jobs, log hours, and export PDF timesheets — all stored privately on your device.">
+<link rel="canonical" href="https://djadigitalstudio.com/apps/splitshift-hours/">
+<meta property="og:title" content="SplitShift Hours — Track Shifts, Hours & Pay">
+<meta property="og:description" content="SplitShift Hours is the shift worker's timesheet. Track shifts from multiple jobs, log hours, and export PDF timesheets — all stored privately on your device.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://djadigitalstudio.com/apps/splitshift-hours/">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "SplitShift Hours",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "iOS, Android",
+  "author": {
+    "@type": "Organization",
+    "name": "DJ&A Digital Studio Limited"
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root { --black: #080808; --deep: #0d0d0d; --surface: #111111; --surface2: #161616; --border: #222222; --gold: #c9a84c; --gold-light: #e4c87a; --rose: #c4856a; --rose-light: #d9a08a; --text: #e8e0d0; --text-muted: #8a8070; --text-dim: #847b6c; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--black); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; letter-spacing: 0.04em; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E"); opacity: 0.025; pointer-events: none; z-index: 9999; }
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 24px 60px; background: linear-gradient(to bottom, rgba(8,8,8,0.95), transparent); }
+  .nav-logo { text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
+  .nav-logo span { color: var(--gold-light); font-style: italic; }
+  .nav-logo-img { height: 28px; width: auto; display: block; }
+  .nav-back { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
+  .nav-back:hover { color: var(--gold); }
+  @media (max-width: 768px) { nav { padding: 20px 24px; } }
+  .hero { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding: 120px 60px 60px; max-width: 900px; }
+  .hero-eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; display: flex; align-items: center; gap: 14px; }
+  .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--gold); }
+  .hero-title { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(3rem, 7vw, 5.5rem); line-height: 1.0; margin-bottom: 24px; }
+  .hero-title em { font-style: italic; color: var(--gold-light); }
+  .hero-sub { font-size: 0.82rem; line-height: 2; color: var(--text-muted); max-width: 520px; margin-bottom: 48px; }
+  .btn-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .btn { display: inline-block; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 14px 32px; text-decoration: none; transition: all 0.3s; }
+  .btn-primary { background: var(--gold); color: var(--black); }
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-ghost { border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+  .features { padding: 80px 60px; max-width: 1000px; margin: 0 auto; }
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 48px; }
+  .feature { background: var(--surface); padding: 36px 32px; border: 1px solid var(--border); }
+  .feature-icon { font-size: 1.4rem; margin-bottom: 16px; color: var(--gold); }
+  .feature-name { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 400; margin-bottom: 12px; color: var(--gold-light); }
+  .feature-desc { font-size: 0.75rem; line-height: 1.9; color: var(--text-muted); }
+  .support { padding: 80px 60px; max-width: 1000px; margin: 0 auto; border-top: 1px solid var(--border); }
+  .section-eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
+  .section-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: var(--gold); }
+  .section-title { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.1; margin-bottom: 40px; }
+  .section-title em { font-style: italic; color: var(--gold-light); }
+  .faq { display: flex; flex-direction: column; gap: 2px; }
+  .faq-item { background: var(--surface); border: 1px solid var(--border); padding: 28px 32px; }
+  .faq-q { font-size: 0.8rem; letter-spacing: 0.05em; color: var(--text); margin-bottom: 10px; }
+  .faq-a { font-size: 0.75rem; line-height: 1.9; color: var(--text-muted); }
+  .contact-box { background: var(--surface); border: 1px solid var(--border); padding: 40px; margin-top: 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .contact-label { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
+  .contact-email { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--gold-light); text-decoration: none; }
+  .contact-email:hover { color: var(--text); }
+  footer { display: flex; align-items: center; justify-content: space-between; padding: 32px 60px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px; }
+  .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--text-muted); letter-spacing: 0.05em; }
+  .footer-logo span { color: var(--gold-light); font-style: italic; }
+  .footer-copy { font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-dim); }
+  .footer-links { display: flex; gap: 22px; flex-wrap: wrap; list-style: none; }
+  .footer-links a { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); text-decoration: none; transition: color 0.3s; }
+  .footer-links a:hover { color: var(--gold-light); }
+  @media (max-width: 768px) { .hero { padding: 100px 24px 60px; } .features { padding: 60px 24px; } .features-grid { grid-template-columns: 1fr; } .support { padding: 60px 24px; } footer { padding: 32px 24px; flex-direction: column; text-align: center; } .footer-links { justify-content: center; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo"><img src="/brand/logo-horizontal-web.png" alt="DJ&amp;A Digital Studio" class="nav-logo-img"></a>
+  <a href="/" class="nav-back">← All Apps</a>
+</nav>
+
+<section class="hero">
+  <p class="hero-eyebrow">SplitShift Hours</p>
+  <h1 class="hero-title">Track shifts,<br>hours &amp;<br><em>pay.</em></h1>
+  <p class="hero-sub">The shift worker's timesheet. Log shifts from multiple jobs, track against any pay cycle, and export clean PDF timesheets — all stored privately on your device. No account. No cloud. No nonsense.</p>
+  <div class="btn-row">
+    <span class="btn btn-ghost" style="cursor:default;">Coming Soon</span>
+  </div>
+</section>
+
+<section class="features">
+  <p class="section-eyebrow">Features</p>
+  <div class="features-grid">
+    <div class="feature">
+      <div class="feature-icon">◈</div>
+      <div class="feature-name">Multiple Jobs</div>
+      <p class="feature-desc">Track shifts across multiple jobs separately — each with its own calendar, pay period, and hours tally.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">◈</div>
+      <div class="feature-name">Shift Templates</div>
+      <p class="feature-desc">Save your common shift patterns as templates and log shifts in seconds — no typing the same details every day.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">◈</div>
+      <div class="feature-name">PDF Timesheets</div>
+      <p class="feature-desc">Export a clean, professional timesheet PDF ready to email to your employer or payroll team.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">◈</div>
+      <div class="feature-name">Pay Period Reports</div>
+      <p class="feature-desc">View hours and earnings by pay period, week, month, or year — with a clear breakdown per job.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">◈</div>
+      <div class="feature-name">Flexible Pay Cycles</div>
+      <p class="feature-desc">Set your own pay period start — weekly, fortnightly, semi-monthly, or monthly — for any currency.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">◈</div>
+      <div class="feature-name">Offline First</div>
+      <p class="feature-desc">Works completely offline. Your data stays on your device — never uploaded to any server.</p>
+    </div>
+  </div>
+</section>
+
+<section class="support" id="support">
+  <p class="section-eyebrow">Support</p>
+  <h2 class="section-title">Common<br><em>Questions.</em></h2>
+  <div class="faq">
+    <div class="faq-item">
+      <p class="faq-q">How much does SplitShift Hours cost?</p>
+      <p class="faq-a">SplitShift Hours is available as a subscription — monthly or annual. You can manage your subscription through your Apple ID or Google Play account.</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Where is my data stored?</p>
+      <p class="faq-a">All your shifts, jobs, and settings are stored locally on your device. Your data is never uploaded to our servers.</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">How do I cancel my subscription?</p>
+      <p class="faq-a">Manage your subscription through your Apple ID (Settings → Your Name → Subscriptions) or Google Play account settings. Cancel at least 24 hours before your renewal date to avoid being charged for the next period.</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">My subscription isn't being recognised after reinstalling. What do I do?</p>
+      <p class="faq-a">Open the app and tap "Restore Purchases" on the paywall screen. Make sure you're signed in with the same Apple ID or Google account you used to subscribe.</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Which countries are supported?</p>
+      <p class="faq-a">New Zealand, Australia, UK, USA, Canada, Philippines, Japan, Singapore, Taiwan, Germany, UAE, Saudi Arabia, Kuwait, Qatar, Timor-Leste, and Other (custom currency).</p>
+    </div>
+  </div>
+  <div class="contact-box">
+    <div>
+      <p class="contact-label">Still need help?</p>
+      <a href="mailto:support@djadigitalstudio.com" class="contact-email">support@djadigitalstudio.com</a>
+    </div>
+    <a href="mailto:support@djadigitalstudio.com" class="btn btn-ghost">Send a message</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">SplitShift <span>Hours</span></div>
+  <p class="footer-copy">© 2026 DJ&A Digital Studio Limited. All rights reserved.</p>
+  <ul class="footer-links">
+    <li><a href="/privacy/splitshift-hours/">Privacy</a></li>
+    <li><a href="/terms/splitshift-hours/">Terms</a></li>
+    <li><a href="#support">Support</a></li>
+    <li><a href="/refund.html">Refund</a></li>
+    <li><a href="/data-deletion.html">Data Deletion</a></li>
+    <li><a href="/eula.html">EULA</a></li>
+  </ul>
+</footer>
+
+</body>
+</html>

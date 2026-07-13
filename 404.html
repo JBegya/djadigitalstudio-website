@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#080808">
+<title>Page Not Found — DJ&A Digital Studio</title>
+<meta name="description" content="This page doesn't exist.">
+<meta name="robots" content="noindex, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root { --black: #080808; --surface: #111111; --border: #222222; --gold: #c9a84c; --gold-light: #e4c87a; --text: #e8e0d0; --text-muted: #8a8070; --text-dim: #847b6c; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--black); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; letter-spacing: 0.04em; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E"); opacity: 0.025; pointer-events: none; z-index: 9999; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 32px 60px; }
+  .nav-logo { text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
+  .nav-logo span { color: var(--gold-light); font-style: italic; }
+  .nav-logo-img { height: 28px; width: auto; display: block; }
+  main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; text-align: center; }
+  .eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(3.5rem, 10vw, 7rem); line-height: 1.0; margin-bottom: 20px; }
+  h1 em { font-style: italic; color: var(--gold-light); }
+  p { font-size: 0.82rem; line-height: 2; color: var(--text-muted); max-width: 420px; margin-bottom: 40px; }
+  .btn { display: inline-block; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 14px 32px; text-decoration: none; border: 1px solid var(--border); color: var(--text-muted); transition: all 0.3s; }
+  .btn:hover { border-color: var(--gold); color: var(--gold); }
+  footer { display: flex; align-items: center; justify-content: center; padding: 28px 60px; border-top: 1px solid var(--border); }
+  .footer-copy { font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-dim); }
+  @media (max-width: 768px) { nav { padding: 24px; } }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo"><img src="/brand/logo-horizontal-web.png" alt="DJ&amp;A Digital Studio" class="nav-logo-img"></a>
+</nav>
+<main>
+  <p class="eyebrow">404</p>
+  <h1>Page not<br><em>found.</em></h1>
+  <p>The page you're looking for doesn't exist or may have moved. Let's get you back on track.</p>
+  <a href="/" class="btn">Back to Home</a>
+</main>
+<footer>
+  <p class="footer-copy">© 2026 DJ&A Digital Studio Limited. All rights reserved.</p>
+</footer>
+</body>
+</html>

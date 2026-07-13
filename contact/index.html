@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#080808">
+<title>Contact — DJ&A Digital Studio</title>
+<meta name="description" content="Get in touch with DJ&A Digital Studio — makers of SplitShift Hours, ShiftEarn Pro, and more.">
+<link rel="canonical" href="https://djadigitalstudio.com/contact/">
+<meta property="og:title" content="Contact — DJ&A Digital Studio">
+<meta property="og:description" content="General enquiries, support, and business contact details for DJ&A Digital Studio.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://djadigitalstudio.com/contact/">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root { --black: #080808; --deep: #0d0d0d; --surface: #111111; --border: #222222; --gold: #c9a84c; --gold-light: #e4c87a; --text: #e8e0d0; --text-muted: #8a8070; --text-dim: #847b6c; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--black); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; letter-spacing: 0.04em; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E"); opacity: 0.025; pointer-events: none; z-index: 9999; }
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 24px 60px; background: linear-gradient(to bottom, rgba(8,8,8,0.97), transparent); }
+  .nav-logo { text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
+  .nav-logo span { color: var(--gold-light); font-style: italic; }
+  .nav-logo-img { height: 28px; width: auto; display: block; }
+  .nav-back { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
+  .nav-back:hover { color: var(--gold); }
+  @media (max-width: 768px) { nav { padding: 20px 24px; } }
+
+  main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 140px 60px 80px; max-width: 900px; }
+  .eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; display: flex; align-items: center; gap: 14px; }
+  .eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--gold); }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(3rem, 7vw, 5rem); line-height: 1.0; margin-bottom: 24px; }
+  h1 em { font-style: italic; color: var(--gold-light); }
+  .sub { font-size: 0.82rem; line-height: 2; color: var(--text-muted); max-width: 480px; margin-bottom: 64px; }
+
+  .contact-methods { display: flex; flex-direction: column; gap: 2px; }
+  .contact-item { background: var(--surface); border: 1px solid var(--border); padding: 36px 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .contact-item-label { font-size: 0.58rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
+  .contact-item-value { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 300; color: var(--gold-light); text-decoration: none; letter-spacing: 0.01em; transition: color 0.3s; }
+  .contact-item-value:hover { color: var(--text); }
+  .contact-item-note { font-size: 0.7rem; line-height: 1.8; color: var(--text-muted); max-width: 320px; }
+
+  .divider { height: 1px; background: var(--border); margin: 48px 0; max-width: 900px; }
+
+  .studios { display: flex; flex-direction: column; gap: 6px; }
+  .studios-label { font-size: 0.58rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; }
+  .studios-name { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: var(--text-muted); }
+  .studios-name span { color: var(--gold-light); font-style: italic; }
+  .studios-tagline { font-size: 0.72rem; line-height: 1.9; color: var(--text-dim); max-width: 400px; }
+
+  footer { display: flex; align-items: center; justify-content: space-between; padding: 32px 60px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px; }
+  .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--text-muted); letter-spacing: 0.05em; }
+  .footer-logo span { color: var(--gold-light); font-style: italic; }
+  .footer-logo-img { height: 22px; width: auto; display: block; }
+  .footer-brand { display: flex; flex-direction: column; gap: 4px; }
+  .footer-copy { font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-dim); }
+  .footer-company { font-size: 0.58rem; letter-spacing: 0.08em; color: var(--text-dim); }
+  .footer-links { display: flex; gap: 22px; flex-wrap: wrap; list-style: none; }
+  .footer-links a { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); text-decoration: none; transition: color 0.3s; }
+  .footer-links a:hover { color: var(--gold); }
+  @media (max-width: 768px) { main { padding: 110px 24px 60px; } .contact-item { padding: 28px 24px; } footer { padding: 32px 24px; flex-direction: column; text-align: center; } .footer-links { justify-content: center; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo"><img src="/brand/logo-horizontal-web.png" alt="DJ&amp;A Digital Studio" class="nav-logo-img"></a>
+  <a href="/" class="nav-back">← Home</a>
+</nav>
+
+<main>
+  <p class="eyebrow">Contact</p>
+  <h1>Get in<br><em>touch.</em></h1>
+  <p class="sub">Questions about an app, a subscription, or anything else — send us a message and we'll get back to you.</p>
+
+  <div class="contact-methods">
+
+    <div class="contact-item">
+      <div>
+        <p class="contact-item-label">General Enquiries</p>
+        <a href="mailto:hello@djadigitalstudio.com" class="contact-item-value">hello@djadigitalstudio.com</a>
+      </div>
+      <p class="contact-item-note">Questions about who we are, what we build, or anything that doesn't fit the categories below.</p>
+    </div>
+
+    <div class="contact-item">
+      <div>
+        <p class="contact-item-label">Support</p>
+        <a href="mailto:support@djadigitalstudio.com" class="contact-item-value">support@djadigitalstudio.com</a>
+      </div>
+      <p class="contact-item-note">App issues, bug reports, feature requests, and subscription help. We aim to respond within one business day.</p>
+    </div>
+
+    <div class="contact-item">
+      <div>
+        <p class="contact-item-label">Business</p>
+        <a href="mailto:admin@djadigitalstudio.com" class="contact-item-value">admin@djadigitalstudio.com</a>
+      </div>
+      <p class="contact-item-note">Partnerships, press, billing, legal, and privacy enquiries.</p>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="studios">
+    <p class="studios-label">About DJ&amp;A Digital Studio</p>
+    <p class="studios-name">DJ&<span>A</span> Digital Studio</p>
+    <p class="studios-tagline">DJ&A Digital Studio Limited is an independent app studio incorporated in New Zealand, making tools for shift workers. All apps are built with privacy in mind — your data stays on your device.</p>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-brand">
+    <div class="footer-logo"><img src="/brand/logo-horizontal-web.png" alt="DJ&amp;A Digital Studio" class="footer-logo-img"></div>
+    <p class="footer-copy">© 2026 DJ&A Digital Studio Limited. All rights reserved.</p>
+    <p class="footer-company">DJ&A Digital Studio Limited · New Zealand</p>
+  </div>
+  <ul class="footer-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/support/">Support</a></li>
+    <li><a href="/privacy.html">Privacy</a></li>
+    <li><a href="/terms.html">Terms</a></li>
+    <li><a href="/refund.html">Refund</a></li>
+    <li><a href="/data-deletion.html">Data Deletion</a></li>
+    <li><a href="/eula.html">EULA</a></li>
+  </ul>
+</footer>
+
+</body>
+</html>
