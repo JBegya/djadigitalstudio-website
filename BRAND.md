@@ -10,7 +10,7 @@ the website today, not an aspirational spec.
 - **Legal entity:** DJ&A Digital Studio Limited
 - **Trading name:** DJ&A Digital Studio
 - **Country:** New Zealand
-- **NZBN:** not yet assigned — appears as `[add NZBN]` in Terms/EULA until the Companies Office issues one. Do not invent a number.
+- **NZBN:** not yet assigned. Not displayed anywhere on the site (removed from Terms/EULA governing-law clauses and contact blocks). Do not add one until the Companies Office issues it — do not invent a number.
 
 ## Typography (official — do not change without an explicit decision)
 

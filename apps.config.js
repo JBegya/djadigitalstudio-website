@@ -20,7 +20,6 @@ const COMPANY = {
   legalName: 'DJ&A Digital Studio Limited',
   tradingName: 'DJ&A Digital Studio',
   country: 'New Zealand',
-  nzbn: '[add NZBN]', // replace once you have it — appears in Terms/EULA governing-law clauses
   // Only reference mailboxes that actually exist. Currently: jennie@, hello@, support@, admin@
   supportEmail: 'support@djadigitalstudio.com',
   adminEmail: 'admin@djadigitalstudio.com',
@@ -172,7 +171,7 @@ const APPS = [
           'We reserve the right to modify these Terms at any time. We will update the effective date at the top of this page when changes are made. Your continued use of the App after any changes constitutes your acceptance of the revised Terms.',
         ]},
         { h: '11. Governing Law', p: [
-          `These Terms shall be governed by and construed in accordance with the laws of ${COMPANY.country}, without regard to its conflict of law provisions. ${COMPANY.legalName} is a company incorporated in ${COMPANY.country} (NZBN: ${COMPANY.nzbn}).`,
+          `These Terms shall be governed by and construed in accordance with the laws of ${COMPANY.country}, without regard to its conflict of law provisions. ${COMPANY.legalName} is a company incorporated in ${COMPANY.country}.`,
         ]},
       ],
     },
@@ -320,7 +319,7 @@ const APPS = [
           'We reserve the right to modify these Terms at any time. We will update the effective date at the top of this page when changes are made. Your continued use of the App after any changes constitutes your acceptance of the revised Terms.',
         ]},
         { h: '11. Governing Law', p: [
-          `These Terms shall be governed by and construed in accordance with the laws of ${COMPANY.country}, without regard to its conflict of law provisions. ${COMPANY.legalName} is a company incorporated in ${COMPANY.country} (NZBN: ${COMPANY.nzbn}).`,
+          `These Terms shall be governed by and construed in accordance with the laws of ${COMPANY.country}, without regard to its conflict of law provisions. ${COMPANY.legalName} is a company incorporated in ${COMPANY.country}.`,
         ]},
       ],
     },
