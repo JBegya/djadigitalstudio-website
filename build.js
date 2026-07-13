@@ -118,11 +118,11 @@ ${headBlock({
   nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 24px 60px; background: rgba(8,8,8,0.98); }
   .nav-logo { text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
   .nav-logo span { color: var(--gold-light); font-style: italic; }
-  .nav-logo-img { height: 112px; width: auto; display: block; }
+  .nav-logo-img { height: 132px; width: auto; display: block; }
   .nav-back { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
   .nav-back:hover { color: var(--${navHover}); }
-  @media (max-width: 768px) { nav { padding: 20px 24px; } .nav-logo-img { height: 68px; } }
-  .hero { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding: 190px 60px 60px; max-width: 900px; }
+  @media (max-width: 768px) { nav { padding: 20px 24px; flex-wrap: wrap; row-gap: 8px; } .nav-logo-img { height: 80px; } .nav-back { width: 100%; text-align: right; } }
+  .hero { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding: 215px 60px 60px; max-width: 900px; }
   .hero-eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--${a}); margin-bottom: 24px; display: flex; align-items: center; gap: 14px; }
   .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--${a}); }
   .hero-title { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(3rem, 7vw, 5.5rem); line-height: 1.0; margin-bottom: 24px; }
@@ -150,8 +150,9 @@ ${headBlock({
   .faq-q { font-size: 0.8rem; letter-spacing: 0.05em; color: var(--text); margin-bottom: 10px; }
   .faq-a { font-size: 0.75rem; line-height: 1.9; color: var(--text-muted); }
   .contact-box { background: var(--surface); border: 1px solid var(--border); padding: 40px; margin-top: 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .contact-box > div { min-width: 0; }
   .contact-label { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
-  .contact-email { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--${aLight}); text-decoration: none; }
+  .contact-email { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--${aLight}); text-decoration: none; overflow-wrap: break-word; }
   .contact-email:hover { color: var(--text); }
   footer { display: flex; align-items: center; justify-content: space-between; padding: 32px 60px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px; }
   .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--text-muted); letter-spacing: 0.05em; }
@@ -160,7 +161,7 @@ ${headBlock({
   .footer-links { display: flex; gap: 22px; flex-wrap: wrap; list-style: none; }
   .footer-links a { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); text-decoration: none; transition: color 0.3s; }
   .footer-links a:hover { color: var(--${aLight}); }
-  @media (max-width: 768px) { .hero { padding: 100px 24px 60px; } .features { padding: 60px 24px; } .features-grid { grid-template-columns: 1fr; } .support { padding: 60px 24px; } footer { padding: 32px 24px; flex-direction: column; text-align: center; } .footer-links { justify-content: center; } }
+  @media (max-width: 768px) { .hero { padding: 180px 24px 60px; } .features { padding: 60px 24px; } .features-grid { grid-template-columns: 1fr; } .support { padding: 60px 24px; } footer { padding: 32px 24px; flex-direction: column; text-align: center; } .footer-links { justify-content: center; } }
 </style>
 </head>
 <body>
@@ -240,7 +241,7 @@ ${headBlock({
   nav { display: flex; align-items: center; justify-content: space-between; padding: 32px 60px; }
   .nav-logo { text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
   .nav-logo span { color: var(--gold-light); font-style: italic; }
-  .nav-logo-img { height: 112px; width: auto; display: block; }
+  .nav-logo-img { height: 132px; width: auto; display: block; }
   main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; text-align: center; }
   .eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; }
   h1 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.5rem, 6vw, 4.5rem); line-height: 1.1; margin-bottom: 20px; }
@@ -248,7 +249,7 @@ ${headBlock({
   a.link { color: var(--gold-light); }
   footer { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 28px 60px; border-top: 1px solid var(--border); }
   .footer-copy { font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-dim); }
-  @media (max-width: 768px) { nav { padding: 24px; } }
+  @media (max-width: 768px) { nav { padding: 24px; } .nav-logo-img { height: 80px; } }
 </style>
 </head>
 <body>
@@ -315,11 +316,11 @@ ${headBlock({
   nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 24px 60px; background: rgba(8,8,8,0.98); }
   .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
   .nav-logo span { color: var(--gold-light); font-style: italic; }
-  .nav-logo-img { height: 112px; width: auto; display: block; }
+  .nav-logo-img { height: 132px; width: auto; display: block; }
   .nav-back { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
   .nav-back:hover { color: var(--${navHover}); }
-  @media (max-width: 768px) { nav { padding: 20px 24px; } }
-  .page-wrap { max-width: 760px; margin: 0 auto; padding: 190px 40px 100px; }
+  @media (max-width: 768px) { nav { padding: 20px 24px; flex-wrap: wrap; row-gap: 8px; } .nav-logo-img { height: 80px; } .nav-back { width: 100%; text-align: right; } }
+  .page-wrap { max-width: 760px; margin: 0 auto; padding: 215px 40px 100px; }
   .page-eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--${a}); margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
   .page-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: var(--${a}); }
   .page-title { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.1; margin-bottom: 12px; }
@@ -345,7 +346,7 @@ ${headBlock({
   .footer-links { display: flex; gap: 22px; flex-wrap: wrap; list-style: none; }
   .footer-links a { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); text-decoration: none; transition: color 0.3s; }
   .footer-links a:hover { color: var(--${aLight}); }
-  @media (max-width: 768px) { .page-wrap { padding: 120px 24px 80px; } footer { padding: 32px 24px; flex-direction: column; text-align: center; } .footer-links { justify-content: center; } }
+  @media (max-width: 768px) { .page-wrap { padding: 180px 24px 80px; } footer { padding: 32px 24px; flex-direction: column; text-align: center; } .footer-links { justify-content: center; } }
 </style>
 </head>
 <body>

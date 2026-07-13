@@ -28,12 +28,12 @@
   nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 24px 60px; background: rgba(8,8,8,0.98); }
   .nav-logo { text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
   .nav-logo span { color: var(--gold-light); font-style: italic; }
-  .nav-logo-img { height: 112px; width: auto; display: block; }
+  .nav-logo-img { height: 132px; width: auto; display: block; }
   .nav-back { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
   .nav-back:hover { color: var(--gold); }
-  @media (max-width: 768px) { nav { padding: 20px 24px; } .nav-logo-img { height: 68px; } }
+  @media (max-width: 768px) { nav { padding: 20px 24px; flex-wrap: wrap; row-gap: 8px; } .nav-logo-img { height: 80px; } .nav-back { width: 100%; text-align: right; } }
 
-  .hero { padding: 190px 60px 60px; max-width: 860px; }
+  .hero { padding: 215px 60px 60px; max-width: 860px; }
   .hero-eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; display: flex; align-items: center; gap: 14px; }
   .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--gold); }
   .hero-title { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(3rem, 7vw, 5rem); line-height: 1.0; margin-bottom: 20px; }
@@ -55,9 +55,9 @@
 
   .help-grid { padding: 80px 60px 0; max-width: 1000px; margin: 0 auto; border-top: 1px solid var(--border); padding-top: 80px; }
   .help-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin-top: 40px; }
-  .help-card { background: var(--surface); border: 1px solid var(--border); padding: 28px 24px; }
+  .help-card { background: var(--surface); border: 1px solid var(--border); padding: 28px 24px; min-width: 0; }
   .help-card-label { font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
-  .help-card-desc { font-size: 0.72rem; line-height: 1.8; color: var(--text-muted); }
+  .help-card-desc { font-size: 0.72rem; line-height: 1.8; color: var(--text-muted); overflow-wrap: break-word; }
   .help-card-desc a { color: var(--gold-light); }
 
   .contact { padding: 80px 60px; max-width: 1000px; margin: 0 auto; border-top: 1px solid var(--border); }
@@ -67,8 +67,9 @@
   .section-title em { font-style: italic; color: var(--gold-light); }
   .section-sub { font-size: 0.8rem; line-height: 2; color: var(--text-muted); margin-bottom: 40px; max-width: 500px; }
   .contact-box { background: var(--surface); border: 1px solid var(--border); padding: 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .contact-box > div { min-width: 0; }
   .contact-detail { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
-  .contact-email { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; color: var(--gold-light); text-decoration: none; letter-spacing: 0.02em; }
+  .contact-email { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; color: var(--gold-light); text-decoration: none; letter-spacing: 0.02em; overflow-wrap: break-word; }
   .contact-email:hover { color: var(--text); }
   .btn { display: inline-block; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 14px 32px; text-decoration: none; transition: all 0.3s; }
   .btn-ghost { border: 1px solid var(--border); color: var(--text-muted); }
@@ -77,14 +78,14 @@
   footer { display: flex; align-items: center; justify-content: space-between; padding: 32px 60px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 16px; }
   .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--text-muted); letter-spacing: 0.05em; }
   .footer-logo span { color: var(--gold-light); font-style: italic; }
-  .footer-logo-img { height: 88px; width: auto; display: block; }
+  .footer-logo-img { height: 165px; width: auto; display: block; }
   .footer-brand { display: flex; flex-direction: column; gap: 4px; }
   .footer-copy { font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-dim); }
   .footer-company { font-size: 0.58rem; letter-spacing: 0.08em; color: var(--text-dim); }
   .footer-links { display: flex; gap: 22px; flex-wrap: wrap; list-style: none; }
   .footer-links a { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); text-decoration: none; transition: color 0.3s; }
   .footer-links a:hover { color: var(--gold); }
-  @media (max-width: 768px) { .hero { padding: 100px 24px 48px; } .apps { padding: 40px 24px 0; } .apps-row { grid-template-columns: 1fr; } .help-grid { padding: 60px 24px 0; } .help-cards { grid-template-columns: 1fr 1fr; } .contact { padding: 60px 24px; } footer { padding: 32px 24px; flex-direction: column; text-align: center; } .footer-logo-img { height: 52px; } .footer-links { justify-content: center; } }
+  @media (max-width: 768px) { .hero { padding: 180px 24px 48px; } .apps { padding: 40px 24px 0; } .apps-row { grid-template-columns: 1fr; } .help-grid { padding: 60px 24px 0; } .help-cards { grid-template-columns: 1fr 1fr; } .contact { padding: 60px 24px; } footer { padding: 32px 24px; flex-direction: column; text-align: center; } .footer-logo-img { height: 80px; } .footer-links { justify-content: center; } }
 </style>
 </head>
 <body>
