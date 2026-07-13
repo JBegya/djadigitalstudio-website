@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#080808">
+<title>DJ&A Digital Studio — Tools for Shift Workers</title>
+<meta name="description" content="DJ&A Digital Studio builds practical apps for shift workers — nurses, drivers, hospitality staff, security guards, and everyone who works when others don't.">
+<link rel="canonical" href="https://djadigitalstudio.com/">
+<meta property="og:title" content="DJ&A Digital Studio — Tools for Shift Workers">
+<meta property="og:description" content="Practical, privacy-first apps for shift workers — nurses, drivers, hospitality staff, security guards, and everyone who works when others don't.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://djadigitalstudio.com/">
+<meta property="og:site_name" content="DJ&A Digital Studio">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DJ&A Digital Studio — Tools for Shift Workers">
+<meta name="twitter:description" content="Practical, privacy-first apps for shift workers.">
+<meta name="robots" content="index, follow">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "DJ&A Digital Studio",
+  "legalName": "DJ&A Digital Studio Limited",
+  "url": "https://djadigitalstudio.com",
+  "email": "hello@djadigitalstudio.com",
+  "address": { "@type": "PostalAddress", "addressCountry": "NZ" },
+  "sameAs": []
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&family=EB+Garamond:ital@1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080808;
+    --deep: #0d0d0d;
+    --surface: #111111;
+    --surface2: #161616;
+    --border: #222222;
+    --gold: #c9a84c;
+    --gold-light: #e4c87a;
+    --gold-pale: #f5e6b8;
+    --rose: #c4856a;
+    --rose-light: #d9a08a;
+    --text: #e8e0d0;
+    --text-muted: #8a8070;
+    --text-dim: #847b6c;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 60px;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.95), transparent);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+  }
+
+  .nav-logo span { color: var(--gold-light); font-style: italic; }
+  .nav-logo-img { height: 28px; width: auto; display: block; }
+
+  .nav-links {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--gold); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 60px 80px;
+    max-width: 1100px;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 32px; height: 1px;
+    background: var(--gold);
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    line-height: 1.0;
+    letter-spacing: -0.01em;
+    margin-bottom: 32px;
+  }
+
+  .hero-title em { font-style: italic; color: var(--gold-light); }
+
+  .hero-sub {
+    font-size: 0.8rem;
+    line-height: 2;
+    color: var(--text-muted);
+    max-width: 480px;
+    margin-bottom: 56px;
+  }
+
+  .hero-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 240px;
+  }
+
+  .hero-divider-line {
+    flex: 1; height: 1px;
+    background: linear-gradient(to right, var(--gold), transparent);
+  }
+
+  .hero-divider-diamond {
+    width: 5px; height: 5px;
+    background: var(--gold);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  /* APPS SECTION */
+  .section {
+    padding: 100px 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-eyebrow {
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .section-eyebrow::before {
+    content: '';
+    display: block;
+    width: 24px; height: 1px;
+    background: var(--gold);
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    line-height: 1.1;
+    margin-bottom: 60px;
+  }
+
+  .section-title em { font-style: italic; color: var(--gold-light); }
+
+  /* APP CARDS */
+  .apps-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+  }
+
+  .app-card {
+    background: var(--surface);
+    padding: 48px;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+    border: 1px solid var(--border);
+  }
+
+  .app-card:hover { background: var(--surface2); }
+
+  .app-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(to right, var(--gold), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .app-card:hover::after { opacity: 1; }
+
+  .app-card-status {
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .app-card-status.live { color: var(--gold); }
+
+  .app-card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 300;
+    margin-bottom: 12px;
+    line-height: 1.1;
+  }
+
+  .app-card-name em { font-style: italic; color: var(--gold-light); }
+  .app-card-name.rose em { color: var(--rose-light); }
+
+  .app-card-desc {
+    font-size: 0.75rem;
+    line-height: 1.9;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }
+
+  .app-card-link {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .app-card-link.muted { color: var(--text-dim); }
+
+  .app-card-link::after {
+    content: '→';
+    transition: transform 0.3s;
+  }
+
+  .app-card:hover .app-card-link::after { transform: translateX(4px); }
+
+  /* ABOUT */
+  .about-section {
+    padding: 100px 60px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .about-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .about-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.1;
+  }
+
+  .about-title em { font-style: italic; color: var(--gold-light); }
+
+  .about-body {
+    font-size: 0.8rem;
+    line-height: 2.2;
+    color: var(--text-muted);
+  }
+
+  .about-body p + p { margin-top: 18px; }
+
+  /* FOOTER */
+  footer {
+    padding: 48px 60px;
+    border-top: 1px solid var(--border);
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .footer-logo span { color: var(--gold-light); font-style: italic; }
+  .footer-logo-img { height: 22px; width: auto; display: block; }
+
+  .footer-brand { display: flex; flex-direction: column; gap: 4px; }
+
+  .footer-copy {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+
+  .footer-company {
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .footer-links a:hover { color: var(--gold); }
+
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .hero { padding: 100px 24px 60px; }
+    .section { padding: 80px 24px; }
+    .apps-grid { grid-template-columns: 1fr; }
+    .about-section { padding: 80px 24px; }
+    .about-inner { grid-template-columns: 1fr; gap: 40px; }
+    footer { padding: 40px 24px; flex-direction: column; text-align: center; }
+    .footer-links { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo"><img src="/brand/logo-horizontal-web.png" alt="DJ&amp;A Digital Studio" class="nav-logo-img"></a>
+  <ul class="nav-links">
+    <li><a href="#apps">Apps</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="/support/">Support</a></li>
+    <li><a href="/contact/">Contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <p class="hero-eyebrow">DJ&A Digital Studio</p>
+  <h1 class="hero-title">Built for the<br>workers who<br><em>keep the world</em><br>running.</h1>
+  <p class="hero-sub">We build practical tools for shift workers — nurses, drivers, hospitality staff, security guards, and everyone who works when others don't.</p>
+  <div class="hero-divider">
+    <div class="hero-divider-line"></div>
+    <div class="hero-divider-diamond"></div>
+  </div>
+</section>
+
+<section class="section" id="apps">
+  <p class="section-eyebrow">Our Apps</p>
+  <h2 class="section-title">Every shift,<br><em>accounted for.</em></h2>
+
+  <div class="apps-grid">
+<!-- BEGIN:APPS_GRID -->
+    <a href="/apps/splitshift-hours/" class="app-card" data-app-id="splitshift-hours">
+      <p class="app-card-status">◇ Coming Soon</p>
+      <h3 class="app-card-name">SplitShift <em>Hours</em></h3>
+      <p class="app-card-desc">Track shifts from multiple jobs, log hours against any pay cycle, and export PDF timesheets — all stored privately on your device.</p>
+      <span class="app-card-link muted">Coming soon</span>
+    </a>
+
+    <a href="/apps/shiftearn-pro/" class="app-card" data-app-id="shiftearn-pro">
+      <p class="app-card-status live">◈ Available Now · iOS &amp; Android</p>
+      <h3 class="app-card-name rose">ShiftEarn <em>Pro</em></h3>
+      <p class="app-card-desc">Calculate your exact take-home pay for every shift — penalty rates, overtime, tax, and leave — across 15+ countries.</p>
+      <span class="app-card-link">Learn more</span>
+    </a>
+  <!-- END:APPS_GRID -->
+  </div>
+</section>
+
+<section class="about-section" id="about">
+  <div class="about-inner">
+    <div>
+      <p class="section-eyebrow">About</p>
+      <h2 class="about-title">Made with<br><em>care,</em><br>for the people<br>who show up.</h2>
+    </div>
+    <div class="about-body">
+      <p>DJ&A Digital Studio is an independent app studio focused on the needs of shift workers. We build tools that are offline-first, privacy-respecting, and designed to work in the real conditions of shift work — no signal, no time, no patience for complexity.</p>
+      <p>Every app we make stores your data on your device. We don't build accounts, we don't run databases of your pay or hours, and we don't sell your data. What you enter stays with you.</p>
+      <p>We support workers across New Zealand, Australia, the UK, the US, Canada, the Philippines, Japan, Singapore, and more.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-brand">
+    <div class="footer-logo"><img src="/brand/logo-horizontal-web.png" alt="DJ&amp;A Digital Studio" class="footer-logo-img"></div>
+    <p class="footer-copy">© 2026 DJ&A Digital Studio Limited. All rights reserved.</p>
+    <p class="footer-company">DJ&A Digital Studio Limited · New Zealand</p>
+  </div>
+  <ul class="footer-links">
+    <li><a href="#apps">Apps</a></li>
+    <li><a href="/support/">Support</a></li>
+    <li><a href="/contact/">Contact</a></li>
+    <li><a href="/privacy.html">Privacy</a></li>
+    <li><a href="/terms.html">Terms</a></li>
+    <li><a href="/refund.html">Refund</a></li>
+    <li><a href="/data-deletion.html">Data Deletion</a></li>
+    <li><a href="/eula.html">EULA</a></li>
+  </ul>
+</footer>
+
+</body>
+</html>
