@@ -118,11 +118,11 @@ ${headBlock({
   nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 24px 60px; background: linear-gradient(to bottom, rgba(8,8,8,0.95), transparent); }
   .nav-logo { text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
   .nav-logo span { color: var(--gold-light); font-style: italic; }
-  .nav-logo-img { height: 56px; width: auto; display: block; }
+  .nav-logo-img { height: 84px; width: auto; display: block; }
   .nav-back { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
   .nav-back:hover { color: var(--${navHover}); }
-  @media (max-width: 768px) { nav { padding: 20px 24px; } }
-  .hero { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding: 120px 60px 60px; max-width: 900px; }
+  @media (max-width: 768px) { nav { padding: 20px 24px; } .nav-logo-img { height: 48px; } }
+  .hero { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding: 160px 60px 60px; max-width: 900px; }
   .hero-eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--${a}); margin-bottom: 24px; display: flex; align-items: center; gap: 14px; }
   .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--${a}); }
   .hero-title { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(3rem, 7vw, 5.5rem); line-height: 1.0; margin-bottom: 24px; }
@@ -240,7 +240,7 @@ ${headBlock({
   nav { display: flex; align-items: center; justify-content: space-between; padding: 32px 60px; }
   .nav-logo { text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
   .nav-logo span { color: var(--gold-light); font-style: italic; }
-  .nav-logo-img { height: 56px; width: auto; display: block; }
+  .nav-logo-img { height: 84px; width: auto; display: block; }
   main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; text-align: center; }
   .eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; }
   h1 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.5rem, 6vw, 4.5rem); line-height: 1.1; margin-bottom: 20px; }
@@ -315,11 +315,11 @@ ${headBlock({
   nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 24px 60px; background: linear-gradient(to bottom, rgba(8,8,8,0.97), transparent); }
   .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.05em; }
   .nav-logo span { color: var(--gold-light); font-style: italic; }
-  .nav-logo-img { height: 56px; width: auto; display: block; }
+  .nav-logo-img { height: 84px; width: auto; display: block; }
   .nav-back { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
   .nav-back:hover { color: var(--${navHover}); }
   @media (max-width: 768px) { nav { padding: 20px 24px; } }
-  .page-wrap { max-width: 760px; margin: 0 auto; padding: 140px 40px 100px; }
+  .page-wrap { max-width: 760px; margin: 0 auto; padding: 160px 40px 100px; }
   .page-eyebrow { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--${a}); margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
   .page-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: var(--${a}); }
   .page-title { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.1; margin-bottom: 12px; }
