@@ -21,7 +21,7 @@ import { createRun, finishRun, updateJob } from './progressStore';
 const log = createLogger('orchestrator');
 const MAX_QUALITY_CYCLES = 3;
 const MAX_CONCURRENT_JOBS = 3;
-const VIDEOS_PER_BRAND = 3;
+export const VIDEOS_PER_BRAND = 3;
 
 const STAGE_ORDER: PipelineStage[] = ['script', 'voice', 'background', 'subtitles', 'music', 'compose', 'captions', 'thumbnail'];
 
@@ -251,6 +251,13 @@ async function runWithConcurrency<T, R>(items: T[], limit: number, worker: (item
   return results;
 }
 
+const EXPECTED_VIDEOS_PER_DAY = ALL_BRAND_IDS.length * VIDEOS_PER_BRAND;
+
+function computeRunStatus(videoCount: number): GenerationHistoryEntry['status'] {
+  if (videoCount <= 0) return 'failed';
+  return videoCount >= EXPECTED_VIDEOS_PER_DAY ? 'complete' : 'partial';
+}
+
 async function executeDailyGeneration(runId: string, specs: JobSpec[], jobIds: string[], settings: Settings, date: string): Promise<void> {
   try {
     const settled = await runWithConcurrency(specs, MAX_CONCURRENT_JOBS, (spec, i) =>
@@ -258,13 +265,11 @@ async function executeDailyGeneration(runId: string, specs: JobSpec[], jobIds: s
     );
 
     const videos: VideoResult[] = [];
-    let failures = 0;
     for (const result of settled) {
       if (result.status === 'fulfilled') videos.push(result.value);
-      else failures += 1;
     }
 
-    const status: GenerationHistoryEntry['status'] = failures === 0 ? 'complete' : videos.length > 0 ? 'partial' : 'failed';
+    const status = computeRunStatus(videos.length);
     finishRun(runId, status === 'failed' ? 'failed' : 'complete');
 
     const entry: GenerationHistoryEntry = {
@@ -318,4 +323,78 @@ export function startDailyGeneration(settings: Settings, date: string): { runId:
   void executeDailyGeneration(runId, specs, jobIds, settings, date);
 
   return { runId, date };
+}
+
+/** Merges a freshly-regenerated video into the day's existing history entry, replacing whatever
+ * previously occupied that brand+index slot (whether it succeeded or failed last time). Reuses
+ * the ORIGINAL day's runId (not the regenerate job's own ephemeral runId) so this stays the same
+ * persisted history row rather than forking a second entry for the same date. */
+function mergeVideoIntoHistory(date: string, result: VideoResult): void {
+  const existing = historyStore.getRunByDate(date);
+  if (!existing) {
+    historyStore.recordRun({
+      date,
+      runId: newId('run'),
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      status: computeRunStatus(1),
+      videos: [result],
+    });
+    return;
+  }
+
+  const videos = existing.videos.filter((v) => !(v.brand === result.brand && v.index === result.index));
+  videos.push(result);
+  historyStore.recordRun({
+    ...existing,
+    finishedAt: new Date().toISOString(),
+    status: computeRunStatus(videos.length),
+    videos,
+  });
+}
+
+async function executeSingleVideoRegeneration(runId: string, jobId: string, spec: JobSpec, settings: Settings, date: string): Promise<void> {
+  try {
+    const result = await runVideoJob(runId, jobId, spec, settings, date);
+    finishRun(runId, 'complete');
+    mergeVideoIntoHistory(date, result);
+    log.info(`Finished regeneration ${runId}: ${spec.brand}/${spec.index}`);
+  } catch (error) {
+    // runVideoJob already logs the failure and marks the job 'failed' in progressStore — nothing
+    // further to persist here, the previous history entry for this slot is left untouched.
+    log.error(`Regeneration ${runId} for ${spec.brand}/${spec.index} crashed: ${error instanceof Error ? error.message : error}`);
+    finishRun(runId, 'failed');
+  }
+}
+
+/**
+ * Regenerates a single video (one brand + slot index) without re-running the other five —
+ * used from Preview when one video needs a redo (bad take, failed QA, wrong topic) rather than
+ * burning API calls and render time on a full daily batch. Picks a fresh topic the same way the
+ * daily batch does, then merges the result back into that date's existing history entry.
+ */
+export function startSingleVideoRegeneration(settings: Settings, date: string, brand: BrandId, index: number): { runId: string; date: string; jobId: string } {
+  const runId = newId('run');
+  const jobId = newId('job');
+  log.info(`Starting single-video regeneration ${runId} for ${date} ${brand}/${index}`);
+
+  const [topicKey] = historyStore.pickNextTopics(brand, 1);
+  const spec: JobSpec = { brand, index, topicKey: topicKey ?? getBrand(brand).topics[0]?.key ?? 'gratitude' };
+
+  const initialJob: VideoJobProgress = {
+    jobId,
+    brand: spec.brand,
+    index: spec.index,
+    topic: getBrand(spec.brand).topics.find((t) => t.key === spec.topicKey)?.label ?? spec.topicKey,
+    stage: 'queued',
+    percent: 0,
+    message: 'Waiting to start',
+    attempt: 1,
+    updatedAt: new Date().toISOString(),
+  };
+  createRun(runId, date, [initialJob]);
+
+  void executeSingleVideoRegeneration(runId, jobId, spec, settings, date);
+
+  return { runId, date, jobId };
 }

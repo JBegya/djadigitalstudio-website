@@ -11,9 +11,28 @@ let serverProcess: ChildProcess | null = null;
 
 function startProductionServer(): Promise<string> {
   return new Promise((resolve, reject) => {
-    const serverEntry = path.join(process.resourcesPath, 'app', '.next', 'standalone', 'server.js');
+    // Everything the packaged app needs — .next/standalone, assets/, node_modules — lives
+    // under resources/app (see electron-builder.yml's `files`), matching the layout `npm run
+    // build` + `electron:build` produce.
+    const appDir = path.join(process.resourcesPath, 'app');
+    const serverEntry = path.join(appDir, '.next', 'standalone', 'server.js');
     serverProcess = spawn(process.execPath, [serverEntry], {
-      env: { ...process.env, PORT: PROD_PORT, NODE_ENV: 'production' },
+      env: {
+        ...process.env,
+        PORT: PROD_PORT,
+        NODE_ENV: 'production',
+        // process.execPath is the Electron binary itself, not a plain `node` —
+        // ELECTRON_RUN_AS_NODE tells it to behave as a Node interpreter instead of trying to
+        // launch another Electron GUI instance. Without this, the server process never
+        // actually starts.
+        ELECTRON_RUN_AS_NODE: '1',
+        // Next's standalone server.js runs `process.chdir(__dirname)` as its first line,
+        // which repoints process.cwd() at .next/standalone/ itself — DJA_APP_ROOT is how
+        // src/server/config/paths.ts finds resources/app again afterwards, for the bundled
+        // assets/fonts, assets/logo, and assets/dictionary that live there.
+        DJA_APP_ROOT: appDir,
+      },
+      cwd: appDir,
       stdio: 'pipe',
     });
 

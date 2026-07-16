@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { getSettings, updateSettings, type RedactedSettings } from '@/lib/api';
+import { getSettings, openLogsFolder, updateSettings, type RedactedSettings } from '@/lib/api';
 import { isElectron, pickFolder, pickImageFile } from '@/lib/desktop';
 import type { SubtitlePosition, VoicePreset } from '@/types/domain';
 
@@ -201,6 +201,25 @@ export function SettingsScreen() {
                   </Select>
                 </Field>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Diagnostics</CardTitle>
+              <CardDescription>Every generation run writes a detailed log to disk — useful if a video fails or looks wrong.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={async () => {
+                  const result = await openLogsFolder();
+                  if (!result.ok) toast.error(result.error ?? 'Could not open the logs folder');
+                }}
+              >
+                Open Logs Folder
+              </Button>
             </CardContent>
           </Card>
         </div>

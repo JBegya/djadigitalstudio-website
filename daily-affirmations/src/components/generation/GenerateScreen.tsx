@@ -10,24 +10,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { startGeneration, subscribeToRun } from '@/lib/api';
+import { STAGE_LABELS } from '@/lib/pipelineStages';
 import { cn } from '@/lib/utils';
-import type { GenerationRunProgress, PipelineStage, VideoJobProgress } from '@/types/domain';
-
-const STAGE_LABELS: Record<PipelineStage, string> = {
-  queued: 'Queued',
-  script: 'Writing script',
-  voice: 'Recording voice',
-  background: 'Selecting background',
-  subtitles: 'Timing subtitles',
-  music: 'Choosing music',
-  compose: 'Composing video',
-  thumbnail: 'Generating thumbnail',
-  captions: 'Writing captions',
-  quality: 'Quality check',
-  export: 'Exporting',
-  done: 'Done',
-  failed: 'Failed',
-};
+import type { GenerationRunProgress, VideoJobProgress } from '@/types/domain';
 
 export function GenerateScreen() {
   const router = useRouter();

@@ -22,6 +22,11 @@ export interface VoiceRequest {
   outputPath: string;
 }
 
+// Below this, the "successful" response is almost certainly an empty or truncated audio
+// stream rather than real speech — catching it here gives a clear error instead of letting a
+// near-empty file fail confusingly deep inside ffmpeg later in the pipeline.
+const MIN_PLAUSIBLE_AUDIO_BYTES = 2_000;
+
 async function callOpenAiTts(text: string, voice: VoicePreset, settings: Settings, outputPath: string): Promise<void> {
   const client = getOpenAIClient(settings.openaiApiKey);
   const openAiVoice = OPENAI_VOICE_MAP[voice] ?? 'shimmer';
@@ -33,6 +38,9 @@ async function callOpenAiTts(text: string, voice: VoicePreset, settings: Setting
     speed: 0.98,
   });
   const buffer = Buffer.from(await response.arrayBuffer());
+  if (buffer.byteLength < MIN_PLAUSIBLE_AUDIO_BYTES) {
+    throw new Error(`OpenAI TTS returned suspiciously little audio data (${buffer.byteLength} bytes)`);
+  }
   fs.writeFileSync(outputPath, buffer);
 }
 
@@ -49,6 +57,14 @@ export async function generateVoice(request: VoiceRequest): Promise<VoiceResult>
     label: 'OpenAI text-to-speech',
     retries: 3,
   });
-  const durationSeconds = await probeDurationSeconds(outputPath);
+
+  let durationSeconds: number;
+  try {
+    durationSeconds = await probeDurationSeconds(outputPath);
+  } catch (error) {
+    throw new Error(
+      `OpenAI TTS produced a file ffmpeg could not read (likely a corrupt or incomplete download): ${error instanceof Error ? error.message : error}`,
+    );
+  }
   return { audioPath: outputPath, durationSeconds, source: 'openai' };
 }

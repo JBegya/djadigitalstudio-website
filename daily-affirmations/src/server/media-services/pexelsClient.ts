@@ -4,6 +4,10 @@ import { retryWithBackoff } from '@/server/utils/retry';
 
 const log = createLogger('pexelsClient');
 
+const SEARCH_TIMEOUT_MS = 20_000;
+// Portrait HD video files can run tens of MB — give downloads much more room than API calls.
+const DOWNLOAD_TIMEOUT_MS = 120_000;
+
 interface PexelsVideoFile {
   id: number;
   quality: string;
@@ -35,10 +39,48 @@ export interface PexelsPick {
 
 class PexelsApiError extends Error {
   status?: number;
-  constructor(message: string, status?: number) {
+  headers?: Headers;
+  constructor(message: string, status?: number, headers?: Headers) {
     super(message);
     this.name = 'PexelsApiError';
     this.status = status;
+    this.headers = headers;
+  }
+}
+
+/**
+ * Pexels signals its rate limit via `X-Ratelimit-Reset` (a Unix timestamp), not the standard
+ * `Retry-After` header. Translate it into a synthetic `retry-after` header so the generic
+ * retry logic (src/server/utils/retry.ts) picks it up without needing Pexels-specific
+ * knowledge of its own.
+ */
+function withSyntheticRetryAfter(res: Response): Headers {
+  const headers = new Headers(res.headers);
+  if (res.status === 429 && !headers.has('retry-after')) {
+    const resetAt = headers.get('x-ratelimit-reset');
+    if (resetAt) {
+      const resetMs = Number(resetAt) * 1000;
+      if (Number.isFinite(resetMs)) {
+        const seconds = Math.max(1, Math.ceil((resetMs - Date.now()) / 1000));
+        headers.set('retry-after', String(seconds));
+      }
+    }
+  }
+  return headers;
+}
+
+async function fetchWithTimeout(url: string | URL, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new PexelsApiError(`Request to Pexels timed out after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -51,8 +93,12 @@ async function searchVideos(query: string, apiKey: string, perPage = 12): Promis
 
   return retryWithBackoff(
     async () => {
-      const res = await fetch(url, { headers: { Authorization: apiKey } });
-      if (!res.ok) throw new PexelsApiError(`Pexels search failed (${res.status}) for "${query}"`, res.status);
+      const res = await fetchWithTimeout(url, { headers: { Authorization: apiKey } }, SEARCH_TIMEOUT_MS);
+      if (!res.ok) {
+        const message =
+          res.status === 429 ? `Pexels rate limit reached while searching "${query}"` : `Pexels search failed (${res.status}) for "${query}"`;
+        throw new PexelsApiError(message, res.status, withSyntheticRetryAfter(res));
+      }
       const data = (await res.json()) as PexelsSearchResponse;
       return data.videos ?? [];
     },
@@ -89,8 +135,8 @@ export async function findBackgroundCandidates(query: string, apiKey: string, ex
 export async function downloadVideo(url: string, destinationPath: string): Promise<void> {
   await retryWithBackoff(
     async () => {
-      const res = await fetch(url);
-      if (!res.ok) throw new PexelsApiError(`Pexels download failed (${res.status})`, res.status);
+      const res = await fetchWithTimeout(url, {}, DOWNLOAD_TIMEOUT_MS);
+      if (!res.ok) throw new PexelsApiError(`Pexels download failed (${res.status})`, res.status, withSyntheticRetryAfter(res));
       const buffer = Buffer.from(await res.arrayBuffer());
       fs.writeFileSync(destinationPath, buffer);
     },

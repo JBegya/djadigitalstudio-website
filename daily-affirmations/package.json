@@ -18,7 +18,7 @@
     "electron:compile": "tsc -p electron/tsconfig.json",
     "electron:dev": "concurrently -k -n NEXT,ELECTRON -c blue,magenta \"npm:dev\" \"npm:electron:watch\"",
     "electron:watch": "wait-on http://127.0.0.1:3131 && npm run electron:compile && cross-env ELECTRON_DEV=1 electron .",
-    "electron:build": "npm run build && npm run electron:compile && electron-builder"
+    "electron:build": "npm run build && node scripts/prepare-standalone.js && npm run electron:compile && electron-builder"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",

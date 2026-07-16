@@ -19,7 +19,7 @@ import { generateSubtitles } from '../src/server/video-engine/subtitleService';
 import { CANVAS_HEIGHT, CANVAS_WIDTH, composeVideo } from '../src/server/video-engine/videoComposer';
 import { generateThumbnail } from '../src/server/video-engine/thumbnailService';
 import { runQualityChecks } from '../src/server/quality-engine';
-import { getDefaultMusicFolder, getFontsDir } from '../src/server/config/paths';
+import { getBundledMusicDir, getFontsDir } from '../src/server/config/paths';
 import type { Settings } from '../src/types/domain';
 
 function step(label: string) {
@@ -34,7 +34,7 @@ async function main() {
     openaiApiKey: '',
     pexelsApiKey: '',
     outputFolder: workDir,
-    musicFolder: getDefaultMusicFolder(),
+    musicFolder: getBundledMusicDir(),
     logoPath: path.join(process.cwd(), 'assets', 'logo', 'dja-logo.png'),
     videoLengthSeconds: 24,
     voice: 'warm-female',

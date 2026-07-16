@@ -3,7 +3,7 @@ import { getBrand } from '@/server/config/brands';
 import { MODELS } from '@/server/config/models';
 import { createLogger } from '@/server/utils/logger';
 import { retryWithBackoff } from '@/server/utils/retry';
-import { getOpenAIClient } from './openaiClient';
+import { getOpenAIClient, parseStructuredCompletion } from './openaiClient';
 import { generateMockCaptions, generateMockHashtags, generateMockThumbnailHook } from './socialCopyWriterMock';
 
 const log = createLogger('socialCopyWriter');
@@ -33,6 +33,25 @@ interface RawResponse {
 
 function clampToSixWords(text: string): string {
   return text.trim().split(/\s+/).filter(Boolean).slice(0, 6).join(' ');
+}
+
+/**
+ * Guarantees exactly 30 hashtags regardless of what the model actually returned. OpenAI's
+ * Structured Outputs strict mode doesn't reliably enforce array-length keywords like
+ * `minItems`/`maxItems` — they're accepted in the schema but not guaranteed to constrain the
+ * model's output — so the count has to be enforced in code rather than trusted from the schema.
+ */
+export function normalizeHashtagCount(brand: BrandId, hashtags: string[]): string[] {
+  const cleaned = hashtags.map((h) => (h.startsWith('#') ? h : `#${h}`).replace(/\s+/g, '')).filter((h) => h.length > 1);
+  const deduped = Array.from(new Set(cleaned));
+
+  if (deduped.length > 30) return deduped.slice(0, 30);
+  if (deduped.length < 30) {
+    log.warn(`Model returned only ${deduped.length} hashtags — padding to 30 with brand fallbacks`);
+    const fallback = generateMockHashtags(brand).filter((h) => !deduped.includes(h));
+    return [...deduped, ...fallback].slice(0, 30);
+  }
+  return deduped;
 }
 
 function buildPrompt(brand: BrandId, topicLabel: string, affirmationText: string) {
@@ -87,10 +106,8 @@ async function callOpenAI(brand: BrandId, topicLabel: string, affirmationText: s
     },
   });
 
-  const raw = completion.choices[0]?.message?.content;
-  if (!raw) throw new Error('OpenAI returned an empty social-copy response');
-  const parsed = JSON.parse(raw) as RawResponse;
-  const hashtags = parsed.hashtags.map((h) => (h.startsWith('#') ? h : `#${h}`).replace(/\s+/g, ''));
+  const parsed = parseStructuredCompletion<RawResponse>(completion, `${brand} captions and hashtags`);
+  const hashtags = normalizeHashtagCount(brand, parsed.hashtags);
 
   return {
     captions: {

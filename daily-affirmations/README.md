@@ -67,9 +67,13 @@ changes autosave and are stored outside the repo (in your OS's per-user app-data
 
 ### Adding your own music
 
-Drop royalty-free tracks into `assets/music/` (`.mp3`, `.wav`, `.m4a`, `.aac`, `.flac`, `.ogg`).
-Two synthesized placeholder ambient pads ship there so Test Mode has something to mix — replace
-them with real licensed tracks before publishing anything. See `assets/music/README.md`.
+The default Music folder is `~/Documents/DJA Daily Affirmations/Music` (Settings → Music
+Folder). On first run, if that folder doesn't exist yet, it's seeded automatically with the two
+synthesized placeholder ambient pads bundled in `assets/music/` so Test Mode has something to
+mix immediately — replace them with real licensed tracks (`.mp3`, `.wav`, `.m4a`, `.aac`,
+`.flac`, `.ogg`) before publishing anything. This folder lives outside the app install
+deliberately: it survives updates/reinstalls and is a sensible place to permanently keep
+licensed music files. See `assets/music/README.md` for the bundled placeholders themselves.
 
 ### Logo / watermark
 
@@ -97,11 +101,19 @@ daily-affirmations/
       export/               Exports/ folder writer
       pipeline/             Orchestrator (the 6-video daily run) + progress tracking
     types/                Shared domain types
-  assets/                 Bundled fonts (Inter, OFL-licensed), music, logo
-  Exports/                Default output location (gitignored — this is generated content)
+  assets/                 Bundled fonts (Inter, OFL-licensed), placeholder music, logo, dictionary
+  build/                  electron-builder resources (app icon)
+  electron-builder.yml    Desktop packaging config (see "Packaging the desktop app" below)
   tests/                  Vitest unit tests for the pure logic (timing, text rules, etc.)
-  scripts/                One-off utility scripts
+  scripts/                One-off utility scripts (smoke test, standalone-build prep)
 ```
+
+Generated content — exported videos and the user's music library — deliberately lives outside
+this folder entirely, at `~/Documents/DJA Daily Affirmations/` (see "Adding your own music"
+above and Settings → Output Folder). That's a stable, user-owned location in dev and in every
+packaged-app scenario alike; the app install itself (wherever it happens to be, and in a
+packaged build, read-only) is the wrong place to default-write generated files or ask someone to
+permanently keep licensed music.
 
 Clean separation: UI never talks to OpenAI/Pexels/ffmpeg directly — it only calls the Next.js
 API routes in `src/app/api/**`, which call into `src/server/**`. That's also what makes the app
@@ -122,12 +134,41 @@ Next.js server process always has full filesystem/OS access, Electron or otherwi
 | `npm run lint` | Next/ESLint |
 | `npm run smoke` | Offline pipeline smoke test — renders one full video in Test Mode via plain Node, no browser needed |
 
+## Packaging the desktop app
+
+```bash
+npm run electron:build
+```
+
+This runs, in order: `next build` (production build) → `scripts/prepare-standalone.js` (copies
+the static asset bundle into the standalone output and strips any `.env*` files that `next
+build` may have copied in — see Security below) → `electron:compile` (compiles the Electron
+main/preload process) → `electron-builder` (packages everything per `electron-builder.yml`).
+
+Output lands in `release/` — a `.dmg`/`.zip` on macOS, an NSIS installer on Windows, or an
+AppImage on Linux, per the targets configured in `electron-builder.yml`. The app icon is
+`build/icon.png`. macOS and Windows builds are unsigned (no code-signing certificate configured)
+— they still run locally; macOS Gatekeeper will warn on first launch (right-click → Open
+bypasses it).
+
+This is an internal tool distributed manually, not through an app store or auto-update server,
+so `electron-builder`'s publish step is disabled entirely.
+
 ## Security
 
 API keys are stored in `.env` (gitignored) and/or the local settings file in your OS's app-data
 directory — never in this repo, never logged, and masked in the UI once saved. The one route
 that turns a request into a filesystem read (`/api/media`) validates the path stays inside the
 configured Exports folder before serving anything.
+
+`next build` automatically copies `.env` into `.next/standalone/.env` — if left alone, that
+would ship whatever `.env` happens to exist on the machine used to build a release (e.g. a
+developer's own local API keys) inside the distributed app. `npm run electron:build` guards
+against this twice: `scripts/prepare-standalone.js` deletes any `.env*` file from the standalone
+output right after the build, and `electron-builder.yml`'s `files` list excludes them as well in
+case the standalone folder is ever packaged some other way. Real installs are configured entirely
+via the in-app Settings screen (persisted outside the app, per above), so `.env` is never needed
+at runtime in a packaged build.
 
 `npm audit` currently flags a handful of advisories against the Next.js 14.2.x line (the app
 pins `^14.2.16`, which resolves to the latest 14.2.x patch release) that were only fixed

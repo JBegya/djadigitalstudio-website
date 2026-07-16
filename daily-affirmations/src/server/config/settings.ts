@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import type { Settings } from '@/types/domain';
 import { env, loadEnv } from './env';
-import { getDefaultLogoPath, getDefaultMusicFolder, getDefaultOutputFolder, getSettingsFilePath } from './paths';
+import { getDefaultLogoPath, getDefaultMusicFolder, getDefaultOutputFolder, getSettingsFilePath, seedMusicFolderOnFirstRun } from './paths';
 
 loadEnv();
 
@@ -62,6 +62,7 @@ class SettingsStore {
       }
     } else {
       this.cached = base;
+      seedMusicFolderOnFirstRun(base.musicFolder);
       this.persist(this.cached);
     }
     return this.cached;

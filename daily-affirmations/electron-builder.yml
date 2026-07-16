@@ -1,0 +1,69 @@
+# electron-builder packaging config — see https://www.electron.build/configuration
+appId: com.djadigitalstudio.dailyaffirmations
+productName: DJ&A Daily Affirmations
+copyright: Copyright © DJ&A Digital Studio Limited
+
+directories:
+  output: release
+  buildResources: build
+
+# This app spawns external binaries directly (ffmpeg/ffprobe) and reads many data files at
+# runtime (fonts, the vendored spell-check dictionary, music, the standalone Next.js server's
+# own dependency tree). None of that plays well with asar packaging — a spawned process can't
+# execute a binary that lives inside an asar archive, and asar's virtual-fs shimming only
+# covers Electron's own patched fs calls, not the plain Node fs the standalone server uses.
+# Plain files on disk under resources/app/ is the simpler, more robust choice for this app.
+asar: false
+
+files:
+  - electron/dist/**/*
+  - .next/standalone/**/*
+  - assets/**/*
+  - package.json
+  # `next build` automatically copies .env into .next/standalone/.env — if the machine doing
+  # the packaging has a real .env for local dev/testing (as this one does right now), it would
+  # otherwise ship the packager's own API keys inside the distributed app. Real installs are
+  # configured via the in-app Settings screen (persisted outside the app entirely), not .env,
+  # so it's never needed at runtime here.
+  - "!.next/standalone/.env"
+  - "!.next/standalone/.env.local"
+  - "!.next/standalone/.env.production"
+  - "!.next/standalone/.env.production.local"
+
+extraResources: []
+
+mac:
+  icon: build/icon.png
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+    - target: zip
+      arch: [x64, arm64]
+  # Signing/notarization needs the owner's own Apple Developer certificate — not configured
+  # here. Unsigned builds still run locally; macOS Gatekeeper will warn on first launch
+  # (right-click → Open bypasses it). Add `mac.identity` + notarize config once a certificate
+  # is available.
+
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch: [x64]
+  # Same as macOS: code signing needs the owner's own certificate, not configured here.
+
+linux:
+  icon: build/icon.png
+  category: AudioVideo
+  target:
+    - target: AppImage
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+
+# This is an internal tool distributed manually (not through an app store or update server) —
+# disable electron-builder's publish step entirely rather than leaving it half-configured.
+publish: null

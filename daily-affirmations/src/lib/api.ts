@@ -1,11 +1,21 @@
-import type { GenerationHistoryEntry, GenerationRunProgress, Settings } from '@/types/domain';
+import type { BrandId, GenerationHistoryEntry, GenerationRunProgress, Settings } from '@/types/domain';
 
 export type RedactedSettings = Settings & { hasOpenAiKey: boolean; hasPexelsKey: boolean };
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
-    throw new Error(text || `Request failed (${res.status})`);
+    // Routes that validate input (e.g. /api/regenerate) respond with { error: "..." } — surface
+    // that message directly instead of the raw JSON blob if that's what came back.
+    const parsedError = (() => {
+      try {
+        const parsed = JSON.parse(text) as { error?: unknown };
+        return typeof parsed.error === 'string' ? parsed.error : null;
+      } catch {
+        return null;
+      }
+    })();
+    throw new Error(parsedError || text || `Request failed (${res.status})`);
   }
   return res.json() as Promise<T>;
 }
@@ -49,6 +59,16 @@ export function subscribeToRun(runId: string, onUpdate: (run: GenerationRunProgr
   return () => source.close();
 }
 
+export async function regenerateVideo(date: string, brand: BrandId, index: number): Promise<{ runId: string; jobId: string; date: string; brand: BrandId; index: number }> {
+  return json(
+    await fetch('/api/regenerate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, brand, index }),
+    }),
+  );
+}
+
 export async function listHistory(limit = 60): Promise<{ runs: GenerationHistoryEntry[] }> {
   return json(await fetch(`/api/history?limit=${limit}`, { cache: 'no-store' }));
 }
@@ -69,4 +89,9 @@ export async function openFolder(path: string): Promise<{ ok: boolean; error: st
       body: JSON.stringify({ path }),
     }),
   );
+}
+
+/** Opens the daily log folder — server-resolved, so this works identically in Electron or a plain browser tab. */
+export async function openLogsFolder(): Promise<{ ok: boolean; error: string | null }> {
+  return json(await fetch('/api/system/open-logs', { method: 'POST' }));
 }

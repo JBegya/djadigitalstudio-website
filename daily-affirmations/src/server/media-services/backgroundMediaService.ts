@@ -4,6 +4,7 @@ import type { BrandId, Settings } from '@/types/domain';
 import { getBrand } from '@/server/config/brands';
 import { getUsedBackgroundsFilePath } from '@/server/config/paths';
 import { createLogger } from '@/server/utils/logger';
+import { probeDurationSeconds } from '@/server/video-engine/ffmpeg';
 import { downloadVideo, findBackgroundCandidates } from './pexelsClient';
 import { generateMockBackground } from './backgroundMediaMock';
 
@@ -73,6 +74,19 @@ export async function fetchBackgroundVideo(request: BackgroundRequest): Promise<
       const pick = candidates[Math.floor(Math.random() * Math.min(3, candidates.length))];
       if (!pick) continue;
       await downloadVideo(pick.downloadUrl, outputPath);
+
+      // A "successful" download can still be a truncated or corrupt file (interrupted
+      // connection, disk-full mid-write) — confirm ffmpeg can actually read it before
+      // committing to this pick, rather than letting the composer fail on it later with a
+      // much less obvious error.
+      try {
+        await probeDurationSeconds(outputPath);
+      } catch (probeError) {
+        log.warn(`Downloaded background for "${keyword}" (Pexels #${pick.id}) is unreadable, trying another: ${probeError instanceof Error ? probeError.message : probeError}`);
+        fs.rmSync(outputPath, { force: true });
+        continue;
+      }
+
       recordUsedId(pick.id);
       return { videoPath: outputPath, source: 'pexels', pexelsId: pick.id, keyword };
     } catch (error) {

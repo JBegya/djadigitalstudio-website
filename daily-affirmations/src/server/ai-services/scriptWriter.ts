@@ -4,7 +4,7 @@ import { MODELS } from '@/server/config/models';
 import { createLogger } from '@/server/utils/logger';
 import { retryWithBackoff } from '@/server/utils/retry';
 import { containsEmoji, findBannedPhrase, jaccardSimilarity, wordCount } from '@/server/utils/textStats';
-import { getOpenAIClient } from './openaiClient';
+import { getOpenAIClient, parseStructuredCompletion } from './openaiClient';
 import { generateMockAffirmation } from './scriptWriterMock';
 
 const log = createLogger('scriptWriter');
@@ -93,9 +93,7 @@ async function callOpenAI(brand: BrandId, topicLabel: string, settings: Settings
     },
   });
 
-  const raw = completion.choices[0]?.message?.content;
-  if (!raw) throw new Error('OpenAI returned an empty script response');
-  const parsed = JSON.parse(raw) as { affirmation: string };
+  const parsed = parseStructuredCompletion<{ affirmation: string }>(completion, `the ${brand} affirmation script`);
   return parsed.affirmation.trim().replace(/^["“]|["”]$/g, '');
 }
 
