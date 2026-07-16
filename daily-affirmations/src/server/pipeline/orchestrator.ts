@@ -16,6 +16,7 @@ import { newId } from '@/server/utils/id';
 import { CANVAS_HEIGHT, CANVAS_WIDTH, composeVideo, type ComposeResult } from '@/server/video-engine/videoComposer';
 import { generateSubtitles, type SubtitleGenerationResult } from '@/server/video-engine/subtitleService';
 import { generateThumbnail, type ThumbnailResult } from '@/server/video-engine/thumbnailService';
+import { assembleFinalVideo, getOrCreateBrandFrames, type AssembleResult } from '@/server/video-engine/videoAssembly';
 import { createRun, finishRun, updateJob } from './progressStore';
 
 const log = createLogger('orchestrator');
@@ -45,6 +46,7 @@ interface JobState {
   subtitles?: SubtitleGenerationResult;
   music?: MusicPick | null;
   composed?: ComposeResult;
+  assembled?: AssembleResult;
   social?: SocialCopyResult;
   thumbnail?: ThumbnailResult;
   targetDuration?: number;
@@ -129,6 +131,7 @@ async function runVideoJob(runId: string, jobId: string, spec: JobSpec, settings
         emit('compose', 65, 'Composing final video…', cycle);
         const testMode = state.script!.source === 'mock' || state.voice!.source === 'mock' || state.background!.source === 'mock';
         state.composed = await composeVideo({
+          brand: spec.brand,
           backgroundVideoPath: state.background!.videoPath,
           voiceAudioPath: state.voice!.audioPath,
           musicAudioPath: state.music?.path ?? null,
@@ -136,10 +139,19 @@ async function runVideoJob(runId: string, jobId: string, spec: JobSpec, settings
           logoPath: settings.logoPath || null,
           fontsDir,
           durationSeconds: state.targetDuration!,
-          outputPath: path.join(workDir, 'final.mp4'),
+          outputPath: path.join(workDir, 'main.mp4'),
           testModeWatermark: testMode,
         });
         state.testMode = testMode;
+
+        emit('compose', 72, 'Adding brand intro and outro…', cycle);
+        const { introPath, outroPath } = await getOrCreateBrandFrames(spec.brand, settings.logoPath || null, fontsDir);
+        state.assembled = await assembleFinalVideo({
+          introPath,
+          mainVideoPath: state.composed.outputPath,
+          outroPath,
+          outputPath: path.join(workDir, 'final.mp4'),
+        });
       }
 
       if (atOrAfter('captions', restartFrom)) {
@@ -164,17 +176,21 @@ async function runVideoJob(runId: string, jobId: string, spec: JobSpec, settings
       }
 
       emit('quality', 93, 'Running quality checks…', cycle);
-      quality = await runQualityChecks({
-        brand: spec.brand,
-        affirmationText: state.script!.text,
-        voiceAudioPath: state.voice!.audioPath,
-        finalVideoPath: state.composed!.outputPath,
-        cues: state.subtitles!.cues,
-        backgroundSource: state.background!.source,
-        pexelsConfigured: Boolean(settings.pexelsApiKey),
-        musicUsed: Boolean(state.music),
-        musicConfigured: isMusicConfigured(settings.musicFolder),
-      });
+      quality = await runQualityChecks(
+        {
+          brand: spec.brand,
+          affirmationText: state.script!.text,
+          voiceAudioPath: state.voice!.audioPath,
+          mainVideoPath: state.composed!.outputPath,
+          finalVideoPath: state.assembled!.outputPath,
+          cues: state.subtitles!.cues,
+          backgroundSource: state.background!.source,
+          pexelsConfigured: Boolean(settings.pexelsApiKey),
+          musicUsed: Boolean(state.music),
+          musicConfigured: isMusicConfigured(settings.musicFolder),
+        },
+        settings.qualityThreshold,
+      );
 
       if (quality.passed || !quality.regenerateComponent) break;
       if (cycle >= MAX_QUALITY_CYCLES) {
@@ -192,7 +208,7 @@ async function runVideoJob(runId: string, jobId: string, spec: JobSpec, settings
       date,
       brand: spec.brand,
       index: spec.index,
-      videoPath: state.composed!.outputPath,
+      videoPath: state.assembled!.outputPath,
       thumbnailPath: state.thumbnail!.outputPath,
       captions: state.social!.captions,
       hashtags: state.social!.hashtags,
@@ -212,11 +228,13 @@ async function runVideoJob(runId: string, jobId: string, spec: JobSpec, settings
       hashtagsPath: exported.hashtagsPath,
       hashtags: state.social!.hashtags,
       captions: state.social!.captions,
-      durationSeconds: state.composed!.durationSeconds,
+      durationSeconds: state.assembled!.durationSeconds,
       createdAt: new Date().toISOString(),
       qualityPassed: quality?.passed ?? false,
       qualityIssues: quality ? quality.checks.filter((c) => !c.passed).map((c) => `${c.name}: ${c.message}`) : [],
+      qualityScore: quality?.score ?? { emotionalImpact: 0, visualQuality: 0, captionReadability: 0, overall: 0 },
       testMode: state.testMode ?? false,
+      approved: false,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -302,7 +320,7 @@ export function startDailyGeneration(settings: Settings, date: string): { runId:
 
   const specs: JobSpec[] = [];
   for (const brand of ALL_BRAND_IDS) {
-    const topics = historyStore.pickNextTopics(brand, VIDEOS_PER_BRAND);
+    const topics = historyStore.pickNextTopics(brand, VIDEOS_PER_BRAND, settings.enabledContentModes?.[brand]);
     topics.forEach((topicKey, i) => specs.push({ brand, index: i + 1, topicKey }));
   }
 
@@ -378,8 +396,8 @@ export function startSingleVideoRegeneration(settings: Settings, date: string, b
   const jobId = newId('job');
   log.info(`Starting single-video regeneration ${runId} for ${date} ${brand}/${index}`);
 
-  const [topicKey] = historyStore.pickNextTopics(brand, 1);
-  const spec: JobSpec = { brand, index, topicKey: topicKey ?? getBrand(brand).topics[0]?.key ?? 'gratitude' };
+  const [topicKey] = historyStore.pickNextTopics(brand, 1, settings.enabledContentModes?.[brand]);
+  const spec: JobSpec = { brand, index, topicKey: topicKey ?? getBrand(brand).topics[0]?.key ?? '' };
 
   const initialJob: VideoJobProgress = {
     jobId,

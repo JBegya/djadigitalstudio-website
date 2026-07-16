@@ -116,6 +116,13 @@ export function getBackgroundCacheDir(): string {
   return dir;
 }
 
+/** Cached, pre-rendered brand intro/outro clips — identical per brand, so they're rendered once and reused rather than re-encoded for every video. */
+export function getBrandFramesCacheDir(): string {
+  const dir = path.join(getCacheDir(), 'brand-frames');
+  ensureDir(dir);
+  return dir;
+}
+
 export function getRenderWorkDir(runId: string, jobId: string): string {
   const dir = path.join(getCacheDir(), 'render', runId, jobId);
   ensureDir(dir);

@@ -10,9 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { getSettings, openLogsFolder, updateSettings, type RedactedSettings } from '@/lib/api';
+import { getBrands, getSettings, openLogsFolder, updateSettings, type BrandSummary, type RedactedSettings } from '@/lib/api';
 import { isElectron, pickFolder, pickImageFile } from '@/lib/desktop';
-import type { SubtitlePosition, VoicePreset } from '@/types/domain';
+import { cn } from '@/lib/utils';
+import type { BrandId, SubtitlePosition, VoicePreset } from '@/types/domain';
 
 const VOICE_OPTIONS: { value: VoicePreset; label: string }[] = [
   { value: 'warm-female', label: 'Warm Female' },
@@ -29,11 +30,13 @@ const POSITION_OPTIONS: { value: SubtitlePosition; label: string }[] = [
 
 export function SettingsScreen() {
   const [settings, setSettings] = useState<RedactedSettings | null>(null);
+  const [brands, setBrands] = useState<BrandSummary[]>([]);
   const [saving, setSaving] = useState(false);
   const electron = isElectron();
 
   useEffect(() => {
     getSettings().then(setSettings).catch(() => toast.error('Could not load settings'));
+    getBrands().then(({ brands }) => setBrands(brands)).catch(() => toast.error('Could not load content modes'));
   }, []);
 
   async function save(patch: Partial<RedactedSettings>) {
@@ -48,6 +51,22 @@ export function SettingsScreen() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function toggleMode(brand: BrandId, allModeKeys: string[], modeKey: string) {
+    if (!settings) return;
+    const current = settings.enabledContentModes[brand];
+    // Undefined/omitted means "all enabled" — expand to an explicit list on first toggle so a
+    // single click reads as "disable just this one," not "disable everything else too."
+    const enabled = current ?? allModeKeys;
+    const next = enabled.includes(modeKey) ? enabled.filter((k) => k !== modeKey) : [...enabled, modeKey];
+    // Never allow a brand to end up with zero eligible modes — the generator would have nothing to pick from.
+    if (next.length === 0) {
+      toast.error('At least one Content Mode must stay enabled per brand.');
+      return;
+    }
+    const nextEnabledContentModes = { ...settings.enabledContentModes, [brand]: next.length === allModeKeys.length ? undefined : next };
+    save({ enabledContentModes: nextEnabledContentModes });
   }
 
   if (!settings) {
@@ -122,6 +141,73 @@ export function SettingsScreen() {
                   value={settings.logoPath}
                   onChange={(v) => save({ logoPath: v })}
                   onBrowse={electron ? async () => pickImageFile(settings.logoPath) : undefined}
+                />
+              </Field>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Content Modes</CardTitle>
+              <CardDescription>
+                Each daily run auto-balances across these categories per brand so coverage stays varied over time. Toggle any
+                off to exclude them for now — at least one must stay on per brand.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {brands.length === 0 && <p className="text-sm text-muted-foreground">Loading…</p>}
+              {brands.map((brand) => {
+                const allModeKeys = brand.contentModes.map((m) => m.key);
+                const enabled = settings.enabledContentModes[brand.id] ?? allModeKeys;
+                return (
+                  <div key={brand.id} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: brand.accentColor }} />
+                      <Label>{brand.name}</Label>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {brand.contentModes.map((mode) => {
+                        const isOn = enabled.includes(mode.key);
+                        return (
+                          <button
+                            key={mode.key}
+                            type="button"
+                            onClick={() => toggleMode(brand.id, allModeKeys, mode.key)}
+                            className={cn(
+                              'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                              isOn
+                                ? 'border-transparent bg-secondary text-secondary-foreground'
+                                : 'border-input text-muted-foreground opacity-60 hover:opacity-100',
+                            )}
+                          >
+                            {mode.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Quality Bar</CardTitle>
+              <CardDescription>
+                Every video gets Emotional Impact, Visual Quality, and Caption Readability scores out of 10. If the Overall
+                score falls below this threshold, the weakest-scoring part is automatically regenerated (up to 3 attempts).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Field label={`Minimum Overall Score — ${settings.qualityThreshold.toFixed(1)}/10`}>
+                <Slider
+                  min={7}
+                  max={10}
+                  step={0.5}
+                  value={[settings.qualityThreshold]}
+                  onValueChange={([v]) => setSettings({ ...settings, qualityThreshold: v ?? settings.qualityThreshold })}
+                  onValueCommit={([v]) => save({ qualityThreshold: v })}
                 />
               </Field>
             </CardContent>

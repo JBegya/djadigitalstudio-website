@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Copy, FolderOpen, Loader2, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Copy, FolderOpen, Loader2, RefreshCw } from 'lucide-react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getSettings, listHistory, mediaUrl, regenerateVideo, subscribeToRun } from '@/lib/api';
+import { getSettings, listHistory, mediaUrl, regenerateVideo, setVideoApproved, subscribeToRun } from '@/lib/api';
 import { openFolderPath } from '@/lib/desktop';
 import { STAGE_LABELS } from '@/lib/pipelineStages';
 import { cn, formatDateLabel, formatDuration } from '@/lib/utils';
@@ -47,6 +47,14 @@ export function PreviewScreen() {
     return allRuns[0] ?? null;
   }, [allRuns, requestedDate]);
 
+  // Two full-batch runs on the same date (re-generating an entire day) both carry that date —
+  // dedupe by date, keeping the most recent (allRuns is already newest-first), so the date
+  // picker never renders two options with the same value.
+  const runsByDate = useMemo(() => {
+    const seen = new Set<string>();
+    return allRuns.filter((r) => (seen.has(r.date) ? false : (seen.add(r.date), true)));
+  }, [allRuns]);
+
   const nurseVideos = activeEntry?.videos.filter((v) => v.brand === 'nurse') ?? [];
   const autismVideos = activeEntry?.videos.filter((v) => v.brand === 'autism') ?? [];
 
@@ -60,18 +68,25 @@ export function PreviewScreen() {
       <main className="mx-auto max-w-5xl px-6 py-12">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-semibold text-foreground">Preview Videos</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{activeEntry ? formatDateLabel(activeEntry.date) : 'No videos yet'}</p>
+            <h1 className="font-display text-2xl font-semibold text-foreground">Today&apos;s Videos</h1>
+            <div className="mt-1 flex items-center gap-2">
+              <p className="text-sm text-muted-foreground">{activeEntry ? formatDateLabel(activeEntry.date) : 'No videos yet'}</p>
+              {activeEntry && activeEntry.videos.length > 0 && (
+                <Badge variant={activeEntry.videos.every((v) => v.approved) ? 'success' : 'secondary'}>
+                  {activeEntry.videos.filter((v) => v.approved).length} of {activeEntry.videos.length} approved
+                </Badge>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            {allRuns.length > 0 && (
+            {runsByDate.length > 0 && (
               <Select value={activeEntry?.date} onValueChange={(date) => router.push(`/preview?date=${date}`)}>
                 <SelectTrigger className="w-52">
                   <SelectValue placeholder="Select a date" />
                 </SelectTrigger>
                 <SelectContent>
-                  {allRuns.map((r) => (
-                    <SelectItem key={r.runId} value={r.date}>
+                  {runsByDate.map((r) => (
+                    <SelectItem key={r.date} value={r.date}>
                       {formatDateLabel(r.date)}
                     </SelectItem>
                   ))}
@@ -95,8 +110,8 @@ export function PreviewScreen() {
 
         {activeEntry && (
           <div className="space-y-10">
-            <BrandSection title="Nurse Affirmations" variant="nurse" videos={nurseVideos} date={activeEntry.date} onRegenerated={refreshHistory} />
-            <BrandSection title="Autism Parent Affirmations" variant="autism" videos={autismVideos} date={activeEntry.date} onRegenerated={refreshHistory} />
+            <BrandSection title="Nurse Affirmations" variant="nurse" videos={nurseVideos} date={activeEntry.date} onDataChanged={refreshHistory} />
+            <BrandSection title="Autism Parent Affirmations" variant="autism" videos={autismVideos} date={activeEntry.date} onDataChanged={refreshHistory} />
           </div>
         )}
       </main>
@@ -109,13 +124,13 @@ function BrandSection({
   variant,
   videos,
   date,
-  onRegenerated,
+  onDataChanged,
 }: {
   title: string;
   variant: 'nurse' | 'autism';
   videos: VideoResult[];
   date: string;
-  onRegenerated: () => void;
+  onDataChanged: () => void;
 }) {
   if (videos.length === 0) return null;
   return (
@@ -126,18 +141,21 @@ function BrandSection({
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {videos.map((video) => (
-          <VideoCard key={`${video.brand}-${video.index}`} video={video} date={date} onRegenerated={onRegenerated} />
+          <VideoCard key={`${video.brand}-${video.index}`} video={video} date={date} onDataChanged={onDataChanged} />
         ))}
       </div>
     </section>
   );
 }
 
-function VideoCard({ video, date, onRegenerated }: { video: VideoResult; date: string; onRegenerated: () => void }) {
+function VideoCard({ video, date, onDataChanged }: { video: VideoResult; date: string; onDataChanged: () => void }) {
   const [regenJob, setRegenJob] = useState<VideoJobProgress | null>(null);
+  const [approved, setApproved] = useState(video.approved);
+  const [approving, setApproving] = useState(false);
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => () => unsubscribeRef.current?.(), []);
+  useEffect(() => setApproved(video.approved), [video.approved]);
 
   const isRegenerating = Boolean(regenJob && regenJob.stage !== 'done' && regenJob.stage !== 'failed');
 
@@ -149,10 +167,26 @@ function VideoCard({ video, date, onRegenerated }: { video: VideoResult; date: s
       unsubscribeRef.current = subscribeToRun(
         runId,
         (run) => setRegenJob(run.jobs[0] ?? null),
-        () => onRegenerated(),
+        () => onDataChanged(),
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to start regeneration');
+    }
+  }
+
+  async function handleToggleApprove() {
+    const next = !approved;
+    setApproved(next); // optimistic — this is a lightweight, low-stakes toggle
+    setApproving(true);
+    try {
+      await setVideoApproved(date, video.brand, video.index, next);
+      if (next) toast.success(`Approved — ${video.brand === 'nurse' ? 'Nurse' : 'Autism Parent'} #${video.index}`);
+      onDataChanged(); // also doubles as "refresh the day's data" — keeps the header's X-of-6 count in sync
+    } catch (error) {
+      setApproved(!next); // roll back on failure
+      toast.error(error instanceof Error ? error.message : 'Could not update approval status');
+    } finally {
+      setApproving(false);
     }
   }
 
@@ -175,6 +209,12 @@ function VideoCard({ video, date, onRegenerated }: { video: VideoResult; date: s
         {video.testMode && (
           <span className="absolute left-2 top-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-medium text-white">TEST MODE</span>
         )}
+        {approved && (
+          <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow">
+            <CheckCircle2 className="h-3 w-3" />
+            Approved
+          </span>
+        )}
         {isRegenerating && regenJob && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/85 px-6 text-center text-white">
             <Loader2 className="h-6 w-6 animate-spin" />
@@ -190,6 +230,12 @@ function VideoCard({ video, date, onRegenerated }: { video: VideoResult; date: s
             <span className="text-xs text-muted-foreground">{formatDuration(video.durationSeconds)}</span>
             <Badge variant={video.qualityPassed ? 'success' : 'warning'}>{video.qualityPassed ? 'Passed QA' : 'Review'}</Badge>
           </div>
+        </div>
+        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+          <span>Emotional {video.qualityScore.emotionalImpact}/10</span>
+          <span>Visual {video.qualityScore.visualQuality}/10</span>
+          <span>Captions {video.qualityScore.captionReadability}/10</span>
+          <span className="font-semibold text-foreground">Overall {video.qualityScore.overall}/10</span>
         </div>
         <p className="line-clamp-3 text-sm text-foreground">{video.affirmationText}</p>
 
@@ -220,11 +266,20 @@ function VideoCard({ video, date, onRegenerated }: { video: VideoResult; date: s
           </Button>
         </div>
 
-        <div className="flex items-center justify-between border-t border-border pt-3">
-          <span className="text-xs text-muted-foreground">{video.qualityPassed ? 'Not happy with this one?' : 'Failed quality checks'}</span>
+        <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
           <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={handleRegenerate} disabled={isRegenerating}>
             <RefreshCw className={cn('h-3 w-3', isRegenerating && 'animate-spin')} />
             Regenerate
+          </Button>
+          <Button
+            size="sm"
+            variant={approved ? 'default' : 'outline'}
+            className={cn('h-7 px-2 text-xs', approved && 'bg-emerald-600 text-white hover:bg-emerald-700')}
+            onClick={handleToggleApprove}
+            disabled={approving || isRegenerating}
+          >
+            <CheckCircle2 className="h-3 w-3" />
+            {approved ? 'Approved' : 'Approve'}
           </Button>
         </div>
       </CardContent>

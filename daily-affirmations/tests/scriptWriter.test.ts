@@ -43,7 +43,7 @@ describe('writeAffirmationScript (mocked OpenAI transport)', () => {
       throw new Error('should never be called in Test Mode');
     };
     const settings = { openaiApiKey: '' } as never;
-    const result = await writeAffirmationScript({ brand: 'nurse', topicKey: 'burnout', settings, avoidExamples: [] });
+    const result = await writeAffirmationScript({ brand: 'nurse', topicKey: 'running-empty', settings, avoidExamples: [] });
     expect(result.source).toBe('mock');
     expect(result.text.length).toBeGreaterThan(0);
   });
@@ -57,7 +57,7 @@ describe('writeAffirmationScript (mocked OpenAI transport)', () => {
     };
     const { writeAffirmationScript } = await import('@/server/ai-services/scriptWriter');
     const settings = { openaiApiKey: 'sk-test' } as never;
-    const result = await writeAffirmationScript({ brand: 'nurse', topicKey: 'burnout', settings, avoidExamples: [] });
+    const result = await writeAffirmationScript({ brand: 'nurse', topicKey: 'running-empty', settings, avoidExamples: [] });
     expect(result.source).toBe('openai');
     expect(result.text).toBe(VALID_AFFIRMATION);
     expect(calls).toBe(2);
@@ -72,7 +72,7 @@ describe('writeAffirmationScript (mocked OpenAI transport)', () => {
     const { writeAffirmationScript } = await import('@/server/ai-services/scriptWriter');
     const settings = { openaiApiKey: 'sk-bad-key' } as never;
     await expect(
-      writeAffirmationScript({ brand: 'nurse', topicKey: 'burnout', settings, avoidExamples: [] }),
+      writeAffirmationScript({ brand: 'nurse', topicKey: 'running-empty', settings, avoidExamples: [] }),
     ).rejects.toThrow('HTTP 401');
     // One content-attempt loop iteration, one underlying HTTP call — no retries, no repeat attempts.
     expect(calls).toBe(1);
@@ -88,7 +88,7 @@ describe('writeAffirmationScript (mocked OpenAI transport)', () => {
     };
     const { writeAffirmationScript } = await import('@/server/ai-services/scriptWriter');
     const settings = { openaiApiKey: 'sk-test' } as never;
-    const result = await writeAffirmationScript({ brand: 'nurse', topicKey: 'burnout', settings, avoidExamples: [] });
+    const result = await writeAffirmationScript({ brand: 'nurse', topicKey: 'running-empty', settings, avoidExamples: [] });
     expect(result.text).toBe(VALID_AFFIRMATION);
     expect(result.attempts).toBe(2);
     expect(calls).toBe(2);

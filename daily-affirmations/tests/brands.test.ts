@@ -32,6 +32,29 @@ describe('brand configuration', () => {
       it('has a substantial banned-phrase list', () => {
         expect(brand.bannedPhrases.length).toBeGreaterThan(10);
       });
+
+      it('has exactly 6 Content Modes with unique keys and non-empty labels', () => {
+        expect(brand.contentModes.length).toBe(6);
+        const keys = brand.contentModes.map((m) => m.key);
+        expect(new Set(keys).size).toBe(6);
+        for (const mode of brand.contentModes) {
+          expect(mode.label.length).toBeGreaterThan(0);
+        }
+      });
+
+      it('every topic belongs to one of the brand’s 6 Content Modes, and every mode has at least one topic', () => {
+        const modeKeys = new Set(brand.contentModes.map((m) => m.key));
+        for (const topic of brand.topics) {
+          expect(modeKeys.has(topic.mode)).toBe(true);
+        }
+        for (const mode of brand.contentModes) {
+          expect(brand.topics.some((t) => t.mode === mode.key)).toBe(true);
+        }
+      });
+
+      it('has a valid accent color hex', () => {
+        expect(brand.accentColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      });
     });
   }
 
@@ -39,5 +62,18 @@ describe('brand configuration', () => {
     const banned = BRANDS.autism.bannedPhrases.join(' ').toLowerCase();
     expect(banned).toContain('special needs');
     expect(banned).toContain('cure');
+  });
+
+  it('the two brands use distinct accent colors matching the cooler/warmer brand direction', () => {
+    expect(BRANDS.nurse.accentColor).not.toBe(BRANDS.autism.accentColor);
+  });
+
+  it('Content Mode labels match the exact category names the business specified', () => {
+    expect(BRANDS.nurse.contentModes.map((m) => m.label).sort()).toEqual(
+      ['Burnout', 'Gratitude', 'Leadership', 'Morning Motivation', 'Night Shift', 'Self Care'].sort(),
+    );
+    expect(BRANDS.autism.contentModes.map((m) => m.label).sort()).toEqual(
+      ['Burnout', 'Hard Days', 'Hope', 'School', 'Small Wins', 'Therapy'].sort(),
+    );
   });
 });

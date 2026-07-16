@@ -64,3 +64,21 @@ export function hasRepeatedWordRun(text: string, minRun = 3): boolean {
 export function containsEmoji(text: string): boolean {
   return /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(text);
 }
+
+/**
+ * Flags the "list-like parallelism" AI-tell — three or more sentences opening with the exact
+ * same two words ("You are enough. You are worthy. You are strong.") rather than natural,
+ * varied phrasing. Deliberately narrow (same two-word opening, not just the same subject) so it
+ * doesn't penalize ordinary second-person narration, which this content is written in on
+ * purpose and will legitimately start more than one sentence with "You".
+ */
+export function hasRepetitiveSentenceOpenings(text: string, minRepeats = 3): boolean {
+  const counts = new Map<string, number>();
+  for (const sentence of splitSentences(text)) {
+    const words = normalizeForComparison(sentence).split(' ').filter(Boolean);
+    const opening = words.slice(0, 2).join(' ');
+    if (!opening) continue;
+    counts.set(opening, (counts.get(opening) ?? 0) + 1);
+  }
+  return [...counts.values()].some((count) => count >= minRepeats);
+}

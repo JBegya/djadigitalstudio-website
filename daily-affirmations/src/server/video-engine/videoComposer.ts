@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import type { BrandId } from '@/types/domain';
 import { createLogger } from '@/server/utils/logger';
-import { escapeDrawtext, escapeFilterPath } from './ffmpegExpr';
+import { buildColorGradeFilter, escapeDrawtext, escapeFilterPath } from './ffmpegExpr';
 import { runFfmpeg, probeDurationSeconds } from './ffmpeg';
 import { buildLogoFilterChain } from './logoOverlay';
 
@@ -14,7 +15,58 @@ const MAX_ZOOM = 1.16;
 const LOGO_WIDTH_PX = 132;
 const LOGO_MARGIN_PX = 44;
 
+// Nurse Affirmations reads cooler (dusty-blue, clinical calm); Autism Parent Affirmations reads
+// warmer (golden, homey) — the same shared DJ&A grade technique, tuned per series so each is
+// instantly recognisable while both still feel like one brand. See ffmpegExpr.buildColorGradeFilter.
+function gradeTemperatureFor(brand: BrandId): 'cooler' | 'warmer' {
+  return brand === 'nurse' ? 'cooler' : 'warmer';
+}
+
+export type KenBurnsStyle = 'zoom-only' | 'pan-horizontal' | 'pan-vertical';
+
+/** Picks a random but bounded Ken Burns treatment — not every video pans, which itself reads more natural than a uniform effect on every single clip. */
+export function pickKenBurnsStyle(): { style: KenBurnsStyle; direction: 1 | -1 } {
+  const styles: KenBurnsStyle[] = ['zoom-only', 'pan-horizontal', 'pan-vertical'];
+  const style = styles[Math.floor(Math.random() * styles.length)] as KenBurnsStyle;
+  const direction: 1 | -1 = Math.random() < 0.5 ? 1 : -1;
+  return { style, direction };
+}
+
+// How much of the zoom-created "slack" (the crop room that opens up as the frame zooms in) the
+// pan uses — kept well under 1.0 so the pan always stays inside the zoomed frame at every point
+// in the clip, including the very first frame where zoom (and therefore slack) is near zero.
+const PAN_FRACTION = 0.35;
+
+/**
+ * Builds the zoompan filter's z/x/y expressions for a smooth, centered Ken Burns zoom, with an
+ * optional gentle pan layered on top. Frame-count-based (not the incremental `zoom+step`
+ * self-reference form) so the zoom curve is exact and reproducible rather than drifting from
+ * accumulated per-frame rounding. The pan offset is expressed as a fraction of the CURRENT
+ * frame's own zoom-dependent slack (`iw-iw/zoom`), which is what keeps it mathematically safe
+ * at every zoom level — a fixed pixel offset would overflow the frame near the start of the
+ * clip, where zoom is still ~1 and there is essentially no slack to pan into.
+ */
+export function buildKenBurnsExpr(
+  kenBurns: { style: KenBurnsStyle; direction: 1 | -1 },
+  totalFrames: number,
+  maxZoom = MAX_ZOOM,
+): { zoomExpr: string; xExpr: string; yExpr: string } {
+  const rate = (maxZoom - 1) / totalFrames;
+  const zoomExpr = `min(1+${rate.toFixed(8)}*on,${maxZoom})`;
+  const centeredX = `(iw-iw/zoom)/2`;
+  const centeredY = `(ih-ih/zoom)/2`;
+  const panOffset = (slackExpr: string) =>
+    `${slackExpr}*${PAN_FRACTION}*(on/${totalFrames}-0.5)*${kenBurns.direction}`;
+
+  return {
+    zoomExpr,
+    xExpr: kenBurns.style === 'pan-horizontal' ? `${centeredX}+${panOffset('(iw-iw/zoom)')}` : centeredX,
+    yExpr: kenBurns.style === 'pan-vertical' ? `${centeredY}+${panOffset('(ih-ih/zoom)')}` : centeredY,
+  };
+}
+
 export interface ComposeRequest {
+  brand: BrandId;
   backgroundVideoPath: string;
   voiceAudioPath: string;
   musicAudioPath?: string | null;
@@ -34,7 +86,8 @@ export interface ComposeResult {
 function buildVideoChain(request: ComposeRequest, hasLogo: boolean, logoInputIndex: number): string {
   const { durationSeconds, assSubtitlePath, fontsDir } = request;
   const totalFrames = Math.max(1, Math.round(durationSeconds * CANVAS_FPS));
-  const zoomIncrement = (MAX_ZOOM - 1) / totalFrames;
+  const kenBurns = pickKenBurnsStyle();
+  const { zoomExpr, xExpr, yExpr } = buildKenBurnsExpr(kenBurns, totalFrames);
 
   const assFile = escapeFilterPath(assSubtitlePath);
   const fontsDirEsc = escapeFilterPath(fontsDir);
@@ -42,7 +95,8 @@ function buildVideoChain(request: ComposeRequest, hasLogo: boolean, logoInputInd
   const steps = [
     `scale=${CANVAS_WIDTH}:${CANVAS_HEIGHT}:force_original_aspect_ratio=increase`,
     `crop=${CANVAS_WIDTH}:${CANVAS_HEIGHT}`,
-    `zoompan=z='min(zoom+${zoomIncrement.toFixed(8)},${MAX_ZOOM})':d=1:s=${CANVAS_WIDTH}x${CANVAS_HEIGHT}:fps=${CANVAS_FPS}`,
+    `zoompan=z='${zoomExpr}':x='${xExpr}':y='${yExpr}':d=1:s=${CANVAS_WIDTH}x${CANVAS_HEIGHT}:fps=${CANVAS_FPS}`,
+    buildColorGradeFilter(gradeTemperatureFor(request.brand)),
     `ass=filename=${assFile}:fontsdir=${fontsDirEsc}`,
   ];
 
@@ -75,7 +129,18 @@ function buildVideoChain(request: ComposeRequest, hasLogo: boolean, logoInputInd
 
 function buildAudioChain(request: ComposeRequest, hasMusic: boolean, musicInputIndex: number): string {
   const { durationSeconds } = request;
-  const voiceNormalized = `[1:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[voiceN]`;
+  const d = durationSeconds.toFixed(2);
+  // The voice track is naturally shorter than the target duration (targetDuration = voice
+  // length + 1.2s breathing room, see orchestrator.ts) — apad+atrim pads it with trailing
+  // silence out to the exact target instead of leaving the audio stream short. Without this,
+  // the exported file's audio track ends before its video track: invisible in a lenient
+  // player, but a real mismatch that corrupts duration metadata once this clip is
+  // concatenated with the brand intro/outro (see videoAssembly.ts). The bundled ffmpeg build
+  // only has apad's older `whole_len` (a sample COUNT, not `whole_dur`/duration string added in
+  // later ffmpeg releases), hence the explicit sample-rate multiplication.
+  const AUDIO_SAMPLE_RATE = 44100;
+  const wholeLenSamples = Math.round(durationSeconds * AUDIO_SAMPLE_RATE);
+  const voiceNormalized = `[1:a]aformat=sample_fmts=fltp:sample_rates=${AUDIO_SAMPLE_RATE}:channel_layouts=stereo,apad=whole_len=${wholeLenSamples},atrim=0:${d}[voiceN]`;
 
   if (!hasMusic) {
     return `${voiceNormalized};[voiceN]loudnorm=I=-16:TP=-1.5:LRA=11[aout]`;
@@ -84,9 +149,12 @@ function buildAudioChain(request: ComposeRequest, hasMusic: boolean, musicInputI
   return [
     voiceNormalized,
     `[voiceN]asplit=2[voice1][voice2]`,
-    `[${musicInputIndex}:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,aloop=loop=-1:size=2000000000,atrim=0:${durationSeconds.toFixed(2)},asetpts=N/SR/TB,volume=0.22[musicbed]`,
+    `[${musicInputIndex}:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,aloop=loop=-1:size=2000000000,atrim=0:${d},asetpts=N/SR/TB,volume=0.22[musicbed]`,
     `[musicbed][voice1]sidechaincompress=threshold=0.045:ratio=9:attack=6:release=320:makeup=1[ducked]`,
-    `[voice2][ducked]amix=inputs=2:duration=first:weights='1 1',loudnorm=I=-16:TP=-1.5:LRA=11[aout]`,
+    // duration=longest (not the previous 'first') so the mix runs the full target length even
+    // after the voice's own padded track and the music bed agree on that length — 'first'
+    // silently truncated to whichever input's filter chain happened to settle first.
+    `[voice2][ducked]amix=inputs=2:duration=longest:weights='1 1',loudnorm=I=-16:TP=-1.5:LRA=11,atrim=0:${d}[aout]`,
   ].join(';');
 }
 

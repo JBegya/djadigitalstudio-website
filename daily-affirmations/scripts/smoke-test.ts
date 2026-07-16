@@ -17,6 +17,7 @@ import { fetchBackgroundVideo } from '../src/server/media-services/backgroundMed
 import { pickMusicTrack } from '../src/server/media-services/musicService';
 import { generateSubtitles } from '../src/server/video-engine/subtitleService';
 import { CANVAS_HEIGHT, CANVAS_WIDTH, composeVideo } from '../src/server/video-engine/videoComposer';
+import { assembleFinalVideo, getOrCreateBrandFrames } from '../src/server/video-engine/videoAssembly';
 import { generateThumbnail } from '../src/server/video-engine/thumbnailService';
 import { runQualityChecks } from '../src/server/quality-engine';
 import { getBundledMusicDir, getFontsDir } from '../src/server/config/paths';
@@ -41,11 +42,13 @@ async function main() {
     subtitleFont: 'Inter',
     subtitleColor: '#FFFFFF',
     subtitlePosition: 'bottom',
+    enabledContentModes: {},
+    qualityThreshold: 9,
   };
   const fontsDir = getFontsDir();
 
   step('Writing affirmation script');
-  const script = await writeAffirmationScript({ brand: 'nurse', topicKey: 'burnout', settings, avoidExamples: [] });
+  const script = await writeAffirmationScript({ brand: 'nurse', topicKey: 'running-empty', settings, avoidExamples: [] });
   console.log(`  "${script.text}" (${script.wordCount} words, source=${script.source})`);
 
   step('Generating voiceover');
@@ -56,7 +59,7 @@ async function main() {
   step('Selecting background footage');
   const background = await fetchBackgroundVideo({
     brand: 'nurse',
-    topicKey: 'burnout',
+    topicKey: 'running-empty',
     durationSeconds: targetDuration,
     settings,
     outputPath: path.join(workDir, 'background.mp4'),
@@ -79,8 +82,9 @@ async function main() {
   const music = pickMusicTrack(settings.musicFolder);
   console.log(`  ${music ? music.fileName : '(none found)'}`);
 
-  step('Composing final video');
+  step('Composing main content clip');
   const composed = await composeVideo({
+    brand: 'nurse',
     backgroundVideoPath: background.videoPath,
     voiceAudioPath: voice.audioPath,
     musicAudioPath: music?.path ?? null,
@@ -88,10 +92,20 @@ async function main() {
     logoPath: settings.logoPath,
     fontsDir,
     durationSeconds: targetDuration,
-    outputPath: path.join(workDir, 'final.mp4'),
+    outputPath: path.join(workDir, 'main.mp4'),
     testModeWatermark: true,
   });
   console.log(`  ${composed.outputPath} (${composed.durationSeconds.toFixed(1)}s)`);
+
+  step('Rendering brand intro/outro and assembling final video');
+  const { introPath, outroPath } = await getOrCreateBrandFrames('nurse', settings.logoPath, fontsDir);
+  const assembled = await assembleFinalVideo({
+    introPath,
+    mainVideoPath: composed.outputPath,
+    outroPath,
+    outputPath: path.join(workDir, 'final.mp4'),
+  });
+  console.log(`  ${assembled.outputPath} (${assembled.durationSeconds.toFixed(1)}s total)`);
 
   step('Writing captions + hashtags');
   const social = await writeSocialCopy({ brand: 'nurse', topicLabel: script.topicLabel, affirmationText: script.text, settings });
@@ -112,7 +126,8 @@ async function main() {
     brand: 'nurse',
     affirmationText: script.text,
     voiceAudioPath: voice.audioPath,
-    finalVideoPath: composed.outputPath,
+    mainVideoPath: composed.outputPath,
+    finalVideoPath: assembled.outputPath,
     cues: subtitles.cues,
     backgroundSource: background.source,
     pexelsConfigured: Boolean(settings.pexelsApiKey),
@@ -120,8 +135,11 @@ async function main() {
     musicConfigured: true,
   });
   for (const check of quality.checks) {
-    console.log(`  [${check.passed ? 'PASS' : 'FAIL'}] ${check.name}: ${check.message}`);
+    console.log(`  [${check.passed ? 'PASS' : 'FAIL'}] ${check.name} (${check.score}/10): ${check.message}`);
   }
+  console.log(
+    `\n  Emotional Impact  ${quality.score.emotionalImpact}/10\n  Visual Quality    ${quality.score.visualQuality}/10\n  Caption Readability ${quality.score.captionReadability}/10\n  Overall           ${quality.score.overall}/10`,
+  );
 
   console.log(`\n${quality.passed ? '✅ Smoke test passed' : '⚠️  Smoke test finished with quality warnings'} — output in ${workDir}`);
   if (!quality.passed) process.exitCode = 1;

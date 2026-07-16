@@ -1,6 +1,13 @@
-import type { BrandId, GenerationHistoryEntry, GenerationRunProgress, Settings } from '@/types/domain';
+import type { BrandId, ContentMode, GenerationHistoryEntry, GenerationRunProgress, Settings } from '@/types/domain';
 
 export type RedactedSettings = Settings & { hasOpenAiKey: boolean; hasPexelsKey: boolean };
+
+export interface BrandSummary {
+  id: BrandId;
+  name: string;
+  contentModes: ContentMode[];
+  accentColor: string;
+}
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -22,6 +29,10 @@ async function json<T>(res: Response): Promise<T> {
 
 export async function getSettings(): Promise<RedactedSettings> {
   return json(await fetch('/api/settings', { cache: 'no-store' }));
+}
+
+export async function getBrands(): Promise<{ brands: BrandSummary[] }> {
+  return json(await fetch('/api/brands', { cache: 'no-store' }));
 }
 
 export async function updateSettings(patch: Partial<Settings>): Promise<RedactedSettings> {
@@ -65,6 +76,16 @@ export async function regenerateVideo(date: string, brand: BrandId, index: numbe
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ date, brand, index }),
+    }),
+  );
+}
+
+export async function setVideoApproved(date: string, brand: BrandId, index: number, approved: boolean): Promise<{ entry: GenerationHistoryEntry }> {
+  return json(
+    await fetch('/api/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, brand, index, approved }),
     }),
   );
 }

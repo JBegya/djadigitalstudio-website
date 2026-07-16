@@ -64,7 +64,10 @@ export async function fetchBackgroundVideo(request: BackgroundRequest): Promise<
 
   const brandDef = getBrand(brand);
   const topic = brandDef.topics.find((t) => t.key === topicKey);
-  const keywordPool = shuffle([...(topic?.keywords ?? []), ...brandDef.backgroundKeywordHints]);
+  // Exhaust the angle's own emotion-matched keywords first (e.g. burnout's "empty beach
+  // overcast sky", "quiet empty road fog") before falling back to the brand's generic mood
+  // pool — a specific emotional match should always be preferred over a merely-on-brand one.
+  const keywordPool = [...shuffle(topic?.keywords ?? []), ...shuffle(brandDef.backgroundKeywordHints)];
   const excludeIds = readUsedIds();
 
   for (const keyword of keywordPool) {

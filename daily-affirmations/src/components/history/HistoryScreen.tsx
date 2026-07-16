@@ -44,6 +44,7 @@ export function HistoryScreen() {
           {runs?.map((run) => {
             const nurseCount = run.videos.filter((v) => v.brand === 'nurse').length;
             const autismCount = run.videos.filter((v) => v.brand === 'autism').length;
+            const approvedCount = run.videos.filter((v) => v.approved).length;
             return (
               <Card
                 key={run.runId}
@@ -57,7 +58,14 @@ export function HistoryScreen() {
                       {nurseCount} Nurse · {autismCount} Autism Parent · {run.videos.length} of 6 videos
                     </p>
                   </div>
-                  <Badge variant={STATUS_VARIANT[run.status]}>{run.status}</Badge>
+                  <div className="flex items-center gap-2">
+                    {run.videos.length > 0 && (
+                      <Badge variant={approvedCount === run.videos.length ? 'success' : 'secondary'}>
+                        {approvedCount}/{run.videos.length} approved
+                      </Badge>
+                    )}
+                    <Badge variant={STATUS_VARIANT[run.status]}>{run.status}</Badge>
+                  </div>
                 </CardContent>
               </Card>
             );

@@ -18,6 +18,10 @@ export interface Settings {
   subtitleFont: string;
   subtitleColor: string; // hex
   subtitlePosition: SubtitlePosition;
+  /** Content Mode keys enabled per brand for daily rotation. Omitted/missing brand = all modes enabled. */
+  enabledContentModes: Partial<Record<BrandId, string[]>>;
+  /** Minimum overall quality score (0-10) a video must clear before export; below it, the weakest component is regenerated. */
+  qualityThreshold: number;
 }
 
 export type PipelineStage =
@@ -63,6 +67,14 @@ export interface CaptionSet {
   youtubeShorts: string;
 }
 
+/** The four headline quality scores (0-10) shown per video — see server/quality-engine/qualityScore.ts for how they're computed. */
+export interface QualityScoreReport {
+  emotionalImpact: number;
+  visualQuality: number;
+  captionReadability: number;
+  overall: number;
+}
+
 export interface VideoResult {
   jobId: string;
   brand: BrandId;
@@ -79,7 +91,10 @@ export interface VideoResult {
   createdAt: string;
   qualityPassed: boolean;
   qualityIssues: string[];
+  qualityScore: QualityScoreReport;
   testMode: boolean;
+  /** Manually reviewed and greenlit for posting — set from the batch Preview screen, tracked so a reviewer can see what's left to check at a glance. */
+  approved: boolean;
 }
 
 export interface GenerationHistoryEntry {
@@ -91,10 +106,18 @@ export interface GenerationHistoryEntry {
   videos: VideoResult[];
 }
 
+/** One of the 6 named categories a brand rotates content through (Content Modes). */
+export interface ContentMode {
+  key: string;
+  label: string;
+}
+
 export interface BrandTopic {
   key: string;
   label: string;
-  /** Pexels search terms that visually match this topic — keeps backgrounds relevant, never random. */
+  /** The ContentMode key this angle belongs to — the unit balanced-rotation picks across. */
+  mode: string;
+  /** Emotion-first Pexels search terms (mood/imagery, not literal occupation nouns) that visually match this angle. */
   keywords: string[];
 }
 
@@ -103,9 +126,14 @@ export interface BrandDefinition {
   name: string;
   folderName: string;
   audience: string[];
+  /** The fixed set of Content Modes this brand rotates across for balanced variety. */
+  contentModes: ContentMode[];
   topics: BrandTopic[];
   toneRules: string[];
   bannedPhrases: string[];
+  /** Shared emotional-imagery fallback pool if an angle's own keywords come up empty on Pexels. */
   backgroundKeywordHints: string[];
   systemPrompt: string;
+  /** This brand's accent hex within the shared DJ&A palette (cooler for Nurse, warmer for Autism Parent). */
+  accentColor: string;
 }

@@ -17,6 +17,8 @@ function defaultSettings(): Settings {
     subtitleFont: 'Inter',
     subtitleColor: '#FFFFFF',
     subtitlePosition: 'bottom',
+    enabledContentModes: {},
+    qualityThreshold: 9,
   };
 }
 
@@ -31,6 +33,8 @@ const SETTINGS_KEYS: Array<keyof Settings> = [
   'subtitleFont',
   'subtitleColor',
   'subtitlePosition',
+  'enabledContentModes',
+  'qualityThreshold',
 ];
 
 function sanitize(candidate: Partial<Settings>, base: Settings): Settings {
@@ -42,6 +46,10 @@ function sanitize(candidate: Partial<Settings>, base: Settings): Settings {
     (merged as Record<keyof Settings, unknown>)[key] = value;
   }
   merged.videoLengthSeconds = Math.min(30, Math.max(15, Math.round(Number(merged.videoLengthSeconds) || 24)));
+  merged.qualityThreshold = Math.min(10, Math.max(0, Number(merged.qualityThreshold) || 9));
+  if (typeof merged.enabledContentModes !== 'object' || merged.enabledContentModes === null || Array.isArray(merged.enabledContentModes)) {
+    merged.enabledContentModes = {};
+  }
   return merged;
 }
 

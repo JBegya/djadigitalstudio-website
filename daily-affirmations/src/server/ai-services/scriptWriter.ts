@@ -3,7 +3,7 @@ import { getBrand } from '@/server/config/brands';
 import { MODELS } from '@/server/config/models';
 import { createLogger } from '@/server/utils/logger';
 import { retryWithBackoff } from '@/server/utils/retry';
-import { containsEmoji, findBannedPhrase, jaccardSimilarity, wordCount } from '@/server/utils/textStats';
+import { containsEmoji, findBannedPhrase, hasRepetitiveSentenceOpenings, jaccardSimilarity, wordCount } from '@/server/utils/textStats';
 import { getOpenAIClient, parseStructuredCompletion } from './openaiClient';
 import { generateMockAffirmation } from './scriptWriterMock';
 
@@ -36,6 +36,7 @@ function validate(text: string, brand: BrandId, avoidExamples: string[]): string
   if (/["“”]/.test(text)) return 'contains quotation marks';
   const banned = findBannedPhrase(text, getBrand(brand).bannedPhrases);
   if (banned) return `contains banned phrase: "${banned}"`;
+  if (hasRepetitiveSentenceOpenings(text)) return 'repetitive, list-like sentence openings (an AI-writing tell)';
   for (const example of avoidExamples) {
     if (jaccardSimilarity(text, example) >= 0.55) return 'too similar to a recent affirmation';
   }
@@ -77,7 +78,11 @@ async function callOpenAI(brand: BrandId, topicLabel: string, settings: Settings
       { role: 'user', content: user },
     ],
     temperature: 1,
-    presence_penalty: 0.4,
+    // presence_penalty pushes the model to cover new ground rather than circling the same
+    // theme; frequency_penalty discourages reusing the exact same words within one script —
+    // together they cut down on the generic, repetitive phrasing that reads as AI-written.
+    presence_penalty: 0.5,
+    frequency_penalty: 0.35,
     response_format: {
       type: 'json_schema',
       json_schema: {

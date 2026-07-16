@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import type { BrandId, GenerationHistoryEntry } from '@/types/domain';
+import type { BrandDefinition, BrandId, GenerationHistoryEntry } from '@/types/domain';
 import { getBrand } from '@/server/config/brands';
 import { getHistoryFilePath, getUsedAffirmationsFilePath } from '@/server/config/paths';
 import { jaccardSimilarity, normalizeForComparison } from '@/server/utils/textStats';
@@ -21,8 +21,78 @@ interface HistoryFile {
   runs: GenerationHistoryEntry[];
 }
 
-const DUPLICATE_SIMILARITY_THRESHOLD = 0.55;
+export const DUPLICATE_SIMILARITY_THRESHOLD = 0.55;
 const TOPIC_LOOKBACK = 6; // don't reuse the same topic within this many most-recent affirmations for the brand
+
+/**
+ * Compares `text` against a set of previously-used affirmations and returns the closest match.
+ * Pure function of its inputs — kept separate from HistoryStore's disk I/O so the similarity
+ * logic itself is directly testable without touching the filesystem.
+ */
+export function findClosestMatch(
+  text: string,
+  previous: Array<{ text: string; normalized: string }>,
+): { duplicate: boolean; closestSimilarity: number; matchedText?: string } {
+  let closest = 0;
+  let matchedText: string | undefined;
+  const normalizedNew = normalizeForComparison(text);
+  for (const record of previous) {
+    if (record.normalized === normalizedNew) return { duplicate: true, closestSimilarity: 1, matchedText: record.text };
+    const sim = jaccardSimilarity(text, record.text);
+    if (sim > closest) {
+      closest = sim;
+      matchedText = record.text;
+    }
+  }
+  return { duplicate: closest >= DUPLICATE_SIMILARITY_THRESHOLD, closestSimilarity: closest, matchedText };
+}
+
+/**
+ * Picks `count` distinct topics as a *balanced mix of Content Modes* — the least-recently-used
+ * mode goes first (a mode never used yet ranks as maximally overdue), rather than picking
+ * topics uniformly at random across the whole pool. Without this, random selection tends to
+ * cluster (e.g. three "Burnout" videos and zero "Leadership" ones in a week) purely by chance.
+ * Within the chosen mode, prefers an angle not used in the last TOPIC_LOOKBACK affirmations so
+ * repeat visits to the same mode still feel specific. Pure function of its inputs — kept
+ * separate from HistoryStore's disk I/O so the rotation algorithm itself is directly testable.
+ */
+export function pickBalancedTopics(
+  brandDef: BrandDefinition,
+  recentTopicsMostRecentLast: string[],
+  count: number,
+  enabledModeKeys?: string[],
+): string[] {
+  const activeModes = enabledModeKeys?.length
+    ? brandDef.contentModes.filter((m) => enabledModeKeys.includes(m.key))
+    : brandDef.contentModes;
+  const modes = activeModes.length > 0 ? activeModes : brandDef.contentModes; // never leave a brand with zero eligible modes
+
+  const topicToMode = new Map(brandDef.topics.map((t) => [t.key, t.mode]));
+
+  // How many affirmations ago each mode was last used, walking back from most recent.
+  // A mode that's never appeared ranks as Infinity — maximally overdue, picked first.
+  const modeAgo = new Map<string, number>(modes.map((m) => [m.key, Infinity]));
+  for (let i = 0; i < recentTopicsMostRecentLast.length; i++) {
+    const topicKey = recentTopicsMostRecentLast[recentTopicsMostRecentLast.length - 1 - i];
+    const mode = topicKey && topicToMode.get(topicKey);
+    if (mode && modeAgo.get(mode) === Infinity) modeAgo.set(mode, i);
+  }
+
+  const modeOrder = [...modes].sort((a, b) => (modeAgo.get(b.key) ?? 0) - (modeAgo.get(a.key) ?? 0));
+  const chosenModes: string[] = [];
+  for (let i = 0; i < count; i++) {
+    chosenModes.push((modeOrder[i % modeOrder.length] ?? modeOrder[0])?.key ?? modes[0]?.key ?? '');
+  }
+
+  const recentTopicKeys = recentTopicsMostRecentLast.slice(-TOPIC_LOOKBACK);
+  return chosenModes.map((modeKey) => {
+    const angles = brandDef.topics.filter((t) => t.mode === modeKey);
+    const fresh = angles.filter((t) => !recentTopicKeys.includes(t.key));
+    const pool = fresh.length > 0 ? fresh : angles;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    return pick?.key ?? angles[0]?.key ?? modeKey;
+  });
+}
 
 function readJson<T>(file: string, fallback: T): T {
   if (!fs.existsSync(file)) return fallback;
@@ -51,21 +121,16 @@ class HistoryStore {
     return this.historyCache;
   }
 
-  /** Checks the new affirmation against everything previously generated for this brand. */
+  /**
+   * Checks the new affirmation against EVERY previously generated affirmation for this brand
+   * (up to the most recent 2000, per the cap in recordAffirmation) — not just a short recent
+   * window. This is the safety net behind the script writer's own live avoid-list (which only
+   * sees the last 10): a near-duplicate of something generated weeks ago still gets caught here
+   * and fails the quality engine's Duplicate Check, forcing a script regeneration.
+   */
   isDuplicate(brand: BrandId, text: string): { duplicate: boolean; closestSimilarity: number; matchedText?: string } {
     const records = this.loadUsed().records.filter((r) => r.brand === brand);
-    let closest = 0;
-    let matchedText: string | undefined;
-    const normalizedNew = normalizeForComparison(text);
-    for (const record of records) {
-      if (record.normalized === normalizedNew) return { duplicate: true, closestSimilarity: 1, matchedText: record.text };
-      const sim = jaccardSimilarity(text, record.text);
-      if (sim > closest) {
-        closest = sim;
-        matchedText = record.text;
-      }
-    }
-    return { duplicate: closest >= DUPLICATE_SIMILARITY_THRESHOLD, closestSimilarity: closest, matchedText };
+    return findClosestMatch(text, records);
   }
 
   /** Most recent affirmation texts for the brand, used to steer the script writer away from repeats. */
@@ -95,29 +160,13 @@ class HistoryStore {
     writeJson(getUsedAffirmationsFilePath(), store);
   }
 
-  /** Picks `count` distinct topics for the brand, preferring ones not used in the last TOPIC_LOOKBACK affirmations. */
-  pickNextTopics(brand: BrandId, count: number): string[] {
+  /** Picks `count` distinct topics for the brand as a balanced mix of Content Modes — see `pickBalancedTopics`. */
+  pickNextTopics(brand: BrandId, count: number, enabledModeKeys?: string[]): string[] {
     const brandDef = getBrand(brand);
-    const allTopicKeys = brandDef.topics.map((t) => t.key);
-    const recent = this.loadUsed()
+    const recentTopics = this.loadUsed()
       .records.filter((r) => r.brand === brand)
-      .slice(-TOPIC_LOOKBACK)
       .map((r) => r.topic);
-
-    const fresh = allTopicKeys.filter((k) => !recent.includes(k));
-    const pool = fresh.length >= count ? fresh : [...fresh, ...allTopicKeys];
-
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    const chosen: string[] = [];
-    for (const topic of shuffled) {
-      if (!chosen.includes(topic)) chosen.push(topic);
-      if (chosen.length === count) break;
-    }
-    // Backfill with random topics (allowing repeats) if the brand has fewer distinct topics than requested.
-    while (chosen.length < count) {
-      chosen.push(allTopicKeys[Math.floor(Math.random() * allTopicKeys.length)] ?? 'gratitude');
-    }
-    return chosen;
+    return pickBalancedTopics(brandDef, recentTopics, count, enabledModeKeys);
   }
 
   recordRun(entry: GenerationHistoryEntry): void {
@@ -139,6 +188,16 @@ class HistoryStore {
 
   getRunById(runId: string): GenerationHistoryEntry | undefined {
     return this.loadHistory().runs.find((r) => r.runId === runId);
+  }
+
+  /** Toggles the reviewed/greenlit flag on one video within a day's run. Returns the updated entry, or null if the date/brand/index doesn't match anything. */
+  setVideoApproved(date: string, brand: BrandId, index: number, approved: boolean): GenerationHistoryEntry | null {
+    const entry = this.getRunByDate(date);
+    const video = entry?.videos.find((v) => v.brand === brand && v.index === index);
+    if (!entry || !video) return null;
+    video.approved = approved;
+    this.recordRun(entry);
+    return entry;
   }
 }
 

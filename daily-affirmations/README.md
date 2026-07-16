@@ -10,22 +10,59 @@ for one person to run every morning.
 
 ## What it does, end to end
 
-For each of the 6 videos, the pipeline:
+Each day's run picks a **balanced mix of Content Modes** per brand (see below) rather than
+random topics, then for each of the 6 videos the pipeline:
 
-1. **Writes an original affirmation** (OpenAI, brand-specific tone rules, never repeats a past one)
+1. **Writes an original affirmation** (OpenAI, brand-specific tone rules tuned for emotional
+   authenticity over generic motivational language, never repeats a past one)
 2. **Records a voiceover** (OpenAI text-to-speech)
-3. **Selects matching background footage** (Pexels, keyword-matched to the topic)
-4. **Times and burns in subtitles** (Whisper word-level alignment, styled captions)
+3. **Selects matching background footage** (Pexels, matched by *emotion* — "quiet sunrise",
+   "empty beach", "rain on window glass" — not literal occupation nouns)
+4. **Times and burns in subtitles** (Whisper word-level alignment, bold styled captions with a
+   soft fade + scale pop-in, positioned inside each platform's safe area)
 5. **Mixes in background music** (auto-ducked under the voice, loudness-normalized)
-6. **Composes the final MP4** (1080×1920, 30fps, slow Ken Burns zoom, logo watermark)
-7. **Writes platform captions + 30 hashtags + a thumbnail hook** (OpenAI)
-8. **Generates a thumbnail** (frame + headline, ≤6 words)
-9. **Runs automated quality checks** (grammar/spelling, tone, duplicate detection, subtitle
-   timing, audio level, video length/resolution) — regenerates just the failing piece, not
-   the whole video
-10. **Exports** into `Exports/YYYY-MM-DD/{Nurse,Autism}/VideoNN.mp4` + thumbnail + caption +
+6. **Composes the main clip** (1080×1920, 30fps, smooth Ken Burns zoom with an occasional gentle
+   pan, a subtle per-brand colour grade, logo watermark)
+7. **Adds the DJ&A brand intro and outro** (a short logo-reveal open and a "Daily Affirmations /
+   follow for daily encouragement" close, rendered once per brand and reused — see Brand
+   identity below)
+8. **Writes platform captions + 30 hashtags + a thumbnail hook** (OpenAI)
+9. **Generates a thumbnail** (frame + headline, ≤6 words)
+10. **Runs automated quality checks and scores the result** (grammar/spelling, tone, duplicate
+    detection, subtitle timing, audio level, video length/resolution) — rolls up into Emotional
+    Impact / Visual Quality / Caption Readability / Overall scores out of 10, and regenerates
+    just the weakest piece (not the whole video) if anything fails outright or the Overall score
+    misses the configured threshold
+11. **Exports** into `Exports/YYYY-MM-DD/{Nurse,Autism}/VideoNN.mp4` + thumbnail + caption +
     hashtags files, ready to upload to Facebook Reels, Instagram Reels, TikTok, and YouTube
     Shorts.
+
+The **Preview** screen shows all 6 of a day's videos on one screen with Play, Regenerate, and
+Approve actions per video, plus each one's quality scores — reviewing a day's batch is a single
+scroll, not six separate opens.
+
+## Content Modes
+
+Instead of picking topics at random, each brand rotates through a fixed set of 6 named
+categories, balanced so the least-recently-used category goes first — three videos a day still
+covers a good spread rather than clustering on whatever topic came up by chance:
+
+- **Nurse Affirmations:** Morning Motivation, Night Shift, Burnout, Leadership, Self Care, Gratitude
+- **Autism Parent Affirmations:** Hard Days, Small Wins, Hope, Therapy, School, Burnout
+
+Each mode has a few specific "angles" under it (e.g. Burnout → *Running on Empty*, *The Weight
+You Carry*, *Finding Your Way Back*) so repeat visits to the same mode still feel like a
+different, specific moment rather than the same prompt reworded — see `src/server/config/brands.ts`.
+Toggle modes off per brand from Settings → Content Modes if you want to temporarily exclude one.
+
+## Brand identity
+
+Nurse Affirmations and Autism Parent Affirmations share one DJ&A identity — the same monogram,
+Inter typography, and intro/outro structure — with a distinct accent per series so viewers can
+tell the two apart at a glance: Nurse leans cooler (dusty blue, clinical calm), Autism Parent
+leans warmer (golden/sage, family warmth). Both the colour grade applied to every clip and the
+Pexels search keywords for each topic follow that same cooler/warmer split. Future series are
+meant to slot into the same pattern — shared bookends and typography, a series-specific accent.
 
 ## Test Mode — try it before adding API keys
 
@@ -61,9 +98,11 @@ npm run electron:dev
 ### Settings
 
 Everything in `.env` can also be set from the in-app **Settings** screen (API keys, output
-folder, music folder, logo, video length, voice, subtitle font/colour/position). Settings
-changes autosave and are stored outside the repo (in your OS's per-user app-data directory), so
-`.env` is only really needed for first-run defaults or headless/CI use.
+folder, music folder, logo, video length, voice, subtitle font/colour/position, which Content
+Modes are active per brand, and the minimum Overall quality score before a component gets
+auto-regenerated). Settings changes autosave and are stored outside the repo (in your OS's
+per-user app-data directory), so `.env` is only really needed for first-run defaults or
+headless/CI use.
 
 ### Adding your own music
 

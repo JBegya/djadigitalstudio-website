@@ -3,6 +3,7 @@ import {
   containsEmoji,
   findBannedPhrase,
   hasRepeatedWordRun,
+  hasRepetitiveSentenceOpenings,
   jaccardSimilarity,
   normalizeForComparison,
   splitSentences,
@@ -74,5 +75,25 @@ describe('containsEmoji', () => {
 describe('splitSentences', () => {
   it('splits on sentence-ending punctuation', () => {
     expect(splitSentences('You made it. Rest now! You earned it.')).toEqual(['You made it.', 'Rest now!', 'You earned it.']);
+  });
+});
+
+describe('hasRepetitiveSentenceOpenings', () => {
+  it('flags three or more sentences sharing the same two-word opening (list-like AI parallelism)', () => {
+    expect(hasRepetitiveSentenceOpenings('You are enough. You are worthy. You are strong.')).toBe(true);
+  });
+
+  it('does not flag two sentences sharing an opening — ordinary second-person narration', () => {
+    expect(hasRepetitiveSentenceOpenings('You held the floor together tonight. You do not have to carry it home too.')).toBe(false);
+  });
+
+  it('does not flag varied, natural sentence openings', () => {
+    const text =
+      'You held the whole unit together tonight. The weight of that shift does not erase your worth. Rest is allowed, and tomorrow you begin again.';
+    expect(hasRepetitiveSentenceOpenings(text)).toBe(false);
+  });
+
+  it('is case- and punctuation-insensitive when matching openings', () => {
+    expect(hasRepetitiveSentenceOpenings('you are enough. You Are worthy! YOU ARE strong.')).toBe(true);
   });
 });

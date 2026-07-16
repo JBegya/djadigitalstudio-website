@@ -6,9 +6,11 @@ import { runFfmpeg } from '@/server/video-engine/ffmpeg';
 
 // Calm gradient used only when there's no Pexels key configured, so the video composer (Ken
 // Burns zoom, subtitles, mixing) can still be exercised end-to-end without stock footage.
+// Colors echo each series' brand accent so even placeholder output reads as on-brand — dusty
+// blue calm for Nurse, warm golden/sage for Autism Parent — see brands.ts's accentColor.
 const BRAND_GRADIENTS: Record<BrandId, { top: [number, number, number]; bottom: [number, number, number] }> = {
-  nurse: { top: [12, 24, 38], bottom: [10, 90, 110] },
-  autism: { top: [30, 16, 42], bottom: [120, 70, 150] },
+  nurse: { top: [12, 20, 32], bottom: [72, 110, 148] },
+  autism: { top: [30, 24, 16], bottom: [156, 142, 96] },
 };
 
 function channelExpr(top: number, bottom: number): string {
