@@ -128,28 +128,33 @@ async function runVideoJob(runId: string, jobId: string, spec: JobSpec, settings
       }
 
       if (atOrAfter('compose', restartFrom)) {
-        emit('compose', 65, 'Composing final video…', cycle);
+        emit('compose', 65, 'Composing final video and brand intro/outro…', cycle);
         const testMode = state.script!.source === 'mock' || state.voice!.source === 'mock' || state.background!.source === 'mock';
-        state.composed = await composeVideo({
-          brand: spec.brand,
-          backgroundVideoPath: state.background!.videoPath,
-          voiceAudioPath: state.voice!.audioPath,
-          musicAudioPath: state.music?.path ?? null,
-          assSubtitlePath: state.subtitles!.assPath,
-          logoPath: settings.logoPath || null,
-          fontsDir,
-          durationSeconds: state.targetDuration!,
-          outputPath: path.join(workDir, 'main.mp4'),
-          testModeWatermark: testMode,
-        });
+        // Independent work — the brand intro/outro (usually a cache hit) don't depend on the
+        // main clip's own render, so there's no reason to make one wait on the other.
+        const [composed, brandFrames] = await Promise.all([
+          composeVideo({
+            brand: spec.brand,
+            backgroundVideoPath: state.background!.videoPath,
+            voiceAudioPath: state.voice!.audioPath,
+            musicAudioPath: state.music?.path ?? null,
+            assSubtitlePath: state.subtitles!.assPath,
+            logoPath: settings.logoPath || null,
+            fontsDir,
+            durationSeconds: state.targetDuration!,
+            outputPath: path.join(workDir, 'main.mp4'),
+            testModeWatermark: testMode,
+          }),
+          getOrCreateBrandFrames(spec.brand, settings.logoPath || null, fontsDir),
+        ]);
+        state.composed = composed;
         state.testMode = testMode;
 
-        emit('compose', 72, 'Adding brand intro and outro…', cycle);
-        const { introPath, outroPath } = await getOrCreateBrandFrames(spec.brand, settings.logoPath || null, fontsDir);
+        emit('compose', 72, 'Assembling final video…', cycle);
         state.assembled = await assembleFinalVideo({
-          introPath,
+          introPath: brandFrames.introPath,
           mainVideoPath: state.composed.outputPath,
-          outroPath,
+          outroPath: brandFrames.outroPath,
           outputPath: path.join(workDir, 'final.mp4'),
         });
       }

@@ -109,7 +109,10 @@ export async function generateThumbnail(request: ThumbnailRequest): Promise<Thum
   let finalLabel = '[base]';
 
   if (hasLogo) {
-    const logoChain = buildLogoFilterChain(request.logoPath as string, LOGO_WIDTH_PX);
+    // Explicit opacity override: the shared default (buildLogoFilterChain's WATERMARK_OPACITY,
+    // tuned for a 20-30s video) reads as nearly invisible on a single static frame, which never
+    // gets that same viewing time to register.
+    const logoChain = buildLogoFilterChain(request.logoPath as string, LOGO_WIDTH_PX, 0.85);
     inputs.push('-i', request.logoPath as string);
     chain += `;[1:v]${logoChain}[wm];[base][wm]overlay=W-w-${LOGO_MARGIN_PX}:H-h-${LOGO_MARGIN_PX}:format=auto[out]`;
     finalLabel = '[out]';

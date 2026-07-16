@@ -46,7 +46,8 @@ function sanitize(candidate: Partial<Settings>, base: Settings): Settings {
     (merged as Record<keyof Settings, unknown>)[key] = value;
   }
   merged.videoLengthSeconds = Math.min(30, Math.max(15, Math.round(Number(merged.videoLengthSeconds) || 24)));
-  merged.qualityThreshold = Math.min(10, Math.max(0, Number(merged.qualityThreshold) || 9));
+  const rawQualityThreshold = Number(merged.qualityThreshold);
+  merged.qualityThreshold = Math.min(10, Math.max(0, Number.isNaN(rawQualityThreshold) ? 9 : rawQualityThreshold));
   if (typeof merged.enabledContentModes !== 'object' || merged.enabledContentModes === null || Array.isArray(merged.enabledContentModes)) {
     merged.enabledContentModes = {};
   }

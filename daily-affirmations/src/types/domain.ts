@@ -136,4 +136,6 @@ export interface BrandDefinition {
   systemPrompt: string;
   /** This brand's accent hex within the shared DJ&A palette (cooler for Nurse, warmer for Autism Parent). */
   accentColor: string;
+  /** Cooler (dusty-blue, clinical) vs warmer (golden, homey) color-grade lean applied to this brand's video footage — see videoComposer.buildColorGradeFilter. */
+  gradeTemperature: 'cooler' | 'warmer';
 }

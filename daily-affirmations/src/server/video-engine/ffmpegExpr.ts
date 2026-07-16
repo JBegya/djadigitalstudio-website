@@ -28,3 +28,34 @@ export function buildColorGradeFilter(temperature: 'cooler' | 'warmer'): string 
       : 'colorbalance=rs=0.04:gs=0.02:bs=-0.03:rm=0.03:gm=0.02:bm=-0.02:rh=0.02:gh=0.01:bh=-0.02';
   return `${balance},eq=contrast=1.07:saturation=1.06:brightness=-0.01`;
 }
+
+/**
+ * The shared H.264/AAC output settings every rendered clip uses — the main composed video, the
+ * cached brand intro/outro, and the final assembled export. Kept in one place so the segments
+ * that later get concatenated together (see videoAssembly.assembleFinalVideo) can never drift
+ * out of encode-parameter sync with each other.
+ */
+export function buildStandardEncodeArgs(fps: number): string[] {
+  return [
+    '-r',
+    String(fps),
+    '-c:v',
+    'libx264',
+    '-preset',
+    'fast',
+    '-crf',
+    '18',
+    '-pix_fmt',
+    'yuv420p',
+    '-c:a',
+    'aac',
+    '-b:a',
+    '192k',
+    '-ar',
+    '44100',
+    '-ac',
+    '2',
+    '-movflags',
+    '+faststart',
+  ];
+}

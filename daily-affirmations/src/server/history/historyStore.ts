@@ -85,12 +85,20 @@ export function pickBalancedTopics(
   }
 
   const recentTopicKeys = recentTopicsMostRecentLast.slice(-TOPIC_LOOKBACK);
+  // Tracks angles already picked earlier in THIS call so a batch never repeats an angle purely
+  // by chance — each slot prefers, in order: not-recent-and-not-yet-chosen, then
+  // not-yet-chosen-even-if-recent, and only falls back to a same-batch repeat when a mode's own
+  // angle pool is smaller than how many times that mode was chosen (unavoidable in that case).
+  const chosenKeys = new Set<string>();
   return chosenModes.map((modeKey) => {
     const angles = brandDef.topics.filter((t) => t.mode === modeKey);
-    const fresh = angles.filter((t) => !recentTopicKeys.includes(t.key));
-    const pool = fresh.length > 0 ? fresh : angles;
+    const notYetChosen = angles.filter((t) => !chosenKeys.has(t.key));
+    const fresh = notYetChosen.filter((t) => !recentTopicKeys.includes(t.key));
+    const pool = fresh.length > 0 ? fresh : notYetChosen.length > 0 ? notYetChosen : angles;
     const pick = pool[Math.floor(Math.random() * pool.length)];
-    return pick?.key ?? angles[0]?.key ?? modeKey;
+    const key = pick?.key ?? angles[0]?.key ?? modeKey;
+    chosenKeys.add(key);
+    return key;
   });
 }
 
@@ -117,7 +125,20 @@ class HistoryStore {
   }
 
   private loadHistory(): HistoryFile {
-    if (!this.historyCache) this.historyCache = readJson(getHistoryFilePath(), { runs: [] });
+    if (!this.historyCache) {
+      const raw = readJson<HistoryFile>(getHistoryFilePath(), { runs: [] });
+      // Backfills fields added to VideoResult after some history.json rows were already written
+      // (qualityScore, approved) so older runs don't crash the Preview screen on load.
+      raw.runs = raw.runs.map((run) => ({
+        ...run,
+        videos: run.videos.map((video) => ({
+          ...video,
+          qualityScore: video.qualityScore ?? { emotionalImpact: 0, visualQuality: 0, captionReadability: 0, overall: 0 },
+          approved: video.approved ?? false,
+        })),
+      }));
+      this.historyCache = raw;
+    }
     return this.historyCache;
   }
 
@@ -171,7 +192,10 @@ class HistoryStore {
 
   recordRun(entry: GenerationHistoryEntry): void {
     const store = this.loadHistory();
-    const existingIndex = store.runs.findIndex((r) => r.runId === entry.runId);
+    // Also match by date (not just runId): re-triggering a full daily generation for a date
+    // that already has an entry mints a brand-new runId, which — without this — would leave the
+    // old entry in place and unshift a second row for the same date instead of replacing it.
+    const existingIndex = store.runs.findIndex((r) => r.runId === entry.runId || r.date === entry.date);
     if (existingIndex >= 0) store.runs[existingIndex] = entry;
     else store.runs.unshift(entry);
     store.runs = store.runs.slice(0, 365);

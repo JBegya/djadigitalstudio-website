@@ -83,6 +83,25 @@ describe('pickBalancedTopics', () => {
       expect(['burnout', 'gratitude']).toContain(modeOf('nurse', key));
     }
   });
+
+  it('never repeats an angle within a single batch when only one mode is enabled (unless the pool is smaller than the batch)', () => {
+    // Nurse "burnout" has exactly 3 angles — a 3-video batch limited to one mode should use
+    // all 3 distinct angles, not land on the same angle twice by chance.
+    for (let i = 0; i < 20; i++) {
+      const picks = pickBalancedTopics(BRANDS.nurse, [], 3, ['burnout']);
+      expect(new Set(picks).size).toBe(3);
+    }
+  });
+
+  it('only repeats an angle within a batch when the mode truly has fewer angles than requested', () => {
+    // Nurse "gratitude" has exactly 2 angles — asking for 3 from it alone forces one repeat,
+    // but the repeat should still cover both angles at least once rather than picking one 3x.
+    for (let i = 0; i < 20; i++) {
+      const picks = pickBalancedTopics(BRANDS.nurse, [], 3, ['gratitude']);
+      expect(picks).toHaveLength(3);
+      expect(new Set(picks).size).toBe(2);
+    }
+  });
 });
 
 describe('findClosestMatch (duplicate detection)', () => {

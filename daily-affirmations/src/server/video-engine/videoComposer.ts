@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { BrandId } from '@/types/domain';
+import { getBrand } from '@/server/config/brands';
 import { createLogger } from '@/server/utils/logger';
-import { buildColorGradeFilter, escapeDrawtext, escapeFilterPath } from './ffmpegExpr';
+import { buildColorGradeFilter, buildStandardEncodeArgs, escapeDrawtext, escapeFilterPath } from './ffmpegExpr';
 import { runFfmpeg, probeDurationSeconds } from './ffmpeg';
 import { buildLogoFilterChain } from './logoOverlay';
 
@@ -14,13 +15,6 @@ export const CANVAS_FPS = 30;
 const MAX_ZOOM = 1.16;
 const LOGO_WIDTH_PX = 132;
 const LOGO_MARGIN_PX = 44;
-
-// Nurse Affirmations reads cooler (dusty-blue, clinical calm); Autism Parent Affirmations reads
-// warmer (golden, homey) — the same shared DJ&A grade technique, tuned per series so each is
-// instantly recognisable while both still feel like one brand. See ffmpegExpr.buildColorGradeFilter.
-function gradeTemperatureFor(brand: BrandId): 'cooler' | 'warmer' {
-  return brand === 'nurse' ? 'cooler' : 'warmer';
-}
 
 export type KenBurnsStyle = 'zoom-only' | 'pan-horizontal' | 'pan-vertical';
 
@@ -96,7 +90,7 @@ function buildVideoChain(request: ComposeRequest, hasLogo: boolean, logoInputInd
     `scale=${CANVAS_WIDTH}:${CANVAS_HEIGHT}:force_original_aspect_ratio=increase`,
     `crop=${CANVAS_WIDTH}:${CANVAS_HEIGHT}`,
     `zoompan=z='${zoomExpr}':x='${xExpr}':y='${yExpr}':d=1:s=${CANVAS_WIDTH}x${CANVAS_HEIGHT}:fps=${CANVAS_FPS}`,
-    buildColorGradeFilter(gradeTemperatureFor(request.brand)),
+    buildColorGradeFilter(getBrand(request.brand).gradeTemperature),
     `ass=filename=${assFile}:fontsdir=${fontsDirEsc}`,
   ];
 
@@ -143,7 +137,10 @@ function buildAudioChain(request: ComposeRequest, hasMusic: boolean, musicInputI
   const voiceNormalized = `[1:a]aformat=sample_fmts=fltp:sample_rates=${AUDIO_SAMPLE_RATE}:channel_layouts=stereo,apad=whole_len=${wholeLenSamples},atrim=0:${d}[voiceN]`;
 
   if (!hasMusic) {
-    return `${voiceNormalized};[voiceN]loudnorm=I=-16:TP=-1.5:LRA=11[aout]`;
+    // atrim after loudnorm for the same reason the with-music branch below needs one: loudnorm
+    // resamples internally (192kHz true-peak detection, then back down) and can shift the sample
+    // count slightly even when its input is already exactly `d` seconds long.
+    return `${voiceNormalized};[voiceN]loudnorm=I=-16:TP=-1.5:LRA=11,atrim=0:${d}[aout]`;
   }
 
   return [
@@ -194,24 +191,7 @@ export async function composeVideo(request: ComposeRequest): Promise<ComposeResu
     '[aout]',
     '-t',
     durationSeconds.toFixed(2),
-    '-r',
-    String(CANVAS_FPS),
-    '-c:v',
-    'libx264',
-    '-preset',
-    'fast',
-    '-crf',
-    '18',
-    '-pix_fmt',
-    'yuv420p',
-    '-c:a',
-    'aac',
-    '-b:a',
-    '192k',
-    '-ac',
-    '2',
-    '-movflags',
-    '+faststart',
+    ...buildStandardEncodeArgs(CANVAS_FPS),
     outputPath,
   ];
 

@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { BrandId } from '@/types/domain';
 import { getBrandFramesCacheDir } from '@/server/config/paths';
 import { createLogger } from '@/server/utils/logger';
-import { escapeDrawtext, escapeFilterPath } from './ffmpegExpr';
+import { buildStandardEncodeArgs, escapeDrawtext, escapeFilterPath } from './ffmpegExpr';
 import { runFfmpeg, probeDurationSeconds } from './ffmpeg';
 import { buildLogoFilterChain } from './logoOverlay';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, CANVAS_FPS } from './videoComposer';
@@ -21,28 +21,7 @@ export const OUTRO_DURATION_SECONDS = 2.5;
 // (as opposed to just the logo file) is stale.
 const BRAND_FRAME_VERSION = 'v1';
 
-const ENCODE_ARGS = [
-  '-r',
-  String(CANVAS_FPS),
-  '-c:v',
-  'libx264',
-  '-preset',
-  'fast',
-  '-crf',
-  '18',
-  '-pix_fmt',
-  'yuv420p',
-  '-c:a',
-  'aac',
-  '-b:a',
-  '192k',
-  '-ar',
-  '44100',
-  '-ac',
-  '2',
-  '-movflags',
-  '+faststart',
-];
+const ENCODE_ARGS = buildStandardEncodeArgs(CANVAS_FPS);
 
 // anullsrc is an infinite generator with no natural EOF — relies on the output-level `-t` flag
 // (added below, same pattern videoComposer.ts already uses for its own infinitely-looped
@@ -148,13 +127,7 @@ export interface BrandFrames {
   outroPath: string;
 }
 
-/**
- * Returns cached intro/outro clips for the brand, rendering them once and reusing on every
- * subsequent video — the bookends are identical every time (same logo, same text), so
- * re-encoding them per video would just be wasted render time across 6 videos a day.
- * Invalidated if the logo file changes (mtime check) or BRAND_FRAME_VERSION is bumped.
- */
-export async function getOrCreateBrandFrames(brand: BrandId, logoPath: string | null, fontsDir: string): Promise<BrandFrames> {
+async function renderBrandFramesIfStale(brand: BrandId, logoPath: string | null, fontsDir: string): Promise<BrandFrames> {
   const cacheDir = getBrandFramesCacheDir();
   const introPath = path.join(cacheDir, `${brand}-intro-${BRAND_FRAME_VERSION}.mp4`);
   const outroPath = path.join(cacheDir, `${brand}-outro-${BRAND_FRAME_VERSION}.mp4`);
@@ -166,16 +139,41 @@ export async function getOrCreateBrandFrames(brand: BrandId, logoPath: string | 
     return fs.statSync(cachedPath).mtimeMs >= logoMtime;
   };
 
-  if (!isFresh(introPath)) {
-    log.info(`Rendering ${brand} intro clip (cache miss or stale logo)`);
-    await renderIntro(logoPath, introPath);
-  }
-  if (!isFresh(outroPath)) {
-    log.info(`Rendering ${brand} outro clip (cache miss or stale logo)`);
-    await renderOutro(logoPath, fontsDir, outroPath);
-  }
+  const introStale = !isFresh(introPath);
+  const outroStale = !isFresh(outroPath);
+  if (introStale) log.info(`Rendering ${brand} intro clip (cache miss or stale logo)`);
+  if (outroStale) log.info(`Rendering ${brand} outro clip (cache miss or stale logo)`);
+
+  await Promise.all([
+    introStale ? renderIntro(logoPath, introPath) : Promise.resolve(),
+    outroStale ? renderOutro(logoPath, fontsDir, outroPath) : Promise.resolve(),
+  ]);
 
   return { introPath, outroPath };
+}
+
+// Keyed by brand so concurrent same-brand jobs (the daily batch runs up to 3 videos in parallel,
+// and the first 3 in-flight jobs on a given day are typically all the same brand) collapse onto
+// one render instead of racing multiple ffmpeg processes to write the same cached output path.
+const inflightRenders = new Map<BrandId, Promise<BrandFrames>>();
+
+/**
+ * Returns cached intro/outro clips for the brand, rendering them once and reusing on every
+ * subsequent video — the bookends are identical every time (same logo, same text), so
+ * re-encoding them per video would just be wasted render time across 6 videos a day.
+ * Invalidated if the logo file changes (mtime check) or BRAND_FRAME_VERSION is bumped.
+ */
+export async function getOrCreateBrandFrames(brand: BrandId, logoPath: string | null, fontsDir: string): Promise<BrandFrames> {
+  const existing = inflightRenders.get(brand);
+  if (existing) return existing;
+
+  const promise = renderBrandFramesIfStale(brand, logoPath, fontsDir);
+  inflightRenders.set(brand, promise);
+  try {
+    return await promise;
+  } finally {
+    inflightRenders.delete(brand);
+  }
 }
 
 export interface AssembleRequest {
