@@ -8,16 +8,12 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { getSettings, listHistory, startGeneration, type RedactedSettings } from '@/lib/api';
 import { openFolderPath } from '@/lib/desktop';
-import { formatDateLabel } from '@/lib/utils';
+import { formatDateLabel, todayISO } from '@/lib/utils';
 import type { GenerationHistoryEntry } from '@/types/domain';
 import { toast } from 'sonner';
-
-const today = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
 
 export function HomeScreen() {
   const router = useRouter();
@@ -25,6 +21,7 @@ export function HomeScreen() {
   const [lastRun, setLastRun] = useState<GenerationHistoryEntry | null>(null);
   const [starting, setStarting] = useState(false);
   const [openingFolder, setOpeningFolder] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     getSettings().then(setSettings).catch(() => {});
@@ -33,10 +30,20 @@ export function HomeScreen() {
       .catch(() => {});
   }, []);
 
-  const todaysDate = today();
+  const todaysDate = todayISO();
   const readyForToday = lastRun?.date === todaysDate && lastRun.status !== 'failed';
+  const hasApprovedToday = readyForToday && lastRun.videos.some((v) => v.approved);
+
+  function handleGenerateClick() {
+    if (hasApprovedToday) {
+      setConfirmOpen(true);
+    } else {
+      void handleGenerate();
+    }
+  }
 
   async function handleGenerate() {
+    setConfirmOpen(false);
     setStarting(true);
     try {
       const { runId, alreadyRunning } = await startGeneration();
@@ -89,12 +96,28 @@ export function HomeScreen() {
           transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
           className="mt-12 w-full"
         >
-          <Button size="lg" className="h-16 w-full max-w-md text-lg shadow-xl shadow-primary/20" onClick={handleGenerate} disabled={starting}>
+          <Button size="lg" className="h-16 w-full max-w-md text-lg shadow-xl shadow-primary/20" onClick={handleGenerateClick} disabled={starting}>
             <Sparkles className="h-5 w-5" />
             {starting ? 'Starting…' : "Generate Today's Videos"}
           </Button>
-          {readyForToday && <p className="mt-3 text-sm text-muted-foreground">Today&apos;s videos are already generated — running again will add a new set.</p>}
+          {readyForToday && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Today&apos;s videos are already generated — running again will replace this batch
+              {hasApprovedToday && ' and clear its approvals'}.
+            </p>
+          )}
         </motion.div>
+
+        <ConfirmDialog
+          open={confirmOpen}
+          title="Regenerate today's videos?"
+          description={'This will regenerate today\'s content and remove any existing approvals for this batch.\n\nContinue?'}
+          confirmLabel="Regenerate All"
+          cancelLabel="Cancel"
+          destructive
+          onConfirm={handleGenerate}
+          onCancel={() => setConfirmOpen(false)}
+        />
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}

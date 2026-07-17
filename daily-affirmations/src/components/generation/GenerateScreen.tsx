@@ -9,22 +9,32 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { startGeneration, subscribeToRun } from '@/lib/api';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { listHistory, startGeneration, subscribeToRun } from '@/lib/api';
 import { STAGE_LABELS } from '@/lib/pipelineStages';
-import { cn } from '@/lib/utils';
-import type { GenerationRunProgress, VideoJobProgress } from '@/types/domain';
+import { cn, todayISO } from '@/lib/utils';
+import type { GenerationHistoryEntry, GenerationRunProgress, VideoJobProgress } from '@/types/domain';
 
 export function GenerateScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [run, setRun] = useState<GenerationRunProgress | null>(null);
   const [starting, setStarting] = useState(false);
+  const [lastRun, setLastRun] = useState<GenerationHistoryEntry | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const runId = searchParams.get('runId');
 
   useEffect(() => {
     if (!runId) return;
     const unsubscribe = subscribeToRun(runId, setRun);
     return unsubscribe;
+  }, [runId]);
+
+  useEffect(() => {
+    if (runId) return; // only the fallback "no run in progress" start button needs this
+    listHistory(1)
+      .then(({ runs }) => setLastRun(runs[0] ?? null))
+      .catch(() => {});
   }, [runId]);
 
   const summary = useMemo(() => {
@@ -35,7 +45,18 @@ export function GenerateScreen() {
     return { done, total, overallPercent };
   }, [run]);
 
+  const hasApprovedToday = lastRun?.date === todayISO() && lastRun.videos.some((v) => v.approved);
+
+  function handleStartClick() {
+    if (hasApprovedToday) {
+      setConfirmOpen(true);
+    } else {
+      void handleStart();
+    }
+  }
+
   async function handleStart() {
+    setConfirmOpen(false);
     setStarting(true);
     try {
       const { runId: newRunId } = await startGeneration();
@@ -52,10 +73,20 @@ export function GenerateScreen() {
         <main className="mx-auto flex max-w-lg flex-col items-center px-6 py-24 text-center">
           <h1 className="font-display text-2xl font-semibold">No generation in progress</h1>
           <p className="mt-2 text-sm text-muted-foreground">Start today&apos;s six-video run from here or from the Home screen.</p>
-          <Button size="lg" className="mt-6" onClick={handleStart} disabled={starting}>
+          <Button size="lg" className="mt-6" onClick={handleStartClick} disabled={starting}>
             {starting ? 'Starting…' : "Generate Today's Videos"}
           </Button>
         </main>
+        <ConfirmDialog
+          open={confirmOpen}
+          title="Regenerate today's videos?"
+          description={'This will regenerate today\'s content and remove any existing approvals for this batch.\n\nContinue?'}
+          confirmLabel="Regenerate All"
+          cancelLabel="Cancel"
+          destructive
+          onConfirm={handleStart}
+          onCancel={() => setConfirmOpen(false)}
+        />
       </div>
     );
   }
