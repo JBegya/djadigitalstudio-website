@@ -48,6 +48,18 @@ function validate(text: string, brand: BrandId, avoidExamples: string[]): string
   return null;
 }
 
+// Write a cinematic emotional monologue, not a generic affirmation — every script follows this
+// arc so the listener is met in the feeling before anything resembling encouragement arrives.
+// The bracketed examples are calibration for TONE and PACING only — never reuse them verbatim or
+// near-verbatim; write something new that fits the same shape for this specific topic instead.
+const MONOLOGUE_STRUCTURE = [
+  '1. Emotional recognition — open with something immediately, specifically relatable to the topic. The first five seconds should make the listener think "this is about me," not "here comes a speech." (e.g. "I know that look." / "I remember driving home in complete silence." / "I don\'t know exactly what happened today... but I know what it feels like when your heart is heavier than your body.")',
+  '2. Validation — do not rush into encouragement. Sit with the emotion. Let the listener feel understood before you offer anything. (e.g. "We carry things that nobody else sees." / "Sometimes the hardest part isn\'t the shift... it\'s trying to leave it behind.")',
+  '3. Shared experience — first person, because you genuinely belong to this: "we", "I\'ve", "I still", "I remember" — not a technique, the plain truth of who is speaking.',
+  '4. Gentle comfort — reassurance without pretending to solve everything. Never "everything will be okay." Instead something like "You don\'t have to carry today by yourself." or "You deserved kindness today too."',
+  '5. Hope — end quietly. Never "you\'ve got this!" Instead something like "Tomorrow will come. When it does... we\'ll keep going together." or "If today was heavy... please remember... you\'re not carrying it alone."',
+].join('\n');
+
 function buildPrompt(brand: BrandId, topicLabel: string, avoidExamples: string[]) {
   const brandDef = getBrand(brand);
   const system = [
@@ -55,11 +67,14 @@ function buildPrompt(brand: BrandId, topicLabel: string, avoidExamples: string[]
     '',
     'Rules you must follow exactly:',
     ...brandDef.toneRules.map((r) => `- ${r}`),
-    '- Structure: a powerful opening line, one to two sentences of emotional encouragement grounded in the topic, then a short, memorable closing sentence.',
-    '- Length: between 40 and 70 words, spoken length (this will be read aloud in 15-30 seconds).',
-    '- Never plagiarize or lightly reword a known quote, song lyric, or slogan.',
+    '',
+    'Structure every script as this five-beat cinematic monologue, in order, flowing as one continuous piece (no headings or labels in the output):',
+    MONOLOGUE_STRUCTURE,
+    '',
+    `- Length: between ${MIN_WORDS} and ${MAX_WORDS} words, spoken length, unhurried — this will be read aloud slowly, with natural pauses, over roughly 20-45 seconds.`,
+    '- Never plagiarize or lightly reword a known quote, song lyric, slogan, or the calibration examples above.',
     `- Never use any of these words or phrases, or close paraphrases of them: ${brandDef.bannedPhrases.join(', ')}.`,
-    'Respond with strict JSON matching the given schema. The "affirmation" field must contain only the affirmation itself — no title, no labels, no surrounding quotation marks.',
+    'Respond with strict JSON matching the given schema. The "affirmation" field must contain only the affirmation itself — no title, no labels, no beat numbers, no surrounding quotation marks.',
   ].join('\n');
 
   const avoidBlock =
