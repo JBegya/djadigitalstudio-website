@@ -1,7 +1,8 @@
 import writeGood from 'write-good';
-import type { BrandId, PipelineStage } from '@/types/domain';
+import type { BrandId, PipelineStage, Settings } from '@/types/domain';
 import { getBrand } from '@/server/config/brands';
 import { MAX_WORDS, MIN_WORDS } from '@/server/ai-services/scriptWriter';
+import { judgeEmotionalAuthenticity } from '@/server/ai-services/emotionalJudge';
 import { DUPLICATE_SIMILARITY_THRESHOLD, historyStore } from '@/server/history/historyStore';
 import { createLogger } from '@/server/utils/logger';
 import { containsEmoji, findBannedPhrase, hasRepetitiveSentenceOpenings, splitSentences, wordCount } from '@/server/utils/textStats';
@@ -27,6 +28,7 @@ export interface QualityCheckResult {
 export interface QualityInput {
   brand: BrandId;
   affirmationText: string;
+  settings: Settings;
   voiceAudioPath: string;
   /** The composed main-content clip BEFORE the brand intro/outro are appended — subtitle timing
    * and the voice/music mix only cover this segment, so checks that measure them against it
@@ -225,6 +227,32 @@ function checkBackgroundSuitability(backgroundSource: 'pexels' | 'mock', pexelsC
   return fail('Background Suitability', 'Pexels is configured but no matching footage was found — fell back to a placeholder background.', 'warning', 6);
 }
 
+async function checkEmotionalAuthenticity(brand: BrandId, text: string, settings: Settings): Promise<QualityCheckResult[]> {
+  const judgment = await judgeEmotionalAuthenticity(brand, text, settings);
+
+  // The five graded dimensions feed the Emotional Impact category average (see qualityScore.ts)
+  // — a script that "feels generic" scores low here, drags the category down, and gets sent back
+  // for another pass through the EXISTING below-threshold regeneration path, the same mechanism
+  // every other soft-scored check already uses. No separate hard-fail threshold needed for these.
+  const scoreCheck = (name: string, value: number): QualityCheckResult => ok(name, `Scored ${value.toFixed(1)}/10.`, 'info', value);
+
+  // "Believable" is the one explicit hard gate the brief calls out by name: if a real nurse/autism
+  // parent wouldn't believe a peer wrote this, regenerate the script outright, independent of
+  // how the numeric scores land.
+  const believability: QualityCheckResult = judgment.believable
+    ? ok('Peer Believability', `Would a real peer believe this was written by one of their own? Yes — ${judgment.reasoning}`, 'info', 10)
+    : fail('Peer Believability', `Would a real peer believe this was written by one of their own? No — ${judgment.reasoning}`, 'error', 2);
+
+  return [
+    scoreCheck('Emotional Authenticity', judgment.emotionalAuthenticity),
+    scoreCheck('Human Warmth', judgment.humanWarmth),
+    believability,
+    scoreCheck('Comfort', judgment.comfort),
+    scoreCheck('Emotional Impact', judgment.emotionalImpact),
+    scoreCheck('Shareability', judgment.shareability),
+  ];
+}
+
 /**
  * @param qualityThreshold Minimum acceptable Overall score (0-10, see qualityScore.ts). A video
  * that passes every hard check can still fall below this on aggregate polish and get sent back
@@ -234,17 +262,21 @@ function checkBackgroundSuitability(backgroundSource: 'pexels' | 'mock', pexelsC
 export async function runQualityChecks(input: QualityInput, qualityThreshold = 9): Promise<QualityReport> {
   const mainDuration = await probeDurationSeconds(input.mainVideoPath).catch(() => 0);
 
-  const checks: QualityCheckResult[] = await Promise.all([
-    checkGrammarAndSpelling(input.affirmationText),
-    Promise.resolve(checkTone(input.brand, input.affirmationText)),
-    Promise.resolve(checkDuplicate(input.brand, input.affirmationText)),
-    Promise.resolve(checkSubtitleTiming(input.cues, mainDuration)),
-    checkAudioLevel(input.voiceAudioPath),
-    checkMusicBalance(input.mainVideoPath, input.musicUsed, input.musicConfigured),
-    checkVideoQuality(input.finalVideoPath),
-    checkVideoLength(input.finalVideoPath),
-    Promise.resolve(checkBackgroundSuitability(input.backgroundSource, input.pexelsConfigured)),
+  const [emotionalChecks, otherChecks] = await Promise.all([
+    checkEmotionalAuthenticity(input.brand, input.affirmationText, input.settings),
+    Promise.all([
+      checkGrammarAndSpelling(input.affirmationText),
+      Promise.resolve(checkTone(input.brand, input.affirmationText)),
+      Promise.resolve(checkDuplicate(input.brand, input.affirmationText)),
+      Promise.resolve(checkSubtitleTiming(input.cues, mainDuration)),
+      checkAudioLevel(input.voiceAudioPath),
+      checkMusicBalance(input.mainVideoPath, input.musicUsed, input.musicConfigured),
+      checkVideoQuality(input.finalVideoPath),
+      checkVideoLength(input.finalVideoPath),
+      Promise.resolve(checkBackgroundSuitability(input.backgroundSource, input.pexelsConfigured)),
+    ]),
   ]);
+  const checks: QualityCheckResult[] = [...emotionalChecks, ...otherChecks];
 
   const score = computeQualityScore(checks);
   const hardFailed = checks.filter((c) => !c.passed && c.severity === 'error');
@@ -255,7 +287,12 @@ export async function runQualityChecks(input: QualityInput, qualityThreshold = 9
   if (!passed) {
     if (hardFailed.length > 0) {
       const byName = new Map(checks.map((c) => [c.name, c]));
-      if (!byName.get('Grammar & Spelling')?.passed || !byName.get('Emotional Tone')?.passed || !byName.get('Duplicate Check')?.passed) {
+      if (
+        !byName.get('Grammar & Spelling')?.passed ||
+        !byName.get('Emotional Tone')?.passed ||
+        !byName.get('Duplicate Check')?.passed ||
+        !byName.get('Peer Believability')?.passed
+      ) {
         regenerateComponent = 'script';
       } else if (!byName.get('Subtitle Timing')?.passed) {
         regenerateComponent = 'subtitles';

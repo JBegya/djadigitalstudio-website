@@ -189,6 +189,7 @@ async function runVideoJob(runId: string, jobId: string, spec: JobSpec, settings
         {
           brand: spec.brand,
           affirmationText: state.script!.text,
+          settings,
           voiceAudioPath: state.voice!.audioPath,
           mainVideoPath: state.composed!.outputPath,
           finalVideoPath: state.assembled!.outputPath,

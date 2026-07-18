@@ -4,7 +4,17 @@ import type { QualityCheckResult } from './qualityChecks';
 export type { QualityScoreReport };
 
 // Which named checks feed each headline score — see qualityChecks.ts for what each one measures.
-const EMOTIONAL_IMPACT_CHECKS = ['Grammar & Spelling', 'Emotional Tone', 'Duplicate Check'];
+const EMOTIONAL_IMPACT_CHECKS = [
+  'Grammar & Spelling',
+  'Emotional Tone',
+  'Duplicate Check',
+  'Emotional Authenticity',
+  'Human Warmth',
+  'Peer Believability',
+  'Comfort',
+  'Emotional Impact',
+  'Shareability',
+];
 const CAPTION_READABILITY_CHECKS = ['Subtitle Timing'];
 const VISUAL_QUALITY_CHECKS = ['Audio Level', 'Music Balance', 'Video Quality', 'Video Length', 'Background Suitability'];
 

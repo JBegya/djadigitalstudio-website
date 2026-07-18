@@ -125,6 +125,7 @@ async function main() {
   const quality = await runQualityChecks({
     brand: 'nurse',
     affirmationText: script.text,
+    settings,
     voiceAudioPath: voice.audioPath,
     mainVideoPath: composed.outputPath,
     finalVideoPath: assembled.outputPath,

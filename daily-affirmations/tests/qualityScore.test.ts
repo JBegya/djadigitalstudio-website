@@ -6,10 +6,28 @@ function check(name: string, score: number, passed = true): QualityCheckResult {
   return { name, passed, message: '', severity: passed ? 'info' : 'error', score };
 }
 
+const EMOTIONAL_IMPACT_CHECK_NAMES = [
+  'Grammar & Spelling',
+  'Emotional Tone',
+  'Duplicate Check',
+  'Emotional Authenticity',
+  'Human Warmth',
+  'Peer Believability',
+  'Comfort',
+  'Emotional Impact',
+  'Shareability',
+];
+
 const ALL_PASS_CHECKS: QualityCheckResult[] = [
   check('Grammar & Spelling', 10),
   check('Emotional Tone', 9.6),
   check('Duplicate Check', 10),
+  check('Emotional Authenticity', 9.5),
+  check('Human Warmth', 9.5),
+  check('Peer Believability', 10),
+  check('Comfort', 9.5),
+  check('Emotional Impact', 9.5),
+  check('Shareability', 9.5),
   check('Subtitle Timing', 10),
   check('Audio Level', 9.8),
   check('Music Balance', 10),
@@ -21,7 +39,8 @@ const ALL_PASS_CHECKS: QualityCheckResult[] = [
 describe('computeQualityScore', () => {
   it('averages each category from its own named checks', () => {
     const score = computeQualityScore(ALL_PASS_CHECKS);
-    expect(score.emotionalImpact).toBeCloseTo((10 + 9.6 + 10) / 3, 1);
+    const emotionalScores = ALL_PASS_CHECKS.filter((c) => EMOTIONAL_IMPACT_CHECK_NAMES.includes(c.name)).map((c) => c.score);
+    expect(score.emotionalImpact).toBeCloseTo(emotionalScores.reduce((a, b) => a + b, 0) / emotionalScores.length, 1);
     expect(score.captionReadability).toBe(10);
     expect(score.visualQuality).toBeCloseTo((9.8 + 10 + 10 + 9.6 + 10) / 5, 1);
   });
@@ -47,7 +66,9 @@ describe('computeQualityScore', () => {
     const withFailure = [...ALL_PASS_CHECKS.filter((c) => c.name !== 'Duplicate Check'), check('Duplicate Check', 1, false)];
     const score = computeQualityScore(withFailure);
     expect(score.emotionalImpact).toBeLessThan(computeQualityScore(ALL_PASS_CHECKS).emotionalImpact);
-    expect(score.emotionalImpact).toBeLessThan(8);
+    // Nine checks now feed this category (up from three), so one failure moves the average less
+    // in absolute terms — still a clear, visible drop from the ~9.7 all-pass baseline.
+    expect(score.emotionalImpact).toBeLessThan(9);
   });
 });
 
