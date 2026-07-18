@@ -1,26 +1,46 @@
 # DJ&A Daily Affirmations
 
 An internal content production system for DJ&A Digital Studio Limited. One click produces six
-ready-to-post vertical affirmation videos every day — three **Nurse Affirmations**, three
-**Autism Parent Affirmations** — complete with voiceover, subtitles, music, a thumbnail,
-platform captions, and hashtags.
+ready-to-post vertical videos every day — three **Nurse Affirmations**, three **Autism Parent
+Affirmations** — complete with voiceover, subtitles, music, a thumbnail, platform captions, and
+hashtags.
 
 This is **not** a SaaS product and is not for sale or public distribution. It's a desktop tool
 for one person to run every morning.
+
+## Product philosophy
+
+DJ&A Daily Affirmations is not a motivational app — it's an emotional companion. Every video is
+written and spoken as one person who has genuinely lived this quietly comforting another person
+who is struggling: a fellow nurse talking to a nurse who just finished a brutal shift, a fellow
+autism parent talking to another parent at the end of one of the hardest days of their life.
+Never an expert, a coach, a therapist, a narrator, or an influencer. The measure of success isn't
+"did this motivate someone" — it's whether the viewer finishes thinking *"this person understands
+me. I am not alone."* Every design decision in this codebase — the script structure, the voice
+delivery, the imagery, the quality scoring — is built around that one goal. See
+`src/server/config/brands.ts` for the full brand voice/identity and
+`src/server/ai-services/scriptWriter.ts` for the exact five-beat monologue structure every script
+follows.
 
 ## What it does, end to end
 
 Each day's run picks a **balanced mix of Content Modes** per brand (see below) rather than
 random topics, then for each of the 6 videos the pipeline:
 
-1. **Writes an original affirmation** (OpenAI, brand-specific tone rules tuned for emotional
-   authenticity over generic motivational language, never repeats a past one)
-2. **Records a voiceover** (OpenAI text-to-speech)
-3. **Selects matching background footage** (Pexels, matched by *emotion* — "quiet sunrise",
-   "empty beach", "rain on window glass" — not literal occupation nouns)
-4. **Times and burns in subtitles** (Whisper word-level alignment, bold styled captions with a
-   soft fade + scale pop-in, positioned inside each platform's safe area)
-5. **Mixes in background music** (auto-ducked under the voice, loudness-normalized)
+1. **Writes an original script** (OpenAI, as a five-beat cinematic monologue — emotional
+   recognition, validation, shared experience, gentle comfort, quiet hope — never a generic
+   affirmation, never repeats a past one)
+2. **Records a voiceover** (OpenAI text-to-speech, gpt-4o-mini-tts with brand-specific delivery
+   instructions: unhurried, 110-130wpm, natural breathing pauses, warm rather than performative)
+3. **Selects matching background footage** (Pexels, matched to specific, lived-in moments — a
+   hospital corridor, washing hands, a therapy waiting room, a quiet couch cuddle — not generic
+   mood shots)
+4. **Times and burns in subtitles** (Whisper word-level alignment, breaking at commas/dashes/
+   sentence ends the way someone speaking slowly actually breathes, not just every few words;
+   bold styled captions with a soft fade + scale pop-in, positioned inside each platform's safe
+   area)
+5. **Mixes in background music** (auto-ducked well under the voice, loudness-normalized — the
+   narration is the whole point, the music should be felt more than noticed)
 6. **Composes the main clip** (1080×1920, 30fps, smooth Ken Burns zoom with an occasional gentle
    pan, a subtle per-brand colour grade, logo watermark)
 7. **Adds the DJ&A brand intro and outro** (a short logo-reveal open and a "Daily Affirmations /
@@ -28,11 +48,15 @@ random topics, then for each of the 6 videos the pipeline:
    identity below)
 8. **Writes platform captions + 30 hashtags + a thumbnail hook** (OpenAI)
 9. **Generates a thumbnail** (frame + headline, ≤6 words)
-10. **Runs automated quality checks and scores the result** (grammar/spelling, tone, duplicate
-    detection, subtitle timing, audio level, video length/resolution) — rolls up into Emotional
-    Impact / Visual Quality / Caption Readability / Overall scores out of 10, and regenerates
-    just the weakest piece (not the whole video) if anything fails outright or the Overall score
-    misses the configured threshold
+10. **Runs automated quality checks and scores the result** — grammar/spelling, tone, duplicate
+    detection, subtitle timing, audio level, video length/resolution, *and* an OpenAI-judged
+    emotional-authenticity pass (framed as an experienced ICU nurse / an autism parent actually
+    reading the script) scoring emotional authenticity, human warmth, comfort, emotional impact,
+    and shareability, plus the one question that matters most: would a real peer genuinely
+    believe another peer wrote this? A "no" forces the script to be rewritten outright. Everything
+    rolls up into Emotional Impact / Visual Quality / Caption Readability / Overall scores out of
+    10, and regenerates just the weakest piece (not the whole video) if anything fails outright or
+    the Overall score misses the configured threshold
 11. **Exports** into `Exports/YYYY-MM-DD/{Nurse,Autism}/VideoNN.mp4` + thumbnail + caption +
     hashtags files, ready to upload to Facebook Reels, Instagram Reels, TikTok, and YouTube
     Shorts.
@@ -113,6 +137,12 @@ mix immediately — replace them with real licensed tracks (`.mp3`, `.wav`, `.m4
 `.flac`, `.ogg`) before publishing anything. This folder lives outside the app install
 deliberately: it survives updates/reinstalls and is a sensible place to permanently keep
 licensed music files. See `assets/music/README.md` for the bundled placeholders themselves.
+
+Look for **piano, ambient textures, gentle strings, warm pads, hopeful minimalism** — nothing
+with a strong beat, hook, or lyric that competes with the voice. The mix already ducks music well
+under the narration (see `buildAudioChain` in `videoComposer.ts`), but the source track itself
+should feel like something you'd barely notice consciously, there to support the emotion rather
+than perform alongside it.
 
 ### Logo / watermark
 
