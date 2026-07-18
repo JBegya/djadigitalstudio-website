@@ -26,12 +26,36 @@ describe('estimateWordTimings', () => {
 });
 
 describe('groupIntoCues', () => {
-  it('never lets a cue exceed 5 words', () => {
-    const timings = estimateWordTimings('one two three four five six seven eight nine ten', 10);
+  it('never lets a cue exceed 7 words (MAX_WORDS_PER_CUE)', () => {
+    const timings = estimateWordTimings('one two three four five six seven eight nine ten eleven twelve', 10);
     const cues = groupIntoCues(timings);
     for (const cue of cues) {
-      expect(cue.text.split(' ').length).toBeLessThanOrEqual(5);
+      expect(cue.text.split(' ').length).toBeLessThanOrEqual(7);
     }
+  });
+
+  it('breaks at a comma even mid-sentence, once a cue has at least two words', () => {
+    const timings = [
+      { word: 'We', start: 0, end: 0.2 },
+      { word: 'carry', start: 0.2, end: 0.5 },
+      { word: 'things,', start: 0.5, end: 0.9 },
+      { word: 'quietly.', start: 1.0, end: 1.5 },
+    ];
+    const cues = groupIntoCues(timings);
+    expect(cues).toEqual([
+      { text: 'We carry things,', start: 0, end: 0.9 },
+      { text: 'quietly.', start: 1.0, end: 1.5 },
+    ]);
+  });
+
+  it('does not break on a lone word ending in a comma', () => {
+    const timings = [
+      { word: 'Wait,', start: 0, end: 0.3 },
+      { word: 'I', start: 0.3, end: 0.4 },
+      { word: 'know.', start: 0.4, end: 0.8 },
+    ];
+    const cues = groupIntoCues(timings);
+    expect(cues).toEqual([{ text: 'Wait, I know.', start: 0, end: 0.8 }]);
   });
 
   it('produces cues that do not overlap and stay in order', () => {

@@ -146,7 +146,10 @@ function buildAudioChain(request: ComposeRequest, hasMusic: boolean, musicInputI
   return [
     voiceNormalized,
     `[voiceN]asplit=2[voice1][voice2]`,
-    `[${musicInputIndex}:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,aloop=loop=-1:size=2000000000,atrim=0:${d},asetpts=N/SR/TB,volume=0.22[musicbed]`,
+    // 0.16, down from 0.22 — the narration is the whole emotional point of the video; the bed
+    // should sit further back under it (plus sidechain ducking below) than a typical background
+    // track, closer to felt-but-not-noticed than "music with narration over it."
+    `[${musicInputIndex}:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,aloop=loop=-1:size=2000000000,atrim=0:${d},asetpts=N/SR/TB,volume=0.16[musicbed]`,
     `[musicbed][voice1]sidechaincompress=threshold=0.045:ratio=9:attack=6:release=320:makeup=1[ducked]`,
     // duration=longest (not the previous 'first') so the mix runs the full target length even
     // after the voice's own padded track and the music bed agree on that length — 'first'

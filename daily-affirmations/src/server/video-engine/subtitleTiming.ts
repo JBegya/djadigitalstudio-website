@@ -10,13 +10,24 @@ export interface SubtitleCue {
   end: number;
 }
 
-const MAX_WORDS_PER_CUE = 5;
-const MAX_CHARS_PER_CUE = 26;
-const MAX_CUE_DURATION = 2.4;
+// Loosened from the old 5-word/26-char/2.4s caps now that clause boundaries (endsClause below)
+// do most of the actual segmenting — these are just the safety ceiling for a stretch of words
+// with no punctuation at all, and the slower 110-130wpm delivery pace means the same word count
+// takes longer to say than it used to.
+const MAX_WORDS_PER_CUE = 7;
+const MAX_CHARS_PER_CUE = 34;
+const MAX_CUE_DURATION = 3.0;
 const MIN_CUE_DURATION = 0.45;
 
 function endsSentence(word: string): boolean {
   return /[.!?]["')\]]*$/.test(word);
+}
+
+/** Comma, semicolon, colon, or dash — the natural micro-pause inside a sentence where someone
+ * speaking slowly and gently would actually take a breath, not just where a word-count cap
+ * happens to land. */
+function endsClause(word: string): boolean {
+  return /[,;:]["')\]]*$/.test(word) || /[-–—]["')\]]*$/.test(word);
 }
 
 /**
@@ -80,7 +91,10 @@ export function groupIntoCues(timings: WordTiming[]): SubtitleCue[] {
       current.push(timing);
     }
 
-    if (endsSentence(timing.word)) flush();
+    // Break at sentence ends always; break at a comma/dash too, but only once a cue already has
+    // a couple of words — a lone word ending in a comma ("Wait,") shouldn't flush by itself, it
+    // should still get a beat to read naturally alongside what follows.
+    if (endsSentence(timing.word) || (endsClause(timing.word) && current.length >= 2)) flush();
   }
   flush();
 
