@@ -89,165 +89,167 @@ const AUTISM_MODES: ContentMode[] = [
   { key: 'burnout', label: 'Burnout' },
 ];
 
-// Nurse imagery leans cool — dawn/night light, rain, still water, grey skies — reflecting the
-// clinical calm and the round-the-clock rhythm of the work. Emotion-first, never literal
-// occupation nouns like "hospital" or "nurse" as the primary search term.
+// Lived-in and specific, not abstract mood shots — the exact rooms, rituals, and small physical
+// gestures of the job (a corridor, a break room, washing hands, pulling off PPE, coffee before
+// the drive home) read as authentic BECAUSE they're concrete, the way a real photo from someone
+// who has actually worked the shift would look, not a generic wellness-brand stock clip.
 const NURSE_TOPICS: BrandTopic[] = [
   {
     key: 'fresh-start',
     label: 'A Fresh Start',
     mode: 'morning-motivation',
-    keywords: ['soft morning light window', 'coffee steam sunrise', 'sunrise through curtains', 'quiet morning kitchen light', 'first light city window'],
+    keywords: ['sunrise after night shift', 'walking outside morning light calm', 'coffee cup quiet morning', 'empty parking lot sunrise', 'quiet street morning walk home'],
   },
   {
     key: 'new-beginnings',
     label: 'New Beginnings',
     mode: 'morning-motivation',
-    keywords: ['sunrise over quiet road', 'morning light empty street', 'dawn breaking over rooftops', 'soft golden hour window'],
+    keywords: ['morning light empty street calm', 'walking outside sunrise quiet', 'coffee steam quiet morning light', 'quiet drive home sunrise'],
   },
   {
     key: 'quiet-hours',
     label: 'The Quiet Hours',
     mode: 'night-shift',
-    keywords: ['city lights night window', 'empty street night lamp', 'moon behind clouds', 'quiet night sky stars', 'streetlight rain night'],
+    keywords: ['hospital corridor night light', 'empty nurses station night', 'quiet hallway night shift', 'night shift window city lights'],
   },
   {
     key: 'holding-steady',
     label: 'Holding Steady Til Dawn',
     mode: 'night-shift',
-    keywords: ['dark window city lights', 'coffee cup night light', 'quiet hallway dim light', 'stars night sky calm'],
+    keywords: ['coffee break room night quiet', 'empty break room chair', 'hospital corridor dim light', 'quiet nurses station late night'],
   },
   {
     key: 'running-empty',
     label: 'Running on Empty',
     mode: 'burnout',
-    keywords: ['empty beach overcast sky', 'grey sky quiet field', 'rain window calm slow', 'still water overcast sky', 'quiet empty road fog'],
+    keywords: ['washing hands sink close up', 'taking off ppe mask tired', 'empty break room chair quiet', 'quiet hallway exhausted pause'],
   },
   {
     key: 'quiet-exhaustion',
     label: 'The Weight You Carry',
     mode: 'burnout',
-    keywords: ['closed eyes resting soft light', 'quiet empty room chair', 'still lake fog morning', 'grey rain window slow'],
+    keywords: ['sitting alone break room quiet', 'closed eyes resting chair tired', 'hospital corridor empty quiet', 'removing gloves close up tired'],
   },
   {
     key: 'coming-back',
     label: 'Finding Your Way Back',
     mode: 'burnout',
-    keywords: ['sunrise breaking through clouds', 'calm ocean waves shore', 'light breaking through storm clouds', 'quiet forest path light'],
+    keywords: ['walking outside hospital sunrise', 'fresh air outside break quiet', 'sunrise through hospital window', 'quiet walk to car morning'],
   },
   {
     key: 'quiet-strength',
     label: 'Quiet Strength',
     mode: 'leadership',
-    keywords: ['confident walking hallway calm', 'sunrise city skyline', 'still water reflection calm', 'mountain sunrise calm strong'],
+    keywords: ['walking hospital corridor calm', 'quiet nurses station calm', 'hands writing chart close up', 'calm hallway walking steady'],
   },
   {
     key: 'showing-up',
     label: 'Showing Up For Others',
     mode: 'leadership',
-    keywords: ['gentle hands close up soft', 'soft light hands together', 'calm corridor soft light', 'warm light through window'],
+    keywords: ['gentle hands patient care close up', 'quiet hallway walking calm', 'hands washing sink care', 'walking into room calm steady'],
   },
   {
     key: 'permission-to-rest',
     label: 'Permission to Rest',
     mode: 'self-care',
-    keywords: ['tea cup steam quiet', 'bath candle calm soft', 'sunlight bedroom calm morning', 'quiet park bench trees'],
+    keywords: ['coffee cup quiet break room', 'sitting quiet break room chair', 'tea steam quiet moment calm', 'quiet corner resting chair'],
   },
   {
     key: 'small-comforts',
     label: 'Small Comforts',
     mode: 'self-care',
-    keywords: ['candle warm light soft', 'blanket soft light window', 'stretching calm morning light', 'garden quiet soft light'],
+    keywords: ['coffee steam close up warm', 'quiet break room chair soft light', 'stretching quiet hallway calm', 'warm light break room quiet'],
   },
   {
     key: 'why-it-matters',
     label: 'Why It Still Matters',
     mode: 'gratitude',
-    keywords: ['sunset sky warm colors', 'hands holding warm cup', 'golden hour field calm', 'quiet sunrise ocean'],
+    keywords: ['sunrise after shift calm', 'quiet hospital window warm light', 'coffee warm hands quiet', 'walking outside sunrise calm'],
   },
   {
     key: 'the-small-moments',
     label: 'The Small Moments',
     mode: 'gratitude',
-    keywords: ['flowers soft light table', 'warm light through curtains', 'candle glow evening calm', 'soft golden light window'],
+    keywords: ['quiet hallway warm light', 'coffee cup warm light table', 'sunrise window quiet moment', 'gentle hands close up warm'],
   },
 ];
 
-// Autism-parent imagery leans warm — golden hour, soft home light, family silhouettes —
-// reflecting the family/support/hope core of this series. Emotion-first, never literal
-// clinical or diagnostic nouns.
+// Lived-in and specific, not abstract mood shots — holding hands, playing together, therapy
+// waiting rooms, the school drop-off, a quiet cuddle on the couch. These are the exact everyday
+// moments a real autism parent would recognize, which is what makes the imagery read as genuine
+// rather than a generic warm-family stock clip.
 const AUTISM_TOPICS: BrandTopic[] = [
   {
     key: 'the-hardest-hours',
     label: 'The Hardest Hours',
     mode: 'hard-days',
-    keywords: ['quiet room soft light calm', 'parent sitting floor calm', 'soft light bedroom quiet', 'rain window calm home'],
+    keywords: ['parent holding child hand quiet', 'quiet cuddle couch calm', 'sitting floor with child calm', 'gentle hug quiet room'],
   },
   {
     key: 'holding-it-together',
     label: 'Holding It Together',
     mode: 'hard-days',
-    keywords: ['couple sitting quiet together', 'hands together table soft light', 'quiet living room evening warm', 'two cups tea table'],
+    keywords: ['holding hands quiet moment', 'parent child quiet couch', 'gentle family moment home', 'quiet embrace calm home'],
   },
   {
     key: 'tiny-victories',
     label: 'Tiny Victories',
     mode: 'small-wins',
-    keywords: ['child smiling close up soft', 'sunlight kitchen morning warm', 'parent child laughing soft light', 'small hands close up warm'],
+    keywords: ['child playing parent smiling', 'small achievement celebration home', 'parent child playing floor', 'gentle high five child'],
   },
   {
     key: 'worth-celebrating',
     label: 'Worth Celebrating',
     mode: 'small-wins',
-    keywords: ['warm light home soft', 'family home warm light', 'child playing soft sunlight', 'open window soft breeze'],
+    keywords: ['family celebrating small moment', 'child playing joyful home', 'parent watching child play', 'warm smile child playing'],
   },
   {
     key: 'the-long-view',
     label: 'The Long View',
     mode: 'hope',
-    keywords: ['sunrise sky open field', 'sunlight through window soft', 'open field sky calm', 'sunrise ocean calm horizon'],
+    keywords: ['walking outside family hopeful', 'sunrise open field hopeful', 'family walking outside calm', 'child looking out window hopeful'],
   },
   {
     key: 'exactly-as-they-are',
     label: 'Exactly As They Are',
     mode: 'hope',
-    keywords: ['child playing alone peaceful soft', 'parent watching child smile warm', 'family silhouette sunset warm', 'child hands close up soft light'],
+    keywords: ['child playing alone content soft', 'parent watching child smile warm', 'gentle family moment quiet', 'child hands close up soft light'],
   },
   {
     key: 'waiting-room-hours',
     label: 'The Waiting Room Hours',
     mode: 'therapy',
-    keywords: ['parent waiting room calm soft', 'quiet clinic hallway soft light', 'hands holding support warm', 'soft window light waiting'],
+    keywords: ['parent waiting room quiet calm', 'therapy hallway quiet light', 'sitting waiting room calm', 'quiet clinic hallway soft light'],
   },
   {
     key: 'small-steps-forward',
     label: 'Small Steps Forward',
     mode: 'therapy',
-    keywords: ['child playing therapy soft light', 'hands guiding gentle warm', 'soft light play room', 'quiet hallway warm light'],
+    keywords: ['child therapy session playing', 'therapy room gentle play', 'parent child therapy calm', 'small steps walking hallway'],
   },
   {
     key: 'the-morning-drop-off',
     label: 'The Morning Drop-Off',
     mode: 'school',
-    keywords: ['child backpack walking morning', 'school hallway morning soft light', 'parent child walking calm', 'morning drop off soft light'],
+    keywords: ['parent child walking school holding hands', 'holding hands walking morning', 'school hallway morning quiet', 'child backpack walking calm'],
   },
   {
     key: 'letting-go-a-little',
     label: 'Letting Go, a Little',
     mode: 'school',
-    keywords: ['child walking away soft light', 'open door morning light', 'empty hallway soft light', 'quiet morning street calm'],
+    keywords: ['child walking away school gate', 'parent watching child walk', 'quiet morning school drop off', 'open door morning light'],
   },
   {
     key: 'running-on-empty',
     label: 'Running on Empty',
     mode: 'burnout',
-    keywords: ['parent resting eyes closed soft', 'tea cup table quiet warm', 'quiet living room evening calm', 'parent sitting alone calm soft'],
+    keywords: ['parent resting eyes closed quiet', 'quiet living room evening tired', 'parent sitting alone calm', 'tea cup quiet evening tired'],
   },
   {
     key: 'refilling-the-cup',
     label: 'Refilling the Cup',
     mode: 'burnout',
-    keywords: ['tea cup steam quiet warm', 'quiet garden bench soft light', 'candle warm light soft', 'parent walking outside calm soft'],
+    keywords: ['parent walking outside calm soft', 'quiet garden bench calm', 'tea cup steam quiet warm', 'gentle quiet moment alone'],
   },
 ];
 
@@ -284,16 +286,16 @@ export const BRANDS: Record<'nurse' | 'autism', BrandDefinition> = {
     ],
     bannedPhrases: [...UNIVERSAL_BANNED_PHRASES, ...NURSE_BANNED_PHRASES],
     backgroundKeywordHints: [
-      'quiet city dawn',
-      'rain on window glass',
-      'empty street morning light',
-      'soft grey sky calm',
-      'still water dawn light',
-      'coffee steam morning light',
-      'quiet hallway soft light',
-      'window light calm room',
-      'streetlight rain reflection',
-      'soft morning fog calm',
+      'hospital corridor quiet light',
+      'night shift window city lights',
+      'empty break room chair',
+      'sunrise after shift calm',
+      'coffee cup quiet morning',
+      'washing hands sink close up',
+      'taking off ppe close up',
+      'walking outside hospital calm',
+      'quiet nurses station night',
+      'gentle hands close up care',
     ],
     systemPrompt:
       'You are a nurse. Not someone talking about nurses — someone who IS one. You have worked difficult shifts, cried after losing patients, experienced burnout and compassion fatigue, questioned yourself, stayed late, missed things at home, felt emotionally wrung out, and also celebrated the recoveries. You kept showing up anyway. Right now you are writing to one specific fellow nurse who just finished one of those shifts — not teaching her, not motivating her, sitting beside her. This is DJ&A Digital Studio\'s "Nurse Affirmations" series: an emotional companion, not a motivational app. The goal is not motivation. The goal is comfort — the feeling of "someone else has carried this too, and I am not alone." If what you write could have been said by a life coach, an influencer, or a chatbot, it is wrong. It should only be believable as one nurse, quietly, to another.',
@@ -324,16 +326,16 @@ export const BRANDS: Record<'nurse' | 'autism', BrandDefinition> = {
     ],
     bannedPhrases: [...UNIVERSAL_BANNED_PHRASES, ...AUTISM_BANNED_PHRASES],
     backgroundKeywordHints: [
-      'soft afternoon light home',
-      'warm light window family',
-      'garden flowers soft light',
-      'quiet living room evening warm',
-      'family silhouette sunset warm',
-      'ocean waves calm warm light',
-      'forest path peaceful soft',
-      'sunlight through curtains warm',
-      'golden hour home window',
-      'warm kitchen light morning',
+      'holding hands quiet moment',
+      'child playing parent smiling',
+      'therapy room gentle play',
+      'walking outside family calm',
+      'quiet cuddle couch home',
+      'gentle family moment warm',
+      'small achievement celebration home',
+      'hopeful walk outside sunrise',
+      'parent child quiet home',
+      'child hands close up soft light',
     ],
     systemPrompt:
       'You are the parent of a child with autism. Not someone talking about autism parents — someone who IS one. You have personally lived the meltdowns, the sleepless nights, the therapy appointments, the overwhelming paperwork, the judgment in public, the quiet worry about the future, and the milestones nobody else notices — while loving your child more than anything and feeling exhausted at the same time. Right now you are writing to one specific fellow parent after one of the hardest days of their life — not advising her, not fixing anything, sitting beside her. This is DJ&A Digital Studio\'s "Autism Parent Affirmations" series: an emotional companion, not a motivational app. The goal is not motivation. The goal is comfort — the feeling of "someone else has carried this too, and I am not alone." If what you write could have been said by a life coach, an influencer, or a chatbot, it is wrong. It should only be believable as one parent, quietly, to another.',
