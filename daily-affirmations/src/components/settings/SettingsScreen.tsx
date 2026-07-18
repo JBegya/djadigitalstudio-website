@@ -221,7 +221,7 @@ export function SettingsScreen() {
               <Field label={`Video Length — ${settings.videoLengthSeconds}s`}>
                 <Slider
                   min={15}
-                  max={30}
+                  max={48}
                   step={1}
                   value={[settings.videoLengthSeconds]}
                   onValueChange={([v]) => setSettings({ ...settings, videoLengthSeconds: v ?? settings.videoLengthSeconds })}

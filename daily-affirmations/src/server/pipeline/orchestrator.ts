@@ -90,12 +90,16 @@ async function runVideoJob(runId: string, jobId: string, spec: JobSpec, settings
       if (atOrAfter('voice', restartFrom)) {
         emit('voice', 20, 'Recording voiceover…', cycle);
         state.voice = await generateVoice({
+          brand: spec.brand,
           text: state.script!.text,
           voice: settings.voice,
           settings,
           outputPath: path.join(workDir, 'voice.wav'),
         });
-        state.targetDuration = Math.min(30, Math.max(15, state.voice.durationSeconds + 1.2));
+        // Ceiling raised from 30 to 48 — a gentle, unhurried 110-130wpm delivery takes longer per
+        // word than the old faster narrator pace, and the writer's word-count range widened to
+        // match (see scriptWriter.ts's MIN_WORDS/MAX_WORDS and qualityChecks.ts's Video Length).
+        state.targetDuration = Math.min(48, Math.max(15, state.voice.durationSeconds + 1.2));
       }
 
       if (atOrAfter('background', restartFrom)) {

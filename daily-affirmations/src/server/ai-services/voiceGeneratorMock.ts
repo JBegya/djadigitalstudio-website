@@ -1,10 +1,13 @@
 import { wordCount } from '@/server/utils/textStats';
 import { runFfmpeg } from '@/server/video-engine/ffmpeg';
 
-const AVERAGE_WORDS_PER_SECOND = 2.5;
+// 2.0 words/sec = 120 wpm — the midpoint of the app's 110-130 wpm gentle-delivery target (see
+// voiceGenerator.ts's buildVoiceInstructions), so Test Mode's estimated duration lines up with
+// what the real slowed-down narration actually takes, not the old, faster narrator-style pace.
+const AVERAGE_WORDS_PER_SECOND = 2.0;
 
 export function estimateSpeechDuration(text: string): number {
-  return Math.max(12, Math.min(30, wordCount(text) / AVERAGE_WORDS_PER_SECOND));
+  return Math.max(12, Math.min(48, wordCount(text) / AVERAGE_WORDS_PER_SECOND));
 }
 
 /**

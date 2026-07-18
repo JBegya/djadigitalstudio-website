@@ -1,6 +1,7 @@
 import writeGood from 'write-good';
 import type { BrandId, PipelineStage } from '@/types/domain';
 import { getBrand } from '@/server/config/brands';
+import { MAX_WORDS, MIN_WORDS } from '@/server/ai-services/scriptWriter';
 import { DUPLICATE_SIMILARITY_THRESHOLD, historyStore } from '@/server/history/historyStore';
 import { createLogger } from '@/server/utils/logger';
 import { containsEmoji, findBannedPhrase, hasRepetitiveSentenceOpenings, splitSentences, wordCount } from '@/server/utils/textStats';
@@ -91,7 +92,9 @@ async function checkGrammarAndSpelling(text: string): Promise<QualityCheckResult
   return ok('Grammar & Spelling', 'No spelling issues or clichés detected.', 'info', 10);
 }
 
-const IDEAL_WORD_COUNT_RANGE: [number, number] = [40, 70]; // the spec's target range, tighter than the 35-78 hard bounds
+// A tighter band than the writer's own MIN_WORDS-MAX_WORDS hard bounds, centered inside them —
+// same relationship as before, just shifted to match the widened 45-85 range.
+const IDEAL_WORD_COUNT_RANGE: [number, number] = [55, 75];
 
 function checkTone(brand: BrandId, text: string): QualityCheckResult {
   if (containsEmoji(text)) return fail('Emotional Tone', 'Affirmation contains an emoji, which is not allowed in the spoken script.', 'error', 0);
@@ -104,7 +107,7 @@ function checkTone(brand: BrandId, text: string): QualityCheckResult {
   const sentences = splitSentences(text);
   if (sentences.length < 2) return fail('Emotional Tone', 'Affirmation reads as a single run-on sentence — missing opening/closing structure.', 'error', 3);
   const words = wordCount(text);
-  if (words < 35 || words > 78) {
+  if (words < MIN_WORDS || words > MAX_WORDS) {
     return fail('Emotional Tone', `Word count (${words}) is outside the natural spoken-length range.`, 'error', 3);
   }
   return ok('Emotional Tone', 'Structure and tone check passed.', 'info', proximityScore(words, ...IDEAL_WORD_COUNT_RANGE));
@@ -190,12 +193,14 @@ async function checkVideoQuality(finalVideoPath: string): Promise<QualityCheckRe
   }
 }
 
-// The exported file is the main 15-30s content PLUS the brand intro/outro bookends
+// The exported file is the main content PLUS the brand intro/outro bookends
 // (INTRO_DURATION_SECONDS + OUTRO_DURATION_SECONDS ≈ 4s) — the acceptable total range shifts by
-// that same overhead rather than checking the un-bookended 15-30s target against the final file.
+// that same overhead rather than checking the un-bookended content-only target against the final
+// file. The 48s ceiling (up from 30s) matches orchestrator.ts's targetDuration clamp, sized for
+// the writer's widened word-count range at the app's slower, gentler 110-130wpm delivery pace.
 const BOOKEND_OVERHEAD_SECONDS = INTRO_DURATION_SECONDS + OUTRO_DURATION_SECONDS;
 const MIN_TOTAL_LENGTH = 14.5 + BOOKEND_OVERHEAD_SECONDS;
-const MAX_TOTAL_LENGTH = 30.5 + BOOKEND_OVERHEAD_SECONDS;
+const MAX_TOTAL_LENGTH = 48.5 + BOOKEND_OVERHEAD_SECONDS;
 
 async function checkVideoLength(finalVideoPath: string): Promise<QualityCheckResult> {
   try {
@@ -203,7 +208,7 @@ async function checkVideoLength(finalVideoPath: string): Promise<QualityCheckRes
     if (duration < MIN_TOTAL_LENGTH || duration > MAX_TOTAL_LENGTH) {
       return fail(
         'Video Length',
-        `Duration ${duration.toFixed(1)}s is outside the required ${MIN_TOTAL_LENGTH.toFixed(1)}-${MAX_TOTAL_LENGTH.toFixed(1)}s range (15-30s content + brand intro/outro).`,
+        `Duration ${duration.toFixed(1)}s is outside the required ${MIN_TOTAL_LENGTH.toFixed(1)}-${MAX_TOTAL_LENGTH.toFixed(1)}s range (15-48s content + brand intro/outro).`,
         'error',
         2,
       );

@@ -48,7 +48,7 @@ describe('generateVoice (mocked OpenAI transport)', () => {
     const { generateVoice } = await import('@/server/ai-services/voiceGenerator');
     const settings = { openaiApiKey: 'sk-bad-key' } as never;
     await expect(
-      generateVoice({ text: 'hello', voice: 'warm-female', settings, outputPath }),
+      generateVoice({ brand: 'nurse', text: 'hello', voice: 'warm-female', settings, outputPath }),
     ).rejects.toThrow('HTTP 401');
     expect(calls).toBe(1);
     expect(fs.existsSync(outputPath)).toBe(false);
@@ -63,7 +63,7 @@ describe('generateVoice (mocked OpenAI transport)', () => {
     const { generateVoice } = await import('@/server/ai-services/voiceGenerator');
     const settings = { openaiApiKey: 'sk-test' } as never;
     await expect(
-      generateVoice({ text: 'hello', voice: 'warm-female', settings, outputPath }),
+      generateVoice({ brand: 'nurse', text: 'hello', voice: 'warm-female', settings, outputPath }),
     ).rejects.toThrow('HTTP 500');
     expect(calls).toBe(4); // initial attempt + 3 retries (the retries:3 hardcoded at this call site)
   }, 30_000);
@@ -73,7 +73,7 @@ describe('generateVoice (mocked OpenAI transport)', () => {
     const { generateVoice } = await import('@/server/ai-services/voiceGenerator');
     const settings = { openaiApiKey: 'sk-test' } as never;
     await expect(
-      generateVoice({ text: 'hello', voice: 'warm-female', settings, outputPath }),
+      generateVoice({ brand: 'nurse', text: 'hello', voice: 'warm-female', settings, outputPath }),
     ).rejects.toThrow(/suspiciously little audio data/);
     expect(fs.existsSync(outputPath)).toBe(false);
   }, 30_000);

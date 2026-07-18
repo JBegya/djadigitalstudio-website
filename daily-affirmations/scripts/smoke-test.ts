@@ -52,9 +52,9 @@ async function main() {
   console.log(`  "${script.text}" (${script.wordCount} words, source=${script.source})`);
 
   step('Generating voiceover');
-  const voice = await generateVoice({ text: script.text, voice: settings.voice, settings, outputPath: path.join(workDir, 'voice.wav') });
+  const voice = await generateVoice({ brand: 'nurse', text: script.text, voice: settings.voice, settings, outputPath: path.join(workDir, 'voice.wav') });
   console.log(`  ${voice.durationSeconds.toFixed(1)}s, source=${voice.source}`);
-  const targetDuration = Math.min(30, Math.max(15, voice.durationSeconds + 1.2));
+  const targetDuration = Math.min(48, Math.max(15, voice.durationSeconds + 1.2));
 
   step('Selecting background footage');
   const background = await fetchBackgroundVideo({

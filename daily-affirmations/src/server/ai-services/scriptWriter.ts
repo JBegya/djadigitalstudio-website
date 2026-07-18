@@ -25,8 +25,13 @@ export interface ScriptRequest {
   avoidExamples: string[];
 }
 
-const MIN_WORDS = 38;
-const MAX_WORDS = 74;
+// Widened from the old 38-74 to give the 5-part cinematic-monologue structure (recognition,
+// validation, shared experience, comfort, hope) room to actually breathe instead of compressing
+// all five beats into a single generic-affirmation-length script. Exported so qualityChecks.ts's
+// tone check enforces the exact same bounds — see also the matching duration ceiling in
+// orchestrator.ts and voiceGeneratorMock.ts, sized for this range at the app's 110-130wpm pace.
+export const MIN_WORDS = 45;
+export const MAX_WORDS = 85;
 const MAX_CONTENT_ATTEMPTS = 4;
 
 function validate(text: string, brand: BrandId, avoidExamples: string[]): string | null {

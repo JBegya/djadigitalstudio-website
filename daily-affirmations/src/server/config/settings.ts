@@ -45,7 +45,7 @@ function sanitize(candidate: Partial<Settings>, base: Settings): Settings {
     // TS can't narrow `merged[key] = candidate[key]` through a generic loop variable here.
     (merged as Record<keyof Settings, unknown>)[key] = value;
   }
-  merged.videoLengthSeconds = Math.min(30, Math.max(15, Math.round(Number(merged.videoLengthSeconds) || 24)));
+  merged.videoLengthSeconds = Math.min(48, Math.max(15, Math.round(Number(merged.videoLengthSeconds) || 24)));
   const rawQualityThreshold = Number(merged.qualityThreshold);
   merged.qualityThreshold = Math.min(10, Math.max(0, Number.isNaN(rawQualityThreshold) ? 9 : rawQualityThreshold));
   if (typeof merged.enabledContentModes !== 'object' || merged.enabledContentModes === null || Array.isArray(merged.enabledContentModes)) {

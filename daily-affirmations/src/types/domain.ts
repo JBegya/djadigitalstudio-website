@@ -13,7 +13,7 @@ export interface Settings {
   outputFolder: string;
   musicFolder: string;
   logoPath: string;
-  videoLengthSeconds: number; // target length, 15-30
+  videoLengthSeconds: number; // target length, 15-48
   voice: VoicePreset;
   subtitleFont: string;
   subtitleColor: string; // hex
