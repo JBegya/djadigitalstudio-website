@@ -4,7 +4,7 @@ import { MODELS } from '@/server/config/models';
 import { createLogger } from '@/server/utils/logger';
 import { retryWithBackoff } from '@/server/utils/retry';
 import { containsEmoji, findBannedPhrase, hasRepetitiveSentenceOpenings, jaccardSimilarity, wordCount } from '@/server/utils/textStats';
-import { getOpenAIClient, parseStructuredCompletion } from './openaiClient';
+import { getOpenAIClient, parseStructuredResponse } from './openaiClient';
 import { generateMockAffirmation } from './scriptWriterMock';
 
 const log = createLogger('scriptWriter');
@@ -71,21 +71,18 @@ async function callOpenAI(brand: BrandId, topicLabel: string, settings: Settings
   const client = getOpenAIClient(settings.openaiApiKey);
   const { system, user } = buildPrompt(brand, topicLabel, avoidExamples);
 
-  const completion = await client.chat.completions.create({
+  const response = await client.responses.create({
     model: MODELS.script,
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
-    ],
-    temperature: 1,
-    // presence_penalty pushes the model to cover new ground rather than circling the same
-    // theme; frequency_penalty discourages reusing the exact same words within one script —
-    // together they cut down on the generic, repetitive phrasing that reads as AI-written.
-    presence_penalty: 0.5,
-    frequency_penalty: 0.35,
-    response_format: {
-      type: 'json_schema',
-      json_schema: {
+    instructions: system,
+    input: user,
+    // presence_penalty/frequency_penalty used to push the model toward fresher phrasing on
+    // older chat-completions models, but the Responses API doesn't expose either knob at all —
+    // reasoning-tier models (o-series, gpt-5.x) reject them outright ("Unsupported parameter").
+    // Variety now comes entirely from the avoid-list in the prompt and the content-validation
+    // retry loop below, which already has to catch repetitive phrasing regardless.
+    text: {
+      format: {
+        type: 'json_schema',
         name: 'affirmation',
         strict: true,
         schema: {
@@ -98,7 +95,7 @@ async function callOpenAI(brand: BrandId, topicLabel: string, settings: Settings
     },
   });
 
-  const parsed = parseStructuredCompletion<{ affirmation: string }>(completion, `the ${brand} affirmation script`);
+  const parsed = parseStructuredResponse<{ affirmation: string }>(response, `the ${brand} affirmation script`);
   return parsed.affirmation.trim().replace(/^["“]|["”]$/g, '');
 }
 

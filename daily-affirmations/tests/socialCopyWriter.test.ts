@@ -47,16 +47,16 @@ describe('normalizeHashtagCount', () => {
 
 // --- End-to-end retry/error-classification behavior through the real OpenAI call site ---
 // These use a hoisted, reassignable mock so the module-level OpenAI client cache in
-// openaiClient.ts doesn't leak state between tests — see chatCreateImpl below.
+// openaiClient.ts doesn't leak state between tests — see responsesCreateImpl below.
 const state = vi.hoisted(() => ({
-  chatCreateImpl: async (..._args: unknown[]): Promise<unknown> => {
-    throw new Error('chatCreateImpl not configured for this test');
+  responsesCreateImpl: async (..._args: unknown[]): Promise<unknown> => {
+    throw new Error('responsesCreateImpl not configured for this test');
   },
 }));
 
 vi.mock('openai', () => ({
   default: class MockOpenAI {
-    chat = { completions: { create: (...args: unknown[]) => state.chatCreateImpl(...args) } };
+    responses = { create: (...args: unknown[]) => state.responsesCreateImpl(...args) };
   },
 }));
 
@@ -67,23 +67,19 @@ function apiError(status: number, headers?: HeadersInit) {
   return err;
 }
 
-function validCompletion() {
+function validResponse() {
+  const outputText = JSON.stringify({
+    facebook: 'A gentle reminder for your shift today.',
+    instagram: 'You are doing better than you think.\n\nBreathe.',
+    tiktok: 'POV: you needed to hear this today.',
+    youtube_shorts: 'Part of our daily affirmations series for nurses.',
+    hashtags: Array.from({ length: 30 }, (_, i) => `#tag${i}`),
+    thumbnail_hook: 'You Are Doing Enough',
+  });
   return {
-    choices: [
-      {
-        message: {
-          content: JSON.stringify({
-            facebook: 'A gentle reminder for your shift today.',
-            instagram: 'You are doing better than you think.\n\nBreathe.',
-            tiktok: 'POV: you needed to hear this today.',
-            youtube_shorts: 'Part of our daily affirmations series for nurses.',
-            hashtags: Array.from({ length: 30 }, (_, i) => `#tag${i}`),
-            thumbnail_hook: 'You Are Doing Enough',
-          }),
-        },
-        finish_reason: 'stop',
-      },
-    ],
+    status: 'completed',
+    output_text: outputText,
+    output: [{ type: 'message', content: [{ type: 'output_text', text: outputText }] }],
   };
 }
 
@@ -98,7 +94,7 @@ describe('writeSocialCopy (mocked OpenAI transport)', () => {
 
   it('falls back to the local mock generator in Test Mode (no API key) without touching the network', async () => {
     const { writeSocialCopy } = await import('@/server/ai-services/socialCopyWriter');
-    state.chatCreateImpl = async () => {
+    state.responsesCreateImpl = async () => {
       throw new Error('should never be called in Test Mode');
     };
     const settings = { openaiApiKey: '' } as never;
@@ -109,10 +105,10 @@ describe('writeSocialCopy (mocked OpenAI transport)', () => {
 
   it('recovers from a transient 429 (with Retry-After) and returns the parsed captions', async () => {
     let calls = 0;
-    state.chatCreateImpl = async () => {
+    state.responsesCreateImpl = async () => {
       calls += 1;
       if (calls === 1) throw apiError(429, { 'retry-after': '0' });
-      return validCompletion();
+      return validResponse();
     };
     const { writeSocialCopy } = await import('@/server/ai-services/socialCopyWriter');
     const settings = { openaiApiKey: 'sk-test' } as never;
@@ -126,7 +122,7 @@ describe('writeSocialCopy (mocked OpenAI transport)', () => {
 
   it('fails fast on a 401 auth error without retrying', async () => {
     let calls = 0;
-    state.chatCreateImpl = async () => {
+    state.responsesCreateImpl = async () => {
       calls += 1;
       throw apiError(401);
     };
@@ -136,8 +132,20 @@ describe('writeSocialCopy (mocked OpenAI transport)', () => {
     expect(calls).toBe(1);
   });
 
+  it('fails fast on a 400 unsupported-parameter error without retrying', async () => {
+    let calls = 0;
+    state.responsesCreateImpl = async () => {
+      calls += 1;
+      throw apiError(400);
+    };
+    const { writeSocialCopy } = await import('@/server/ai-services/socialCopyWriter');
+    const settings = { openaiApiKey: 'sk-test' } as never;
+    await expect(writeSocialCopy({ brand: 'nurse', topicLabel: 'Burnout', affirmationText: 'x', settings })).rejects.toThrow('HTTP 400');
+    expect(calls).toBe(1);
+  });
+
   it('surfaces a clear error when the model returns malformed JSON, after exhausting retries', async () => {
-    state.chatCreateImpl = async () => ({ choices: [{ message: { content: '{not valid' }, finish_reason: 'stop' }] });
+    state.responsesCreateImpl = async () => ({ status: 'completed', output_text: '{not valid', output: [] });
     const { writeSocialCopy } = await import('@/server/ai-services/socialCopyWriter');
     const settings = { openaiApiKey: 'sk-test' } as never;
     await expect(writeSocialCopy({ brand: 'nurse', topicLabel: 'Burnout', affirmationText: 'x', settings })).rejects.toThrow(

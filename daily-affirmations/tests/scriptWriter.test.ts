@@ -1,14 +1,14 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 const state = vi.hoisted(() => ({
-  chatCreateImpl: async (..._args: unknown[]): Promise<unknown> => {
-    throw new Error('chatCreateImpl not configured for this test');
+  responsesCreateImpl: async (..._args: unknown[]): Promise<unknown> => {
+    throw new Error('responsesCreateImpl not configured for this test');
   },
 }));
 
 vi.mock('openai', () => ({
   default: class MockOpenAI {
-    chat = { completions: { create: (...args: unknown[]) => state.chatCreateImpl(...args) } };
+    responses = { create: (...args: unknown[]) => state.responsesCreateImpl(...args) };
   },
 }));
 
@@ -24,8 +24,13 @@ const VALID_AFFIRMATION =
   'quiet hour. The weight of this work does not erase your worth or your care for the people ' +
   'who depend on you. Rest is allowed. Tomorrow you begin again, steady and whole.';
 
-function validCompletion(text = VALID_AFFIRMATION) {
-  return { choices: [{ message: { content: JSON.stringify({ affirmation: text }) }, finish_reason: 'stop' }] };
+function validResponse(text = VALID_AFFIRMATION) {
+  const outputText = JSON.stringify({ affirmation: text });
+  return {
+    status: 'completed',
+    output_text: outputText,
+    output: [{ type: 'message', content: [{ type: 'output_text', text: outputText }] }],
+  };
 }
 
 describe('writeAffirmationScript (mocked OpenAI transport)', () => {
@@ -39,7 +44,7 @@ describe('writeAffirmationScript (mocked OpenAI transport)', () => {
 
   it('falls back to the local mock generator in Test Mode (no API key) without touching the network', async () => {
     const { writeAffirmationScript } = await import('@/server/ai-services/scriptWriter');
-    state.chatCreateImpl = async () => {
+    state.responsesCreateImpl = async () => {
       throw new Error('should never be called in Test Mode');
     };
     const settings = { openaiApiKey: '' } as never;
@@ -50,10 +55,10 @@ describe('writeAffirmationScript (mocked OpenAI transport)', () => {
 
   it('recovers from a transient 503 and returns the validated affirmation', async () => {
     let calls = 0;
-    state.chatCreateImpl = async () => {
+    state.responsesCreateImpl = async () => {
       calls += 1;
       if (calls === 1) throw apiError(503, { 'retry-after': '0' });
-      return validCompletion();
+      return validResponse();
     };
     const { writeAffirmationScript } = await import('@/server/ai-services/scriptWriter');
     const settings = { openaiApiKey: 'sk-test' } as never;
@@ -65,7 +70,7 @@ describe('writeAffirmationScript (mocked OpenAI transport)', () => {
 
   it('fails fast on a 401 auth error without retrying', async () => {
     let calls = 0;
-    state.chatCreateImpl = async () => {
+    state.responsesCreateImpl = async () => {
       calls += 1;
       throw apiError(401);
     };
@@ -78,13 +83,30 @@ describe('writeAffirmationScript (mocked OpenAI transport)', () => {
     expect(calls).toBe(1);
   });
 
+  it('fails fast on a 400 unsupported-parameter error without retrying', async () => {
+    // Regression test for the real-world failure this migration fixed: a reasoning-tier model
+    // (e.g. gpt-5.5) rejecting an unsupported sampling parameter with a 400. Retrying an
+    // identically-malformed request would never succeed, so this must surface immediately.
+    let calls = 0;
+    state.responsesCreateImpl = async () => {
+      calls += 1;
+      throw apiError(400);
+    };
+    const { writeAffirmationScript } = await import('@/server/ai-services/scriptWriter');
+    const settings = { openaiApiKey: 'sk-test' } as never;
+    await expect(
+      writeAffirmationScript({ brand: 'nurse', topicKey: 'running-empty', settings, avoidExamples: [] }),
+    ).rejects.toThrow('HTTP 400');
+    expect(calls).toBe(1);
+  });
+
   it('rejects a response that violates content rules (banned phrase) and asks the model again', async () => {
     let calls = 0;
-    state.chatCreateImpl = async () => {
+    state.responsesCreateImpl = async () => {
       calls += 1;
       // First reply uses a banned phrase; second is clean — proves the content-validation retry
       // loop (separate from the HTTP retry layer) actually re-requests instead of accepting it.
-      return calls === 1 ? validCompletion(`${VALID_AFFIRMATION} You got this.`) : validCompletion();
+      return calls === 1 ? validResponse(`${VALID_AFFIRMATION} You got this.`) : validResponse();
     };
     const { writeAffirmationScript } = await import('@/server/ai-services/scriptWriter');
     const settings = { openaiApiKey: 'sk-test' } as never;

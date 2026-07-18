@@ -1,9 +1,9 @@
 import type { BrandId, CaptionSet, Settings } from '@/types/domain';
 import { getBrand } from '@/server/config/brands';
-import { MODELS } from '@/server/config/models';
+import { isReasoningModel, MODELS } from '@/server/config/models';
 import { createLogger } from '@/server/utils/logger';
 import { retryWithBackoff } from '@/server/utils/retry';
-import { getOpenAIClient, parseStructuredCompletion } from './openaiClient';
+import { getOpenAIClient, parseStructuredResponse } from './openaiClient';
 import { generateMockCaptions, generateMockHashtags, generateMockThumbnailHook } from './socialCopyWriterMock';
 
 const log = createLogger('socialCopyWriter');
@@ -77,16 +77,16 @@ async function callOpenAI(brand: BrandId, topicLabel: string, affirmationText: s
   const client = getOpenAIClient(settings.openaiApiKey);
   const { system, user } = buildPrompt(brand, topicLabel, affirmationText);
 
-  const completion = await client.chat.completions.create({
+  const response = await client.responses.create({
     model: MODELS.script,
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
-    ],
-    temperature: 0.9,
-    response_format: {
-      type: 'json_schema',
-      json_schema: {
+    instructions: system,
+    input: user,
+    // Reasoning-tier models (o-series, gpt-5.x) reject a custom temperature outright — only
+    // apply it for classic chat-style models where it actually has an effect.
+    ...(isReasoningModel(MODELS.script) ? {} : { temperature: 0.9 }),
+    text: {
+      format: {
+        type: 'json_schema',
         name: 'social_copy',
         strict: true,
         schema: {
@@ -106,7 +106,7 @@ async function callOpenAI(brand: BrandId, topicLabel: string, affirmationText: s
     },
   });
 
-  const parsed = parseStructuredCompletion<RawResponse>(completion, `${brand} captions and hashtags`);
+  const parsed = parseStructuredResponse<RawResponse>(response, `${brand} captions and hashtags`);
   const hashtags = normalizeHashtagCount(brand, parsed.hashtags);
 
   return {

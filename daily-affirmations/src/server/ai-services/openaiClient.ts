@@ -18,26 +18,33 @@ export function getOpenAIClient(apiKey: string): OpenAI {
   return client;
 }
 
-interface StructuredCompletionLike {
-  choices: Array<{
-    message?: { content?: string | null; refusal?: string | null };
-    finish_reason?: string;
+interface StructuredResponseLike {
+  status?: string;
+  incomplete_details?: { reason?: string } | null;
+  output_text?: string;
+  output?: Array<{
+    type?: string;
+    content?: Array<{ type?: string; text?: string; refusal?: string }>;
   }>;
 }
 
 /**
- * Extracts and parses the JSON payload from a `response_format: json_schema` completion,
- * with explicit handling for the ways a real call can come back unusable that a bare
- * `JSON.parse(content)` would surface as a confusing, unrelated error: a safety refusal, a
- * response truncated by hitting the token limit, or content that isn't valid JSON at all.
+ * Extracts and parses the JSON payload from a Responses API call made with
+ * `text.format: { type: 'json_schema', ... }`, with explicit handling for the ways a real call
+ * can come back unusable that a bare `JSON.parse(output_text)` would surface as a confusing,
+ * unrelated error: a safety refusal, a response truncated by hitting a token/output limit, or
+ * content that isn't valid JSON at all.
  */
-export function parseStructuredCompletion<T>(completion: StructuredCompletionLike, context: string): T {
-  const choice = completion.choices[0];
-  if (!choice) throw new Error(`OpenAI returned no choices for ${context}`);
-  if (choice.message?.refusal) throw new Error(`OpenAI declined to generate ${context}: ${choice.message.refusal}`);
-  if (choice.finish_reason === 'length') throw new Error(`OpenAI response for ${context} was truncated (hit the token limit)`);
+export function parseStructuredResponse<T>(response: StructuredResponseLike, context: string): T {
+  const message = response.output?.find((item) => item.type === 'message');
+  const refusal = message?.content?.find((part) => part.type === 'refusal')?.refusal;
+  if (refusal) throw new Error(`OpenAI declined to generate ${context}: ${refusal}`);
+  if (response.status === 'incomplete') {
+    const reason = response.incomplete_details?.reason ?? 'hit a limit';
+    throw new Error(`OpenAI response for ${context} was truncated (${reason})`);
+  }
 
-  const raw = choice.message?.content;
+  const raw = response.output_text;
   if (!raw) throw new Error(`OpenAI returned an empty response for ${context}`);
   try {
     return JSON.parse(raw) as T;
