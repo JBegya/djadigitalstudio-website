@@ -16,6 +16,11 @@ export interface EmotionalJudgeResult {
    * a hard failure regardless of the numeric scores — see qualityChecks.ts's "Peer Believability". */
   believable: boolean;
   reasoning: string;
+  /** The second hard gate: would someone actually save or send this because it made them feel
+   * understood — the metric social media actually rewards, distinct from merely sounding like a
+   * believable peer. See qualityChecks.ts's "Save-Worthy". */
+  wouldSave: boolean;
+  saveReasoning: string;
   source: 'openai' | 'heuristic';
 }
 
@@ -32,6 +37,8 @@ interface RawJudgeResponse {
   shareability: number;
   believable: boolean;
   reasoning: string;
+  wouldSave: boolean;
+  saveReasoning: string;
 }
 
 function buildJudgePrompt(brand: BrandId, text: string) {
@@ -45,9 +52,11 @@ function buildJudgePrompt(brand: BrandId, text: string) {
     '- comfort: would this genuinely comfort someone having a hard day, without pretending to fix everything or rushing past the hard part?',
     '- emotionalImpact: how much would this actually move someone in your position, right now?',
     '- shareability: how likely would someone in your position be to save this or send it to a friend who needed it?',
-    'Then answer the single most important question, "believable": would you, a real person living this life, genuinely believe this was written by a peer — someone who lives it too — rather than an outside observer, a life coach, a therapist, a motivational speaker, an influencer, or an AI? Only answer true if the answer is a genuine yes.',
-    'Be a tough, honest critic. A pleasant but generic script that any wellness brand could have produced should score low on authenticity and believability even if nothing in it is offensive or wrong.',
-    'Respond with strict JSON matching the schema. "reasoning" is one honest sentence explaining your believable verdict.',
+    'Then answer two separate yes/no questions — a script can pass one and fail the other, so judge them independently:',
+    '"believable": would you, a real person living this life, genuinely believe this was written by a peer — someone who lives it too — rather than an outside observer, a life coach, a therapist, a motivational speaker, an influencer, or an AI? Only true if the answer is a genuine yes.',
+    '"wouldSave": would you actually save this video, or send it to a friend who needed it, because it made you feel specifically understood — not just because it was pleasant or well-written? This is the real test: people don\'t save content because it\'s technically good, they save it because it spoke to them. Only true if you\'d genuinely do this, not if it merely seems plausible that someone might.',
+    'Be a tough, honest critic on both questions. A pleasant but generic script that any wellness brand could have produced should score low on authenticity and fail both gates even if nothing in it is offensive or wrong — sounding believable as a peer is not the same as being worth saving.',
+    'Respond with strict JSON matching the schema. "reasoning" is one honest sentence explaining your believable verdict; "saveReasoning" is one honest sentence explaining your wouldSave verdict.',
   ].join('\n');
   const user = `Script:\n"${text}"`;
   return { system, user };
@@ -77,8 +86,20 @@ async function callJudge(brand: BrandId, text: string, settings: Settings): Prom
             shareability: { type: 'number' },
             believable: { type: 'boolean' },
             reasoning: { type: 'string' },
+            wouldSave: { type: 'boolean' },
+            saveReasoning: { type: 'string' },
           },
-          required: ['emotionalAuthenticity', 'humanWarmth', 'comfort', 'emotionalImpact', 'shareability', 'believable', 'reasoning'],
+          required: [
+            'emotionalAuthenticity',
+            'humanWarmth',
+            'comfort',
+            'emotionalImpact',
+            'shareability',
+            'believable',
+            'reasoning',
+            'wouldSave',
+            'saveReasoning',
+          ],
           additionalProperties: false,
         },
       },
@@ -95,6 +116,8 @@ async function callJudge(brand: BrandId, text: string, settings: Settings): Prom
     shareability: clamp(parsed.shareability),
     believable: parsed.believable,
     reasoning: parsed.reasoning,
+    wouldSave: parsed.wouldSave,
+    saveReasoning: parsed.saveReasoning,
     source: 'openai',
   };
 }
@@ -119,6 +142,8 @@ function heuristicJudge(): EmotionalJudgeResult {
     shareability: 8.5,
     believable: true,
     reasoning: 'Heuristic fallback (no OpenAI judge available) — not independently verified.',
+    wouldSave: true,
+    saveReasoning: 'Heuristic fallback (no OpenAI judge available) — not independently verified.',
     source: 'heuristic',
   };
 }

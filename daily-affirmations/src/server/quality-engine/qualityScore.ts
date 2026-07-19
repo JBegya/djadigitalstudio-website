@@ -11,6 +11,7 @@ const EMOTIONAL_IMPACT_CHECKS = [
   'Emotional Authenticity',
   'Human Warmth',
   'Peer Believability',
+  'Save-Worthy',
   'Comfort',
   'Emotional Impact',
   'Shareability',

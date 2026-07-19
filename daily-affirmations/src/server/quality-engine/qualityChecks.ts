@@ -236,17 +236,24 @@ async function checkEmotionalAuthenticity(brand: BrandId, text: string, settings
   // every other soft-scored check already uses. No separate hard-fail threshold needed for these.
   const scoreCheck = (name: string, value: number): QualityCheckResult => ok(name, `Scored ${value.toFixed(1)}/10.`, 'info', value);
 
-  // "Believable" is the one explicit hard gate the brief calls out by name: if a real nurse/autism
-  // parent wouldn't believe a peer wrote this, regenerate the script outright, independent of
-  // how the numeric scores land.
+  // Two independent hard gates — a script can pass one and fail the other, and either failing
+  // regenerates the script outright, independent of how the numeric scores land.
   const believability: QualityCheckResult = judgment.believable
     ? ok('Peer Believability', `Would a real peer believe this was written by one of their own? Yes — ${judgment.reasoning}`, 'info', 10)
     : fail('Peer Believability', `Would a real peer believe this was written by one of their own? No — ${judgment.reasoning}`, 'error', 2);
+
+  // "Save-worthy" is the metric social media actually rewards: people don't save content for
+  // being well written, they save it because it spoke to them. Sounding like a believable peer
+  // isn't the same as being worth saving, so this is judged and gated separately.
+  const saveWorthy: QualityCheckResult = judgment.wouldSave
+    ? ok('Save-Worthy', `Would someone save this because it made them feel understood? Yes — ${judgment.saveReasoning}`, 'info', 10)
+    : fail('Save-Worthy', `Would someone save this because it made them feel understood? No — ${judgment.saveReasoning}`, 'error', 2);
 
   return [
     scoreCheck('Emotional Authenticity', judgment.emotionalAuthenticity),
     scoreCheck('Human Warmth', judgment.humanWarmth),
     believability,
+    saveWorthy,
     scoreCheck('Comfort', judgment.comfort),
     scoreCheck('Emotional Impact', judgment.emotionalImpact),
     scoreCheck('Shareability', judgment.shareability),
@@ -291,7 +298,8 @@ export async function runQualityChecks(input: QualityInput, qualityThreshold = 9
         !byName.get('Grammar & Spelling')?.passed ||
         !byName.get('Emotional Tone')?.passed ||
         !byName.get('Duplicate Check')?.passed ||
-        !byName.get('Peer Believability')?.passed
+        !byName.get('Peer Believability')?.passed ||
+        !byName.get('Save-Worthy')?.passed
       ) {
         regenerateComponent = 'script';
       } else if (!byName.get('Subtitle Timing')?.passed) {

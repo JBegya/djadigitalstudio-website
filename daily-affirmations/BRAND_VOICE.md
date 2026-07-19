@@ -1,8 +1,15 @@
 # Brand Voice — DJ&A Daily Affirmations
 
 This document is the creative foundation for everything this application produces. Read it before
-changing a prompt, a visual, a piece of music, or a line of copy. When a technical decision and an
-emotional one conflict, **the emotional one wins.**
+changing a prompt, a visual, a piece of music, or a line of copy.
+
+**Optimize for emotional impact first, while remaining economically sustainable.** When a
+technical decision and an emotional one conflict, default to the emotional one — spending a few
+extra cents per video for noticeably better writing or narration is worth it if it improves how
+understood a viewer feels. But this isn't a blank check: if a change would multiply the cost of a
+video several times over for only a marginal quality gain, that's worth stopping and reassessing
+rather than assuming the emotional argument always wins by default. The creative vision stays
+front and center without losing sight of the business it needs to sustain.
 
 ## The one job this application has
 
@@ -56,6 +63,12 @@ terrible day — quietly, without performing anything.
 
 See `NURSE_STYLE_GUIDE.md` and `AUTISM_PARENT_STYLE_GUIDE.md` for exactly who that narrator is for
 each series — their backstory, their specific vocabulary, and what they would never say.
+
+Knowing who's speaking isn't enough on its own — see `AUDIENCE_PROFILES.md` for who's
+**listening**: not demographics, but the specific psychology of the person opening this video at
+the end of a hard day — what she fears, what she secretly needs, what words hurt and which ones
+heal. A script that nails the narrator's voice but doesn't actually meet the listener where she is
+will still fall flat.
 
 ## The one rule that protects authenticity above all others: don't claim certainty you don't have
 
@@ -117,6 +130,7 @@ brand. See `VISUAL_GUIDE.md` for the full palette, typography, and motion langua
 | `VISUAL_GUIDE.md` | Color, typography, motion, subtitles, music — the shared visual/audio language of both series |
 | `NURSE_STYLE_GUIDE.md` | Everything specific to writing and shooting as a nurse, for nurses |
 | `AUTISM_PARENT_STYLE_GUIDE.md` | Everything specific to writing and shooting as an autism parent, for autism parents |
+| `AUDIENCE_PROFILES.md` | Who's listening — the psychology of the person on the other side of the screen, not just who's speaking to them |
 
 These documents are the creative foundation. When the code and this document disagree, that's a
 bug in the code — fix the code, or have a real conversation about changing the direction here

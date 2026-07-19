@@ -32,6 +32,7 @@ just implied by prompts:
 | [`VISUAL_GUIDE.md`](./VISUAL_GUIDE.md) | Color, typography, motion, footage, subtitles, music |
 | [`NURSE_STYLE_GUIDE.md`](./NURSE_STYLE_GUIDE.md) | Everything specific to writing and shooting as a nurse, for nurses |
 | [`AUTISM_PARENT_STYLE_GUIDE.md`](./AUTISM_PARENT_STYLE_GUIDE.md) | Everything specific to writing and shooting as an autism parent, for autism parents |
+| [`AUDIENCE_PROFILES.md`](./AUDIENCE_PROFILES.md) | Who's listening — the psychology of the person on the other side of the screen, not just who's speaking to them |
 
 Read these before changing a prompt, a visual, or a piece of copy — they're the creative
 foundation the code (`src/server/config/brands.ts`, `src/server/ai-services/scriptWriter.ts`)

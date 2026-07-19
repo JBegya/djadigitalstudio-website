@@ -13,6 +13,7 @@ const EMOTIONAL_IMPACT_CHECK_NAMES = [
   'Emotional Authenticity',
   'Human Warmth',
   'Peer Believability',
+  'Save-Worthy',
   'Comfort',
   'Emotional Impact',
   'Shareability',
@@ -25,6 +26,7 @@ const ALL_PASS_CHECKS: QualityCheckResult[] = [
   check('Emotional Authenticity', 9.5),
   check('Human Warmth', 9.5),
   check('Peer Believability', 10),
+  check('Save-Worthy', 10),
   check('Comfort', 9.5),
   check('Emotional Impact', 9.5),
   check('Shareability', 9.5),
@@ -66,7 +68,7 @@ describe('computeQualityScore', () => {
     const withFailure = [...ALL_PASS_CHECKS.filter((c) => c.name !== 'Duplicate Check'), check('Duplicate Check', 1, false)];
     const score = computeQualityScore(withFailure);
     expect(score.emotionalImpact).toBeLessThan(computeQualityScore(ALL_PASS_CHECKS).emotionalImpact);
-    // Nine checks now feed this category (up from three), so one failure moves the average less
+    // Ten checks now feed this category (up from three), so one failure moves the average less
     // in absolute terms — still a clear, visible drop from the ~9.7 all-pass baseline.
     expect(score.emotionalImpact).toBeLessThan(9);
   });

@@ -128,12 +128,21 @@ through a feeling rather than compressing everything into a single line.
 
 ## The final test, before anything ships
 
-Would an experienced ICU nurse genuinely believe another nurse wrote this — not a wellness brand,
-not an AI? Would an autism parent genuinely believe another autism parent wrote this — not an
-advocacy account, not an AI? If the honest answer is no, it gets rewritten. This is now an actual
-gate in the pipeline (`src/server/ai-services/emotionalJudge.ts`), not just a guideline — a script
-that fails this test is regenerated automatically, regardless of how well it scores on anything
-else.
+Two questions, both hard gates in the pipeline (`src/server/ai-services/emotionalJudge.ts`) — a
+"no" on either one forces the script to be rewritten, regardless of how well it scores on
+anything else:
+
+1. **Believability** — would an experienced ICU nurse genuinely believe another nurse wrote this
+   (not a wellness brand, not an AI)? Would an autism parent genuinely believe another autism
+   parent wrote this (not an advocacy account, not an AI)?
+2. **Save-worthy** — would someone actually save this video, or send it to a friend, because it
+   made them feel understood? This is the metric social media actually rewards — people don't
+   save content because it's well written, they save it because it spoke to them specifically.
+   A script can be believable as a peer's voice and still not be worth saving if it doesn't land
+   emotionally; both questions have to clear the bar.
+
+See `AUDIENCE_PROFILES.md` for the specific psychology each of these questions is really testing
+against — "would this person, exactly as described there, save this?"
 
 ## Excellent vs. weak — worked examples
 

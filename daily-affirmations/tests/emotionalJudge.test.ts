@@ -27,6 +27,8 @@ function judgeResponse(overrides: Partial<Record<string, unknown>> = {}) {
     shareability: 8,
     believable: true,
     reasoning: 'Reads like a real nurse talking to another nurse.',
+    wouldSave: true,
+    saveReasoning: 'This is specific enough that I would send it to a friend having a hard shift.',
     ...overrides,
   };
   const outputText = JSON.stringify(payload);
