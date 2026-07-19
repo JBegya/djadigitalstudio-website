@@ -16,11 +16,27 @@ who is struggling: a fellow nurse talking to a nurse who just finished a brutal 
 autism parent talking to another parent at the end of one of the hardest days of their life.
 Never an expert, a coach, a therapist, a narrator, or an influencer. The measure of success isn't
 "did this motivate someone" — it's whether the viewer finishes thinking *"this person understands
-me. I am not alone."* Every design decision in this codebase — the script structure, the voice
-delivery, the imagery, the quality scoring — is built around that one goal. See
-`src/server/config/brands.ts` for the full brand voice/identity and
-`src/server/ai-services/scriptWriter.ts` for the exact five-beat monologue structure every script
-follows.
+me. I am not alone."* When a technical decision and an emotional one conflict, the emotional one
+wins.
+
+### The Brand Bible
+
+The full creative direction — narrator identity, words to use and avoid, sentence rhythm, visual
+style, music style, and worked excellent-vs-weak script examples — is documented explicitly, not
+just implied by prompts:
+
+| Document | Covers |
+|---|---|
+| [`BRAND_VOICE.md`](./BRAND_VOICE.md) | The mission, the narrator concept, brand personality, the core authenticity rule |
+| [`WRITING_GUIDE.md`](./WRITING_GUIDE.md) | The five-beat script structure, sentence rhythm, banned phrases, annotated examples |
+| [`VISUAL_GUIDE.md`](./VISUAL_GUIDE.md) | Color, typography, motion, footage, subtitles, music |
+| [`NURSE_STYLE_GUIDE.md`](./NURSE_STYLE_GUIDE.md) | Everything specific to writing and shooting as a nurse, for nurses |
+| [`AUTISM_PARENT_STYLE_GUIDE.md`](./AUTISM_PARENT_STYLE_GUIDE.md) | Everything specific to writing and shooting as an autism parent, for autism parents |
+
+Read these before changing a prompt, a visual, or a piece of copy — they're the creative
+foundation the code (`src/server/config/brands.ts`, `src/server/ai-services/scriptWriter.ts`)
+implements. If the code and the Brand Bible ever disagree, that's a bug: fix the code, or update
+the Bible deliberately, but don't let them drift apart silently.
 
 ## What it does, end to end
 
