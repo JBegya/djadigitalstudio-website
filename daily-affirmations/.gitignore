@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+*.tsbuildinfo
+
+# electron
+electron/dist/
+dist/
+release/
+
+# env
+.env
+.env.local
+
+# runtime data — settings live outside the repo, but ignore local fallbacks
+.settings/
+Exports/
+.cache/
+tmp/
+
+# logs
+*.log
+npm-debug.log*
+
+# os
+.DS_Store
+Thumbs.db
+
+# testing
+coverage/

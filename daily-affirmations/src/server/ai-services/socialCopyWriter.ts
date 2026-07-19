@@ -1,0 +1,142 @@
+import type { BrandId, CaptionSet, Settings } from '@/types/domain';
+import { getBrand } from '@/server/config/brands';
+import { isReasoningModel, MODELS } from '@/server/config/models';
+import { createLogger } from '@/server/utils/logger';
+import { retryWithBackoff } from '@/server/utils/retry';
+import { getOpenAIClient, parseStructuredResponse } from './openaiClient';
+import { generateMockCaptions, generateMockHashtags, generateMockThumbnailHook } from './socialCopyWriterMock';
+
+const log = createLogger('socialCopyWriter');
+
+export interface SocialCopyResult {
+  captions: CaptionSet;
+  hashtags: string[];
+  thumbnailHook: string;
+  source: 'openai' | 'mock';
+}
+
+export interface SocialCopyRequest {
+  brand: BrandId;
+  topicLabel: string;
+  affirmationText: string;
+  settings: Settings;
+}
+
+interface RawResponse {
+  facebook: string;
+  instagram: string;
+  tiktok: string;
+  youtube_shorts: string;
+  hashtags: string[];
+  thumbnail_hook: string;
+}
+
+function clampToSixWords(text: string): string {
+  return text.trim().split(/\s+/).filter(Boolean).slice(0, 6).join(' ');
+}
+
+/**
+ * Guarantees exactly 30 hashtags regardless of what the model actually returned. OpenAI's
+ * Structured Outputs strict mode doesn't reliably enforce array-length keywords like
+ * `minItems`/`maxItems` — they're accepted in the schema but not guaranteed to constrain the
+ * model's output — so the count has to be enforced in code rather than trusted from the schema.
+ */
+export function normalizeHashtagCount(brand: BrandId, hashtags: string[]): string[] {
+  const cleaned = hashtags.map((h) => (h.startsWith('#') ? h : `#${h}`).replace(/\s+/g, '')).filter((h) => h.length > 1);
+  const deduped = Array.from(new Set(cleaned));
+
+  if (deduped.length > 30) return deduped.slice(0, 30);
+  if (deduped.length < 30) {
+    log.warn(`Model returned only ${deduped.length} hashtags — padding to 30 with brand fallbacks`);
+    const fallback = generateMockHashtags(brand).filter((h) => !deduped.includes(h));
+    return [...deduped, ...fallback].slice(0, 30);
+  }
+  return deduped;
+}
+
+function buildPrompt(brand: BrandId, topicLabel: string, affirmationText: string) {
+  const brandDef = getBrand(brand);
+  const system = [
+    `You write social captions and hashtags for DJ&A Digital Studio's "${brandDef.name}" series — short faceless affirmation videos for ${brandDef.audience.join(', ')}.`,
+    'Write four platform-native captions for the SAME video:',
+    '- facebook: warm, a little longer, community-oriented, can invite a gentle response in the comments.',
+    '- instagram: short, punchy, uses line breaks, light and tasteful emoji use is fine.',
+    '- tiktok: casual, hook-first, feels native to the app, one or two sentences.',
+    '- youtube_shorts: a short description-style caption, can mention this is part of a daily affirmations series.',
+    'Then write exactly 30 hashtags relevant to the video: a mix of large broad tags, medium niche tags, and small very-specific tags. No irrelevant or unrelated hashtags.',
+    'Finally write thumbnail_hook: a maximum-six-word on-screen thumbnail headline, punchy and readable at a glance, title case, no punctuation at the end.',
+    'Never restate the full affirmation verbatim as the caption — write something complementary, not a duplicate.',
+    'Respond as strict JSON matching the schema.',
+  ].join('\n');
+
+  const user = `Topic: ${topicLabel}\nAffirmation (for context only, do not repeat verbatim): "${affirmationText}"`;
+  return { system, user };
+}
+
+async function callOpenAI(brand: BrandId, topicLabel: string, affirmationText: string, settings: Settings): Promise<SocialCopyResult> {
+  const client = getOpenAIClient(settings.openaiApiKey);
+  const { system, user } = buildPrompt(brand, topicLabel, affirmationText);
+
+  const response = await client.responses.create({
+    model: MODELS.script,
+    instructions: system,
+    input: user,
+    // Reasoning-tier models (o-series, gpt-5.x) reject a custom temperature outright — only
+    // apply it for classic chat-style models where it actually has an effect.
+    ...(isReasoningModel(MODELS.script) ? {} : { temperature: 0.9 }),
+    text: {
+      format: {
+        type: 'json_schema',
+        name: 'social_copy',
+        strict: true,
+        schema: {
+          type: 'object',
+          properties: {
+            facebook: { type: 'string' },
+            instagram: { type: 'string' },
+            tiktok: { type: 'string' },
+            youtube_shorts: { type: 'string' },
+            hashtags: { type: 'array', items: { type: 'string' }, minItems: 30, maxItems: 30 },
+            thumbnail_hook: { type: 'string' },
+          },
+          required: ['facebook', 'instagram', 'tiktok', 'youtube_shorts', 'hashtags', 'thumbnail_hook'],
+          additionalProperties: false,
+        },
+      },
+    },
+  });
+
+  const parsed = parseStructuredResponse<RawResponse>(response, `${brand} captions and hashtags`);
+  const hashtags = normalizeHashtagCount(brand, parsed.hashtags);
+
+  return {
+    captions: {
+      facebook: parsed.facebook.trim(),
+      instagram: parsed.instagram.trim(),
+      tiktok: parsed.tiktok.trim(),
+      youtubeShorts: parsed.youtube_shorts.trim(),
+    },
+    hashtags,
+    thumbnailHook: clampToSixWords(parsed.thumbnail_hook),
+    source: 'openai',
+  };
+}
+
+export async function writeSocialCopy(request: SocialCopyRequest): Promise<SocialCopyResult> {
+  const { brand, topicLabel, affirmationText, settings } = request;
+
+  if (!settings.openaiApiKey) {
+    log.info('Test Mode: generating placeholder captions and hashtags');
+    return {
+      captions: generateMockCaptions(brand, topicLabel),
+      hashtags: generateMockHashtags(brand),
+      thumbnailHook: generateMockThumbnailHook(topicLabel),
+      source: 'mock',
+    };
+  }
+
+  return retryWithBackoff(() => callOpenAI(brand, topicLabel, affirmationText, settings), {
+    label: 'caption + hashtag writer',
+    retries: 3,
+  });
+}
