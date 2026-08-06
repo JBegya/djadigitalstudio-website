@@ -18,16 +18,16 @@ function response(opts: {
 
 describe('parseStructuredResponse', () => {
   it('parses valid JSON content into the expected shape', () => {
-    const result = parseStructuredResponse<{ affirmation: string }>(
-      response({ outputText: '{"affirmation":"You are enough."}', status: 'completed' }),
+    const result = parseStructuredResponse<{ headline: string }>(
+      response({ outputText: '{"headline":"Never miss a shift change again."}', status: 'completed' }),
       'test',
     );
-    expect(result).toEqual({ affirmation: 'You are enough.' });
+    expect(result).toEqual({ headline: 'Never miss a shift change again.' });
   });
 
   it('throws when the model refused the request', () => {
-    expect(() => parseStructuredResponse(response({ refusal: "I can't help with that." }), 'the autism script')).toThrow(
-      /declined to generate the autism script.*can't help with that/,
+    expect(() => parseStructuredResponse(response({ refusal: "I can't help with that." }), 'the ad headline')).toThrow(
+      /declined to generate the ad headline.*can't help with that/,
     );
   });
 

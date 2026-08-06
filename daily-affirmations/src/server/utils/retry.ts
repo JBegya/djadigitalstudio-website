@@ -60,8 +60,8 @@ const MAX_RETRY_AFTER_MS = 60_000;
 
 /**
  * Exponential backoff with jitter, upgraded to respect a server's `Retry-After` header when
- * present (rate limits especially). Used to wrap every external call (OpenAI, Pexels, ffmpeg)
- * so a transient failure never crashes the app — per the "never crash" requirement.
+ * present (rate limits especially). Used to wrap every external call (OpenAI) so a transient
+ * failure never crashes the app — per the "never crash" requirement.
  */
 export async function retryWithBackoff<T>(fn: (attempt: number) => Promise<T>, options: RetryOptions = {}): Promise<T> {
   const { retries = 3, minDelayMs = 800, maxDelayMs = 12_000, label = 'operation', shouldRetry = defaultShouldRetry, onRetry } = options;

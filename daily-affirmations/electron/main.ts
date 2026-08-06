@@ -61,7 +61,7 @@ async function createWindow(): Promise<void> {
     minWidth: 1080,
     minHeight: 720,
     backgroundColor: '#0a0a0c',
-    title: 'DJ&A Daily Affirmations',
+    title: 'DJ&A Ad Studio',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

@@ -11,8 +11,6 @@ const badgeVariants = cva('inline-flex items-center rounded-full border px-2.5 p
       success: 'border-transparent bg-emerald-500/15 text-emerald-400',
       warning: 'border-transparent bg-amber-500/15 text-amber-400',
       destructive: 'border-transparent bg-destructive/15 text-red-400',
-      nurse: 'border-transparent bg-nurse/15 text-nurse',
-      autism: 'border-transparent bg-autism/15 text-autism',
     },
   },
   defaultVariants: { variant: 'default' },

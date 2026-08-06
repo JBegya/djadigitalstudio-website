@@ -10,16 +10,10 @@ export function formatDateLabel(dateISO: string): string {
   return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
 
-/** Today's date as YYYY-MM-DD in the local timezone — matches the format GenerationHistoryEntry.date uses. */
+/** Today's date as YYYY-MM-DD in the local timezone. */
 export function todayISO(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-export function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.round(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 export function formatBytes(bytes: number): string {

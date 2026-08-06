@@ -1,129 +1,90 @@
-# DJ&A Daily Affirmations
+# DJ&A Ad Studio
 
-An internal content production system for DJ&A Digital Studio Limited. One click produces six
-ready-to-post vertical videos every day — three **Nurse Affirmations**, three **Autism Parent
-Affirmations** — complete with voiceover, subtitles, music, a thumbnail, platform captions, and
-hashtags.
+An internal desktop tool for DJ&A Digital Studio Limited. Its only job is turning a product's
+real screenshots and brand assets into a polished, ready-to-post **static** advertisement — a
+Facebook/Instagram post, an App Store screenshot, a website banner — in under a minute.
 
-This is **not** a SaaS product and is not for sale or public distribution. It's a desktop tool
-for one person to run every morning.
+This is **not** a SaaS product and is not for sale or public distribution. It's a focused
+productivity tool built specifically for marketing DJ&A's own apps, not a general design
+platform. It is not trying to become Canva or Adobe Express.
 
 ## Product philosophy
 
-DJ&A Daily Affirmations is not a motivational app — it's an emotional companion. Every video is
-written and spoken as one person who has genuinely lived this quietly comforting another person
-who is struggling: a fellow nurse talking to a nurse who just finished a brutal shift, a fellow
-autism parent talking to another parent at the end of one of the hardest days of their life.
-Never an expert, a coach, a therapist, a narrator, or an influencer. The measure of success isn't
-"did this motivate someone" — it's whether the viewer finishes thinking *"this person understands
-me. I am not alone."* When a technical decision and an emotional one conflict, the emotional one
-wins.
+Every design decision optimizes for **speed, simplicity, professional quality, low operating
+cost, consistent branding, and reusability** — in that order of what actually matters for this
+tool's one job.
 
-### The Brand Bible
+- **Real screenshots, never recreated.** The app never redraws, regenerates, or AI-generates a
+  screenshot. A product's actual, uploaded screenshots are placed into device mockups exactly as
+  they are. If screenshots are missing, the UI shows a clear placeholder and says so — it never
+  fakes one.
+- **AI only where it genuinely saves time.** OpenAI is used solely to generate *text* — headlines,
+  captions, CTAs, hashtags — never to generate a layout or an image. Every layout comes from a
+  small library of hand-built, reusable templates.
+- **No video.** There is no voice generation, no background music, no stock footage, no subtitle
+  generation, no video rendering. Version 1 produces static graphics only (PNG/JPG/PDF). This is a
+  deliberate scope decision, not an oversight — see "What's explicitly out of scope" below.
 
-The full creative direction — narrator identity, words to use and avoid, sentence rhythm, visual
-style, music style, and worked excellent-vs-weak script examples — is documented explicitly, not
-just implied by prompts:
+## Products
 
-| Document | Covers |
-|---|---|
-| [`BRAND_VOICE.md`](./BRAND_VOICE.md) | The mission, the narrator concept, brand personality, the core authenticity rule |
-| [`WRITING_GUIDE.md`](./WRITING_GUIDE.md) | The five-beat script structure, sentence rhythm, banned phrases, annotated examples |
-| [`VISUAL_GUIDE.md`](./VISUAL_GUIDE.md) | Color, typography, motion, footage, subtitles, music |
-| [`NURSE_STYLE_GUIDE.md`](./NURSE_STYLE_GUIDE.md) | Everything specific to writing and shooting as a nurse, for nurses |
-| [`AUTISM_PARENT_STYLE_GUIDE.md`](./AUTISM_PARENT_STYLE_GUIDE.md) | Everything specific to writing and shooting as an autism parent, for autism parents |
-| [`AUDIENCE_PROFILES.md`](./AUDIENCE_PROFILES.md) | Who's listening — the psychology of the person on the other side of the screen, not just who's speaking to them |
+Products are **never hardcoded** — each one is a Product Profile loaded from JSON
+(`data/products/*.json`), carrying its name, logo, brand colors, fonts, tagline, description,
+App Store/Play Store/website/privacy/terms URLs, screenshots, reusable feature cards, target
+audience, and keywords. Adding a new product means adding a new JSON file, not writing code.
 
-Read these before changing a prompt, a visual, or a piece of copy — they're the creative
-foundation the code (`src/server/config/brands.ts`, `src/server/ai-services/scriptWriter.ts`)
-implements. If the code and the Brand Bible ever disagree, that's a bug: fix the code, or update
-the Bible deliberately, but don't let them drift apart silently.
+Initial products: **ShiftEarn Pro**, **SplitShift Hours**, **ShiftHydrate**.
 
-## What it does, end to end
+## The workflow
 
-Each day's run picks a **balanced mix of Content Modes** per brand (see below) rather than
-random topics, then for each of the 6 videos the pipeline:
+```
+Choose Product → Choose Platform → Choose Template → Choose Screenshot → Choose Feature
+  → (optional AI headline) → (optional AI caption) → Preview → Export
+```
 
-1. **Writes an original script** (OpenAI, as a five-beat cinematic monologue — emotional
-   recognition, validation, shared experience, gentle comfort, quiet hope — never a generic
-   affirmation, never repeats a past one)
-2. **Records a voiceover** (OpenAI text-to-speech, gpt-4o-mini-tts with brand-specific delivery
-   instructions: unhurried, 110-130wpm, natural breathing pauses, warm rather than performative)
-3. **Selects matching background footage** (Pexels, matched to specific, lived-in moments — a
-   hospital corridor, washing hands, a therapy waiting room, a quiet couch cuddle — not generic
-   mood shots)
-4. **Times and burns in subtitles** (Whisper word-level alignment, breaking at commas/dashes/
-   sentence ends the way someone speaking slowly actually breathes, not just every few words;
-   bold styled captions with a soft fade + scale pop-in, positioned inside each platform's safe
-   area)
-5. **Mixes in background music** (auto-ducked well under the voice, loudness-normalized — the
-   narration is the whole point, the music should be felt more than noticed)
-6. **Composes the main clip** (1080×1920, 30fps, smooth Ken Burns zoom with an occasional gentle
-   pan, a subtle per-brand colour grade, logo watermark)
-7. **Adds the DJ&A brand intro and outro** (a short logo-reveal open and a "Daily Affirmations /
-   follow for daily encouragement" close, rendered once per brand and reused — see Brand
-   identity below)
-8. **Writes platform captions + 30 hashtags + a thumbnail hook** (OpenAI)
-9. **Generates a thumbnail** (frame + headline, ≤6 words)
-10. **Runs automated quality checks and scores the result** — grammar/spelling, tone, duplicate
-    detection, subtitle timing, audio level, video length/resolution, *and* an OpenAI-judged
-    emotional-authenticity pass (framed as an experienced ICU nurse / an autism parent actually
-    reading the script) scoring emotional authenticity, human warmth, comfort, emotional impact,
-    and shareability, plus the one question that matters most: would a real peer genuinely
-    believe another peer wrote this? A "no" forces the script to be rewritten outright. Everything
-    rolls up into Emotional Impact / Visual Quality / Caption Readability / Overall scores out of
-    10, and regenerates just the weakest piece (not the whole video) if anything fails outright or
-    the Overall score misses the configured threshold
-11. **Exports** into `Exports/YYYY-MM-DD/{Nurse,Autism}/VideoNN.mp4` + thumbnail + caption +
-    hashtags files, ready to upload to Facebook Reels, Instagram Reels, TikTok, and YouTube
-    Shorts.
+Everything happens on one page. A complete, production-ready advertisement should be achievable
+in under a minute.
 
-The **Preview** screen shows all 6 of a day's videos on one screen with Play, Regenerate, and
-Approve actions per video, plus each one's quality scores — reviewing a day's batch is a single
-scroll, not six separate opens.
+## What's explicitly out of scope (for now)
 
-## Content Modes
+Campaign management, scheduling, analytics, video generation, AI image generation, Canva/Figma
+integration, social publishing, SEO tools, blog/email generation, plugin architecture, and
+workflow automation are all deliberately **not** built in this version. The architecture is meant
+to allow adding them later without a major rewrite, but none of them are implemented yet, and the
+UI doesn't pretend otherwise.
 
-Instead of picking topics at random, each brand rotates through a fixed set of 6 named
-categories, balanced so the least-recently-used category goes first — three videos a day still
-covers a good spread rather than clustering on whatever topic came up by chance:
+## Current status
 
-- **Nurse Affirmations:** Morning Motivation, Night Shift, Burnout, Leadership, Self Care, Gratitude
-- **Autism Parent Affirmations:** Hard Days, Small Wins, Hope, Therapy, School, Burnout
+This app is being rebuilt from an earlier single-purpose video generator (the daily affirmation
+video pipeline) into the focused static-ad tool described above. Work proceeds as small,
+reviewable milestones:
 
-Each mode has a few specific "angles" under it (e.g. Burnout → *Running on Empty*, *The Weight
-You Carry*, *Finding Your Way Back*) so repeat visits to the same mode still feel like a
-different, specific moment rather than the same prompt reworded — see `src/server/config/brands.ts`.
-Toggle modes off per brand from Settings → Content Modes if you want to temporarily exclude one.
+- [x] **M1 — Project cleanup.** Removed all video/voice/affirmation-specific code and docs;
+      renamed the app; landed on a minimal, green skeleton (sidebar shell, Settings screen).
+- [ ] **M2 — Product management.** The Product Profile schema, loader, and Apps screen.
+- [ ] **M3 — Template engine.** The template data model, device-mockup compositing, and render
+      engine.
+- [ ] **M4 — Advertisement builder.** The single-page Create Advertisement workflow and the AI
+      copy service.
+- [ ] **M5 — Export engine.** PNG/JPG/PDF export, the Exports and Library screens, and a real
+      Dashboard.
 
-## Brand identity
+## Test Mode — try it before adding an API key
 
-Nurse Affirmations and Autism Parent Affirmations share one DJ&A identity — the same monogram,
-Inter typography, and intro/outro structure — with a distinct accent per series so viewers can
-tell the two apart at a glance: Nurse leans cooler (dusty blue, clinical calm), Autism Parent
-leans warmer (golden/sage, family warmth). Both the colour grade applied to every clip and the
-Pexels search keywords for each topic follow that same cooler/warmer split. Future series are
-meant to slot into the same pattern — shared bookends and typography, a series-specific accent.
-
-## Test Mode — try it before adding API keys
-
-With no `OPENAI_API_KEY` / `PEXELS_API_KEY` configured, every AI/stock-footage call falls back
-to a local placeholder generator (template affirmation text, a synthesized tone bed instead of
-real speech, a generated gradient clip instead of stock footage). The entire pipeline —
-composition, subtitle burn-in, audio mixing, thumbnailing, export — still runs for real and
-produces real MP4s, just with placeholder content clearly watermarked "TEST MODE". This is the
-fastest way to confirm the app works on your machine before spending API credits.
+With no `OPENAI_API_KEY` configured, ad-copy generation falls back to placeholder text instead of
+a real OpenAI call, so the rest of the app (product selection, template layout, screenshot
+placement, export) can be exercised for free. AI copy is always optional in the workflow — you can
+type your own headline/caption instead.
 
 ## Getting started
 
 ```bash
 npm install
-cp .env.example .env   # then fill in OPENAI_API_KEY / PEXELS_API_KEY (or leave blank for Test Mode)
+cp .env.example .env   # then fill in OPENAI_API_KEY (or leave blank for Test Mode)
 npm run dev             # renderer at http://localhost:3131
 ```
 
 Open http://localhost:3131 in a browser — the whole app works as a local web app, no Electron
-required for development. Click **Generate Today's Videos** on the Home screen.
+required for development.
 
 To run as an actual desktop window (native folder pickers, "Open Export Folder" via the OS file
 manager, packaged app icon):
@@ -138,73 +99,43 @@ npm run electron:dev
 
 ### Settings
 
-Everything in `.env` can also be set from the in-app **Settings** screen (API keys, output
-folder, music folder, logo, video length, voice, subtitle font/colour/position, which Content
-Modes are active per brand, and the minimum Overall quality score before a component gets
-auto-regenerated). Settings changes autosave and are stored outside the repo (in your OS's
-per-user app-data directory), so `.env` is only really needed for first-run defaults or
-headless/CI use.
-
-### Adding your own music
-
-The default Music folder is `~/Documents/DJA Daily Affirmations/Music` (Settings → Music
-Folder). On first run, if that folder doesn't exist yet, it's seeded automatically with the two
-synthesized placeholder ambient pads bundled in `assets/music/` so Test Mode has something to
-mix immediately — replace them with real licensed tracks (`.mp3`, `.wav`, `.m4a`, `.aac`,
-`.flac`, `.ogg`) before publishing anything. This folder lives outside the app install
-deliberately: it survives updates/reinstalls and is a sensible place to permanently keep
-licensed music files. See `assets/music/README.md` for the bundled placeholders themselves.
-
-Look for **piano, ambient textures, gentle strings, warm pads, hopeful minimalism** — nothing
-with a strong beat, hook, or lyric that competes with the voice. The mix already ducks music well
-under the narration (see `buildAudioChain` in `videoComposer.ts`), but the source track itself
-should feel like something you'd barely notice consciously, there to support the emotion rather
-than perform alongside it.
-
-### Logo / watermark
-
-`assets/logo/dja-logo.png` (the DJ&A monogram) is the default watermark. Point Settings → Logo
-at a different PNG to use your own; a transparent background is recommended (the shipped
-monogram's black background is chroma-keyed out automatically since we know its exact color —
-a custom logo is trusted to already have real alpha transparency).
+Everything in `.env` can also be set from the in-app **Settings** screen (API key, output
+folder). Settings changes autosave and are stored outside the repo (in your OS's per-user
+app-data directory), so `.env` is only really needed for first-run defaults or headless/CI use.
 
 ## Project structure
 
 ```
 daily-affirmations/
+  data/                  Bundled Product Profile / Template / Content Type JSON (added in M2/M3)
   electron/              Electron main process + preload (desktop shell only)
   src/
     app/                 Next.js App Router — pages + API routes
     components/          UI (shadcn/ui-style primitives + screen components)
     lib/                 Client-side helpers (API client, Electron/browser bridge)
     server/
-      config/             Settings, brand content rules, paths, model IDs
-      ai-services/        OpenAI: script writer, TTS, transcription, captions/hashtags
-      media-services/      Pexels client, background selection, music selection
-      video-engine/        FFmpeg: composition, subtitles (.ass), thumbnails
-      quality-engine/      Automated pre-export checks
-      history/             Dedup + topic-rotation store
-      export/               Exports/ folder writer
-      pipeline/             Orchestrator (the 6-video daily run) + progress tracking
+      config/             Settings, product/template config, paths, model IDs
+      ai-services/        OpenAI client + ad copy writer
+      render-engine/       Static-ad compositing (added in M3)
+      types/                Shared server-only types
     types/                Shared domain types
-  assets/                 Bundled fonts (Inter, OFL-licensed), placeholder music, logo, dictionary
+  assets/                 Bundled fonts (Inter, OFL-licensed), logo, device mockups (added in M3)
   build/                  electron-builder resources (app icon)
   electron-builder.yml    Desktop packaging config (see "Packaging the desktop app" below)
-  tests/                  Vitest unit tests for the pure logic (timing, text rules, etc.)
-  scripts/                One-off utility scripts (smoke test, standalone-build prep)
+  tests/                  Vitest unit tests for the pure logic
+  scripts/                One-off utility scripts (standalone-build prep)
 ```
 
-Generated content — exported videos and the user's music library — deliberately lives outside
-this folder entirely, at `~/Documents/DJA Daily Affirmations/` (see "Adding your own music"
-above and Settings → Output Folder). That's a stable, user-owned location in dev and in every
-packaged-app scenario alike; the app install itself (wherever it happens to be, and in a
-packaged build, read-only) is the wrong place to default-write generated files or ask someone to
-permanently keep licensed music.
+Generated advertisements and each product's asset library deliberately live outside this folder
+entirely, at `~/Documents/DJA Ad Studio/` (see Settings → Output Folder). That's a stable,
+user-owned location in dev and in every packaged-app scenario alike; the app install itself
+(wherever it happens to be, and in a packaged build, read-only) is the wrong place to
+default-write generated files.
 
-Clean separation: UI never talks to OpenAI/Pexels/ffmpeg directly — it only calls the Next.js
-API routes in `src/app/api/**`, which call into `src/server/**`. That's also what makes the app
-work identically whether it's wrapped in Electron or not: `src/server` is plain Node and the
-Next.js server process always has full filesystem/OS access, Electron or otherwise.
+Clean separation: UI never talks to OpenAI directly — it only calls the Next.js API routes in
+`src/app/api/**`, which call into `src/server/**`. That's also what makes the app work
+identically whether it's wrapped in Electron or not: `src/server` is plain Node and the Next.js
+server process always has full filesystem/OS access, Electron or otherwise.
 
 ## Scripts
 
@@ -218,7 +149,6 @@ Next.js server process always has full filesystem/OS access, Electron or otherwi
 | `npm test` | Run the unit test suite (Vitest) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | Next/ESLint |
-| `npm run smoke` | Offline pipeline smoke test — renders one full video in Test Mode via plain Node, no browser needed |
 
 ## Packaging the desktop app
 
@@ -242,14 +172,14 @@ so `electron-builder`'s publish step is disabled entirely.
 
 ## Security
 
-API keys are stored in `.env` (gitignored) and/or the local settings file in your OS's app-data
+The API key is stored in `.env` (gitignored) and/or the local settings file in your OS's app-data
 directory — never in this repo, never logged, and masked in the UI once saved. The one route
 that turns a request into a filesystem read (`/api/media`) validates the path stays inside the
 configured Exports folder before serving anything.
 
 `next build` automatically copies `.env` into `.next/standalone/.env` — if left alone, that
 would ship whatever `.env` happens to exist on the machine used to build a release (e.g. a
-developer's own local API keys) inside the distributed app. `npm run electron:build` guards
+developer's own local API key) inside the distributed app. `npm run electron:build` guards
 against this twice: `scripts/prepare-standalone.js` deletes any `.env*` file from the standalone
 output right after the build, and `electron-builder.yml`'s `files` list excludes them as well in
 case the standalone folder is ever packaged some other way. Real installs are configured entirely
@@ -266,7 +196,4 @@ as follow-up work, not a blocker for internal use.
 ## Requirements
 
 - Node.js 20+
-- An OpenAI API key (script writing, TTS, transcription, captions/hashtags) — https://platform.openai.com/api-keys
-- A Pexels API key (background footage) — https://www.pexels.com/api/
-- ffmpeg is bundled via `@ffmpeg-installer/ffmpeg` / `@ffprobe-installer/ffprobe` — nothing to
-  install separately.
+- An OpenAI API key (ad copy generation) — https://platform.openai.com/api-keys

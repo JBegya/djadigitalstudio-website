@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   // Never let the client blank out a saved key by sending back the masked placeholder —
   // only accept a new key if it looks like a real, un-masked value.
   const patch: Record<string, unknown> = { ...body };
-  for (const key of ['openaiApiKey', 'pexelsApiKey'] as const) {
+  for (const key of ['openaiApiKey'] as const) {
     if (typeof patch[key] === 'string' && (patch[key] as string).includes('••••')) {
       delete patch[key];
     }

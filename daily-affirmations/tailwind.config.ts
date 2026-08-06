@@ -44,14 +44,6 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        nurse: {
-          DEFAULT: 'hsl(var(--nurse))',
-          foreground: 'hsl(var(--nurse-foreground))',
-        },
-        autism: {
-          DEFAULT: 'hsl(var(--autism))',
-          foreground: 'hsl(var(--autism-foreground))',
-        },
       },
       borderRadius: {
         lg: 'var(--radius)',

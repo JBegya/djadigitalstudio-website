@@ -35,12 +35,6 @@
 
     --radius: 0.875rem;
 
-    /* Brand accent colors used sparingly to differentiate the two content lines */
-    --nurse: 189 94% 55%;
-    --nurse-foreground: 240 10% 6%;
-    --autism: 291 70% 68%;
-    --autism-foreground: 240 10% 6%;
-
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }

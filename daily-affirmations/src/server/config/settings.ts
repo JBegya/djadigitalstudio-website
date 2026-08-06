@@ -1,55 +1,25 @@
 import fs from 'node:fs';
 import type { Settings } from '@/types/domain';
 import { env, loadEnv } from './env';
-import { getDefaultLogoPath, getDefaultMusicFolder, getDefaultOutputFolder, getSettingsFilePath, seedMusicFolderOnFirstRun } from './paths';
+import { getDefaultOutputFolder, getSettingsFilePath } from './paths';
 
 loadEnv();
 
 function defaultSettings(): Settings {
   return {
     openaiApiKey: env('OPENAI_API_KEY'),
-    pexelsApiKey: env('PEXELS_API_KEY'),
     outputFolder: env('DJA_OUTPUT_FOLDER') || getDefaultOutputFolder(),
-    musicFolder: env('DJA_MUSIC_FOLDER') || getDefaultMusicFolder(),
-    logoPath: env('DJA_LOGO_PATH') || getDefaultLogoPath(),
-    videoLengthSeconds: 24,
-    voice: 'warm-female',
-    subtitleFont: 'Inter',
-    subtitleColor: '#FFFFFF',
-    subtitlePosition: 'bottom',
-    enabledContentModes: {},
-    qualityThreshold: 9,
   };
 }
 
-const SETTINGS_KEYS: Array<keyof Settings> = [
-  'openaiApiKey',
-  'pexelsApiKey',
-  'outputFolder',
-  'musicFolder',
-  'logoPath',
-  'videoLengthSeconds',
-  'voice',
-  'subtitleFont',
-  'subtitleColor',
-  'subtitlePosition',
-  'enabledContentModes',
-  'qualityThreshold',
-];
+const SETTINGS_KEYS: Array<keyof Settings> = ['openaiApiKey', 'outputFolder'];
 
 function sanitize(candidate: Partial<Settings>, base: Settings): Settings {
   const merged: Settings = { ...base };
   for (const key of SETTINGS_KEYS) {
     const value = candidate[key];
     if (value === undefined || value === null) continue;
-    // TS can't narrow `merged[key] = candidate[key]` through a generic loop variable here.
     (merged as Record<keyof Settings, unknown>)[key] = value;
-  }
-  merged.videoLengthSeconds = Math.min(48, Math.max(15, Math.round(Number(merged.videoLengthSeconds) || 24)));
-  const rawQualityThreshold = Number(merged.qualityThreshold);
-  merged.qualityThreshold = Math.min(10, Math.max(0, Number.isNaN(rawQualityThreshold) ? 9 : rawQualityThreshold));
-  if (typeof merged.enabledContentModes !== 'object' || merged.enabledContentModes === null || Array.isArray(merged.enabledContentModes)) {
-    merged.enabledContentModes = {};
   }
   return merged;
 }
@@ -71,7 +41,6 @@ class SettingsStore {
       }
     } else {
       this.cached = base;
-      seedMusicFolderOnFirstRun(base.musicFolder);
       this.persist(this.cached);
     }
     return this.cached;
@@ -85,15 +54,13 @@ class SettingsStore {
     return next;
   }
 
-  /** Settings safe to send to the renderer with secrets masked, plus flags for whether keys are set. */
-  redacted(): Settings & { hasOpenAiKey: boolean; hasPexelsKey: boolean } {
+  /** Settings safe to send to the renderer with secrets masked, plus a flag for whether the key is set. */
+  redacted(): Settings & { hasOpenAiKey: boolean } {
     const s = this.load();
     return {
       ...s,
       openaiApiKey: s.openaiApiKey ? maskKey(s.openaiApiKey) : '',
-      pexelsApiKey: s.pexelsApiKey ? maskKey(s.pexelsApiKey) : '',
       hasOpenAiKey: Boolean(s.openaiApiKey),
-      hasPexelsKey: Boolean(s.pexelsApiKey),
     };
   }
 

@@ -1,24 +1,24 @@
 # electron-builder packaging config — see https://www.electron.build/configuration
-appId: com.djadigitalstudio.dailyaffirmations
-productName: DJ&A Daily Affirmations
+appId: com.djadigitalstudio.adstudio
+productName: DJ&A Ad Studio
 copyright: Copyright © DJ&A Digital Studio Limited
 
 directories:
   output: release
   buildResources: build
 
-# This app spawns external binaries directly (ffmpeg/ffprobe) and reads many data files at
-# runtime (fonts, the vendored spell-check dictionary, music, the standalone Next.js server's
-# own dependency tree). None of that plays well with asar packaging — a spawned process can't
-# execute a binary that lives inside an asar archive, and asar's virtual-fs shimming only
-# covers Electron's own patched fs calls, not the plain Node fs the standalone server uses.
-# Plain files on disk under resources/app/ is the simpler, more robust choice for this app.
+# This app reads many data files at runtime (fonts, bundled Product Profile/Template JSON, the
+# standalone Next.js server's own dependency tree). None of that plays well with asar
+# packaging — asar's virtual-fs shimming only covers Electron's own patched fs calls, not the
+# plain Node fs the standalone server uses. Plain files on disk under resources/app/ is the
+# simpler, more robust choice for this app.
 asar: false
 
 files:
   - electron/dist/**/*
   - .next/standalone/**/*
   - assets/**/*
+  - data/**/*
   - package.json
   # `next build` automatically copies .env into .next/standalone/.env — if the machine doing
   # the packaging has a real .env for local dev/testing (as this one does right now), it would
@@ -54,7 +54,7 @@ win:
 
 linux:
   icon: build/icon.png
-  category: AudioVideo
+  category: Graphics
   target:
     - target: AppImage
       arch: [x64]
