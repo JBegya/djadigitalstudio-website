@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { NextRequest } from 'next/server';
 import { settingsStore } from '@/server/config/settings';
+import { getUserContentDir } from '@/server/config/paths';
 
 export const runtime = 'nodejs';
 
@@ -11,20 +12,25 @@ const MIME_TYPES: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
 };
 
+/** Resolves inside either the configured Exports folder or the Asset Library (both under the
+ * user's content directory) — the two places this app ever writes files a browser needs to load
+ * back. Anything else is rejected, since this is the one route that turns an arbitrary string
+ * into a filesystem read. */
 function resolveSafePath(requested: string): string | null {
-  const outputFolder = path.resolve(settingsStore.load().outputFolder);
+  const allowedRoots = [path.resolve(settingsStore.load().outputFolder), path.resolve(getUserContentDir(), 'Assets')];
   const resolved = path.resolve(requested);
-  if (resolved !== outputFolder && !resolved.startsWith(outputFolder + path.sep)) return null;
+  const isInsideAnAllowedRoot = allowedRoots.some((root) => resolved === root || resolved.startsWith(root + path.sep));
+  if (!isInsideAnAllowedRoot) return null;
   if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) return null;
   return resolved;
 }
 
 /**
- * Streams a file from inside the configured Exports folder, with HTTP Range support so the
- * in-app video preview can scrub. `path` must resolve inside outputFolder — anything else is
- * rejected, since this is the one route that turns an arbitrary string into a filesystem read.
+ * Streams a file from inside the configured Exports folder or the Asset Library, with HTTP
+ * Range support so the in-app video preview can scrub.
  */
 export async function GET(request: NextRequest) {
   const requested = request.nextUrl.searchParams.get('path');

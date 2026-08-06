@@ -1,4 +1,4 @@
-import type { AdCreation, Settings } from '@/types/domain';
+import type { AdCreation, DeviceKind, ProductProfile, Settings } from '@/types/domain';
 
 export type RedactedSettings = Settings & { hasOpenAiKey: boolean };
 
@@ -90,5 +90,79 @@ export async function exportAd(payload: { format: 'png' | 'jpg' | 'pdf'; dataUrl
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     }),
+  );
+}
+
+export async function listProducts(): Promise<{ products: ProductProfile[] }> {
+  return json(await fetch('/api/products', { cache: 'no-store' }));
+}
+
+export async function getProduct(id: string): Promise<{ product: ProductProfile }> {
+  return json(await fetch(`/api/products/${encodeURIComponent(id)}`, { cache: 'no-store' }));
+}
+
+export async function createProduct(profile: Pick<ProductProfile, 'id' | 'name'> & Partial<ProductProfile>): Promise<{ product: ProductProfile }> {
+  return json(
+    await fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    }),
+  );
+}
+
+export async function updateProduct(id: string, patch: Partial<ProductProfile>): Promise<{ product: ProductProfile }> {
+  return json(
+    await fetch(`/api/products/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    }),
+  );
+}
+
+export async function deleteProduct(id: string): Promise<{ ok: boolean }> {
+  return json(await fetch(`/api/products/${encodeURIComponent(id)}`, { method: 'DELETE' }));
+}
+
+export async function uploadProductLogo(id: string, file: File): Promise<{ product: ProductProfile }> {
+  const form = new FormData();
+  form.set('kind', 'logo');
+  form.set('file', file);
+  return json(await fetch(`/api/products/${encodeURIComponent(id)}/assets`, { method: 'POST', body: form }));
+}
+
+export async function uploadProductIcon(id: string, file: File): Promise<{ product: ProductProfile }> {
+  const form = new FormData();
+  form.set('kind', 'icon');
+  form.set('file', file);
+  return json(await fetch(`/api/products/${encodeURIComponent(id)}/assets`, { method: 'POST', body: form }));
+}
+
+export async function uploadProductScreenshot(
+  id: string,
+  file: File,
+  opts: { thumbnail?: Blob; label?: string; device?: DeviceKind } = {},
+): Promise<{ product: ProductProfile }> {
+  const form = new FormData();
+  form.set('kind', 'screenshot');
+  form.set('file', file);
+  if (opts.thumbnail) form.set('thumbnail', opts.thumbnail, 'thumbnail.jpg');
+  if (opts.label) form.set('label', opts.label);
+  if (opts.device) form.set('device', opts.device);
+  return json(await fetch(`/api/products/${encodeURIComponent(id)}/assets`, { method: 'POST', body: form }));
+}
+
+export async function deleteProductLogo(id: string): Promise<{ product: ProductProfile }> {
+  return json(await fetch(`/api/products/${encodeURIComponent(id)}/assets?kind=logo`, { method: 'DELETE' }));
+}
+
+export async function deleteProductIcon(id: string): Promise<{ product: ProductProfile }> {
+  return json(await fetch(`/api/products/${encodeURIComponent(id)}/assets?kind=icon`, { method: 'DELETE' }));
+}
+
+export async function deleteProductScreenshot(id: string, screenshotId: string): Promise<{ product: ProductProfile }> {
+  return json(
+    await fetch(`/api/products/${encodeURIComponent(id)}/assets?kind=screenshot&assetId=${encodeURIComponent(screenshotId)}`, { method: 'DELETE' }),
   );
 }

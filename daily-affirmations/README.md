@@ -68,13 +68,20 @@ editable advertisement) before the full product-management system exists:
       Watch, iPad — no external mockup assets needed), PNG/JPG/PDF export at the exact target
       platform size, and full persistence (save → reload → keep editing, never a one-shot
       export). Runs against bundled sample content — no real products yet, no AI, no API cost.
-- [ ] **M3 — Product management.** The Product Profile schema, loader, and Apps screen.
-- [ ] **M4 — Advertisement builder.** Wires Products and the Template Engine together into the
-      real Product → Platform → Template → Screenshot → Feature → Generate workflow.
+- [x] **M3 — Brand Manager.** Each Product Profile owns its own logo, app icon, brand colors,
+      screenshots, features, and store links directly — no separate asset-library concept.
+      Bundled seed profiles (`data/products/*.json`) plus a user-writable overlay (never lost on
+      a single-field edit); multipart asset upload with client-side thumbnailing (no
+      server-side image-processing dependency); a Brand Manager screen (product grid + "Add
+      Product") and per-product detail screen (Identity/Store Links/Features/Screenshots,
+      autosave on blur, drag-and-drop or click-to-browse uploads).
+- [ ] **M4 — Advertisement Wizard.** A guided Product → Platform → Feature → Style → Editor flow,
+      replacing raw template/asset pickers as the primary entry point into the (already-built)
+      Template Engine.
 - [ ] **M5 — Copy generator.** AI-generated headlines/captions/CTAs/hashtags (the first and only
       point OpenAI gets used) — always optional, editable like everything else.
-- [ ] **M6 — Export engine polish.** Per-platform batch export, the Exports and Library screens,
-      and a real Dashboard.
+- [ ] **M6 — Export engine polish.** Per-platform batch export, the Exports screen, and a real
+      Dashboard.
 
 ## Test Mode — try it before adding an API key
 
@@ -116,19 +123,27 @@ app-data directory), so `.env` is only really needed for first-run defaults or h
 
 ```
 daily-affirmations/
-  data/                  Bundled Product Profile JSON (added in M3) — templates are hand-authored
-                         TS (src/server/config/templates.ts), not JSON: fixed, pixel-tuned, and
-                         versioned tightly with the slot-mapping code that interprets them.
+  data/
+    products/              Bundled seed Product Profile JSON (ShiftEarn Pro, SplitShift Hours,
+                           ShiftHydrate) — placeholder copy until real assets are uploaded through
+                           the Brand Manager UI. Templates are hand-authored TS
+                           (src/server/config/templates.ts), not JSON: fixed, pixel-tuned, and
+                           versioned tightly with the slot-mapping code that interprets them.
   electron/              Electron main process + preload (desktop shell only)
   src/
     app/                 Next.js App Router — pages + API routes
     components/
+      brand/               Brand Manager: BrandManagerScreen (product grid), ProductDetailScreen
+                           + its Identity/StoreLinks/Features/Screenshots sections,
+                           AssetDropzone, AutosaveField
       editor/              The Template Engine: EditorCanvas (Fabric.js), PropertiesPanel,
                            TemplatePicker, DeviceMockupPicker, ExportBar, CreateAdvertisementScreen
       layout/              Sidebar shell, ComingSoon stub
       settings/            Settings screen
       ui/                  shadcn/ui-style primitives
     lib/
+      assets/              Client-side screenshot thumbnailing (canvas-based, no server-side
+                           image-processing dependency)
       editor/              Template↔Fabric-object mapping, parametric device mockups, snapping,
                            canvas export, sample placeholder content — all client-safe, most of it
                            pure and unit-tested (see tests/)
@@ -136,12 +151,12 @@ daily-affirmations/
                            font-family string on canvas text)
       api.ts, desktop.ts, utils.ts   Client-side helpers (API client, Electron/browser bridge)
     server/
-      config/              Settings, templates, creations store, paths, model IDs
+      config/              Settings, templates, creations store, products store, paths, model IDs
       ai-services/         OpenAI client (used starting M5)
     types/                 Shared domain types
   assets/
     sample/                A clearly-labeled placeholder screenshot SVG for the Template Engine
-                           to demo against before real product screenshots exist (M3/M4)
+                           to demo against before real product screenshots exist
     fonts/, logo/          Bundled Inter (OFL-licensed) and the DJ&A studio logo
   build/                  electron-builder resources (app icon)
   electron-builder.yml    Desktop packaging config (see "Packaging the desktop app" below)
@@ -199,8 +214,9 @@ so `electron-builder`'s publish step is disabled entirely.
 
 The API key is stored in `.env` (gitignored) and/or the local settings file in your OS's app-data
 directory — never in this repo, never logged, and masked in the UI once saved. The one route
-that turns a request into a filesystem read (`/api/media`) validates the path stays inside the
-configured Exports folder before serving anything.
+that turns a request into a filesystem read (`/api/media`) validates the path stays inside either
+the configured Exports folder or the Asset Library (both under the user's content directory)
+before serving anything.
 
 `next build` automatically copies `.env` into `.next/standalone/.env` — if left alone, that
 would ship whatever `.env` happens to exist on the machine used to build a release (e.g. a

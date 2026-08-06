@@ -82,8 +82,16 @@ export function getDefaultOutputFolder(): string {
   return path.join(getUserContentDir(), 'Exports');
 }
 
-export function getAssetLibraryDir(productId: string): string {
-  const dir = path.join(getUserContentDir(), 'Assets', productId);
+export function getAssetLibraryDir(productFolderName: string): string {
+  const dir = path.join(getUserContentDir(), 'Assets', productFolderName);
+  ensureDir(dir);
+  return dir;
+}
+
+const ASSET_CATEGORY_DIRS = { logo: 'Logos', icon: 'Icons', screenshot: 'Screenshots' } as const;
+
+export function getAssetCategoryDir(productFolderName: string, category: keyof typeof ASSET_CATEGORY_DIRS): string {
+  const dir = path.join(getAssetLibraryDir(productFolderName), ASSET_CATEGORY_DIRS[category]);
   ensureDir(dir);
   return dir;
 }

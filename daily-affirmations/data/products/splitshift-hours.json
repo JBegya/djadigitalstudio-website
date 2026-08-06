@@ -1,0 +1,19 @@
+{
+  "id": "splitshift-hours",
+  "name": "SplitShift Hours",
+  "tagline": "Placeholder tagline — replace with real SplitShift Hours copy.",
+  "description": "Placeholder description — replace with real SplitShift Hours copy. An hours-tracking and scheduling companion for workers with split or irregular shifts.",
+  "brandColors": { "primary": "#5ad1a8", "secondary": "#0f2a22", "accent": "#f5e663" },
+  "appStoreUrl": "",
+  "googlePlayUrl": "",
+  "websiteUrl": "",
+  "privacyUrl": "",
+  "termsUrl": "",
+  "screenshots": [],
+  "features": [
+    { "key": "split-shift-tracking", "label": "Split Shift Tracking", "description": "Placeholder — logs and totals hours across split shifts in a single day." },
+    { "key": "schedule-reminders", "label": "Schedule Reminders", "description": "Placeholder — alerts before each shift segment starts." }
+  ],
+  "targetAudience": ["Shift workers with split or irregular schedules"],
+  "keywords": ["split shift", "hours tracking", "scheduling"]
+}

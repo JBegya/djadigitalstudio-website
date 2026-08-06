@@ -1,0 +1,26 @@
+{
+  "id": "shiftearn-pro",
+  "name": "ShiftEarn Pro",
+  "tagline": "Never miss a shift change again.",
+  "description": "Placeholder description — replace with real ShiftEarn Pro copy. Payroll accuracy for shift workers: tracks hours, pay rates, and callback/short-change detection across every shift.",
+  "brandColors": { "primary": "#7c9cff", "secondary": "#1b1030", "accent": "#f5a623" },
+  "appStoreUrl": "",
+  "googlePlayUrl": "",
+  "websiteUrl": "",
+  "privacyUrl": "",
+  "termsUrl": "",
+  "screenshots": [],
+  "features": [
+    { "key": "short-change-detection", "label": "Short Change Detection", "description": "Flags when a paycheck doesn't match the hours actually worked." },
+    { "key": "callback-pay", "label": "Callback Pay", "description": "Automatically calculates callback and on-call pay entitlements." },
+    { "key": "leave-calculator", "label": "Leave Calculator", "description": "Tracks accrued leave balances in real time." },
+    { "key": "two-jobs", "label": "Two Jobs", "description": "Manages pay and shifts across more than one employer at once." },
+    { "key": "fifo", "label": "FIFO", "description": "Built for fly-in fly-out rosters and irregular shift patterns." },
+    { "key": "apple-watch", "label": "Apple Watch", "description": "Clock in, clock out, and check pay from the wrist." },
+    { "key": "offline-privacy", "label": "Offline Privacy", "description": "Works fully offline — your pay data never leaves your device unless you choose to sync it." },
+    { "key": "pdf-payslips", "label": "PDF Payslips", "description": "Generates clean, exportable PDF payslips for every pay period." },
+    { "key": "15-countries", "label": "15 Countries", "description": "Supports pay rules and tax conventions across 15 countries." }
+  ],
+  "targetAudience": ["Shift workers", "Nurses", "Retail and hospitality staff", "FIFO workers"],
+  "keywords": ["payroll", "shift work", "timesheet", "pay accuracy", "callback pay"]
+}

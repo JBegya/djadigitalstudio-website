@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Grid2x2, PlusSquare, Library, FolderOutput, Settings } from 'lucide-react';
+import { LayoutDashboard, Grid2x2, PlusSquare, FolderOutput, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/apps', label: 'Apps', icon: Grid2x2 },
+  { href: '/brand', label: 'Brand Manager', icon: Grid2x2 },
   { href: '/create', label: 'Create Advertisement', icon: PlusSquare },
-  { href: '/library', label: 'Library', icon: Library },
   { href: '/exports', label: 'Exports', icon: FolderOutput },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];

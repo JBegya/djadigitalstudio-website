@@ -14,6 +14,9 @@ export type DeviceKind = 'iphone' | 'watch' | 'ipad' | 'mac';
 export interface ProductScreenshot {
   id: string;
   path: string;
+  /** Small preview for the Brand Manager grid — generated client-side at upload time. Logo/icon
+   * don't get one; they're single images always shown at a controlled UI size. */
+  thumbnailPath?: string;
   label: string;
   device: DeviceKind;
 }
