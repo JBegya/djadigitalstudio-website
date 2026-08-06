@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { BrandGuidelinesSection } from '@/components/brand/BrandGuidelinesSection';
 import { FeaturesSection } from '@/components/brand/FeaturesSection';
 import { IdentitySection } from '@/components/brand/IdentitySection';
+import { ProductStatusBar } from '@/components/brand/ProductStatusBar';
 import { ScreenshotsSection } from '@/components/brand/ScreenshotsSection';
 import { StoreLinksSection } from '@/components/brand/StoreLinksSection';
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +66,9 @@ export function ProductDetailScreen({ productId }: { productId: string }) {
       </div>
 
       <div className="space-y-6">
+        <ProductStatusBar product={product} onPatch={patch} />
         <IdentitySection product={product} onPatch={patch} onProductChange={setProduct} />
+        <BrandGuidelinesSection product={product} onPatch={patch} />
         <StoreLinksSection product={product} onPatch={patch} />
         <FeaturesSection product={product} onPatch={patch} />
         <ScreenshotsSection product={product} onProductChange={setProduct} />

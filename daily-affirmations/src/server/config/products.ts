@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { ProductProfile, ProductScreenshot } from '@/types/domain';
+import type { BrandGuidelines, ProductProfile, ProductScreenshot } from '@/types/domain';
 import { getProductsDir, getUserProductsOverlayDir } from './paths';
 
 function readJsonSafe<T>(filePath: string): T | null {
@@ -12,13 +12,36 @@ function readJsonSafe<T>(filePath: string): T | null {
   }
 }
 
+const DEFAULT_BRAND_GUIDELINES: BrandGuidelines = {
+  cornerRadiusPx: 16,
+  buttonStyle: 'rounded',
+  preferredBackground: 'solid',
+  logoClearSpacePx: 16,
+  storeBadgeStyle: 'black',
+};
+
+/** Backfills fields added after some bundled/overlay JSON already existed on disk — otherwise a
+ * profile written before `brandGuidelines`/`status`/platform-availability existed would come back
+ * missing them entirely (JSON on disk isn't statically typed, so old files just don't have them),
+ * and the UI would crash reading e.g. `product.brandGuidelines.cornerRadiusPx`. */
+function withDefaults(profile: ProductProfile): ProductProfile {
+  return {
+    ...profile,
+    brandGuidelines: { ...DEFAULT_BRAND_GUIDELINES, ...profile.brandGuidelines },
+    status: profile.status ?? 'draft',
+    appStoreAvailability: profile.appStoreAvailability ?? 'not-planned',
+    googlePlayAvailability: profile.googlePlayAvailability ?? 'not-planned',
+  };
+}
+
 /** Fields that need a one-level-deep merge rather than a wholesale replace — otherwise patching
- * just `brandColors.primary` would silently drop `secondary`/`accent`. */
+ * just `brandColors.primary` (or one `brandGuidelines` field) would silently drop the rest. */
 function mergeProfile(current: ProductProfile, patch: Partial<ProductProfile>): ProductProfile {
   return {
     ...current,
     ...patch,
     brandColors: { ...current.brandColors, ...patch.brandColors },
+    brandGuidelines: { ...current.brandGuidelines, ...patch.brandGuidelines },
   };
 }
 
@@ -53,7 +76,8 @@ export class ProductStore {
   get(id: string): ProductProfile | null {
     const bundled = readJsonSafe<ProductProfile>(path.join(this.bundledDir, `${id}.json`));
     const overlay = readJsonSafe<ProductProfile>(path.join(this.overlayDir, `${id}.json`));
-    return overlay ?? bundled;
+    const effective = overlay ?? bundled;
+    return effective ? withDefaults(effective) : null;
   }
 
   create(profile: ProductProfile): ProductProfile {

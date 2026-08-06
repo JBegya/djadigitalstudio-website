@@ -21,13 +21,43 @@ export interface ProductScreenshot {
   device: DeviceKind;
 }
 
+export type FeaturePriority = 'low' | 'medium' | 'high';
+
 export interface ProductFeature {
   key: string;
   label: string;
   description: string;
-  defaultHeadline?: string;
-  defaultCta?: string;
+  /** These make the Advertisement Wizard able to auto-populate a template slot-for-slot without
+   * calling AI at all — the copy assistant (M5) only needs to kick in when the user wants
+   * something better than what's already here. */
+  headline?: string;
+  subheadline?: string;
+  cta?: string;
+  /** Free-text icon identifier (e.g. a lucide-react icon name) — no icon picker yet. */
+  icon?: string;
+  accentColor?: string;
+  priority?: FeaturePriority;
+  /** References a ProductScreenshot.id on the same product. */
+  suggestedScreenshotId?: string;
 }
+
+export type ButtonStyle = 'rounded' | 'pill' | 'square';
+export type BackgroundStyle = 'solid' | 'gradient' | 'photo';
+export type StoreBadgeStyle = 'black' | 'white' | 'outline';
+
+/** Visual rules beyond raw brand colors — lets every generated ad follow the same look without
+ * the person building it having to remember or re-decide these choices each time. */
+export interface BrandGuidelines {
+  cornerRadiusPx: number;
+  buttonStyle: ButtonStyle;
+  preferredBackground: BackgroundStyle;
+  /** Minimum clear space (px, at the template's reference size) to keep free around the logo. */
+  logoClearSpacePx: number;
+  storeBadgeStyle: StoreBadgeStyle;
+}
+
+export type ProductStatus = 'draft' | 'beta' | 'released' | 'archived';
+export type PlatformAvailability = 'available' | 'coming-soon' | 'not-planned';
 
 export interface ProductProfile {
   id: ProductId;
@@ -41,9 +71,13 @@ export interface ProductProfile {
     secondary?: string;
     accent?: string;
   };
+  brandGuidelines: BrandGuidelines;
   fontFamily?: string;
+  status: ProductStatus;
   appStoreUrl?: string;
+  appStoreAvailability: PlatformAvailability;
   googlePlayUrl?: string;
+  googlePlayAvailability: PlatformAvailability;
   websiteUrl?: string;
   privacyUrl?: string;
   termsUrl?: string;

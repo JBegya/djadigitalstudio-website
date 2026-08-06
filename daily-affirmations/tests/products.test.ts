@@ -12,8 +12,12 @@ function sampleProfile(overrides: Partial<ProductProfile> = {}): ProductProfile 
     tagline: 'Never miss a shift change again.',
     description: 'Payroll accuracy for shift workers.',
     brandColors: { primary: '#7c9cff', secondary: '#1b1030', accent: '#f5a623' },
+    brandGuidelines: { cornerRadiusPx: 16, buttonStyle: 'rounded', preferredBackground: 'solid', logoClearSpacePx: 16, storeBadgeStyle: 'black' },
+    status: 'released',
     appStoreUrl: '',
+    appStoreAvailability: 'available',
     googlePlayUrl: '',
+    googlePlayAvailability: 'available',
     websiteUrl: '',
     privacyUrl: '',
     termsUrl: '',
@@ -83,6 +87,17 @@ describe('ProductStore', () => {
     expect(updated?.brandColors.accent).toBe('#f5a623');
   });
 
+  it('update() merges brandGuidelines one level deep instead of replacing the whole object', () => {
+    writeBundled(sampleProfile());
+    const store = new ProductStore(bundledDir, overlayDir);
+    store.update('shiftearn-pro', { brandGuidelines: { cornerRadiusPx: 24 } as ProductProfile['brandGuidelines'] });
+
+    const updated = store.get('shiftearn-pro');
+    expect(updated?.brandGuidelines.cornerRadiusPx).toBe(24);
+    expect(updated?.brandGuidelines.buttonStyle).toBe('rounded');
+    expect(updated?.brandGuidelines.storeBadgeStyle).toBe('black');
+  });
+
   it('update() throws for a product that does not exist', () => {
     const store = new ProductStore(bundledDir, overlayDir);
     expect(() => store.update('nope', { tagline: 'x' })).toThrow(/not found/);
@@ -142,6 +157,32 @@ describe('ProductStore', () => {
 
     const store = new ProductStore(bundledDir, overlayDir);
     expect(store.get('shiftearn-pro')?.name).toBe('ShiftEarn Pro');
+  });
+
+  it('backfills brandGuidelines/status/platform-availability on a profile written before those fields existed', () => {
+    const legacyProfile = sampleProfile();
+    // @ts-expect-error simulating a real profile written to disk before this schema change
+    delete legacyProfile.brandGuidelines;
+    // @ts-expect-error same — status/availability didn't exist either
+    delete legacyProfile.status;
+    // @ts-expect-error same
+    delete legacyProfile.appStoreAvailability;
+    // @ts-expect-error same
+    delete legacyProfile.googlePlayAvailability;
+    writeBundled(legacyProfile);
+
+    const store = new ProductStore(bundledDir, overlayDir);
+    const loaded = store.get('shiftearn-pro');
+    expect(loaded?.brandGuidelines).toEqual({
+      cornerRadiusPx: 16,
+      buttonStyle: 'rounded',
+      preferredBackground: 'solid',
+      logoClearSpacePx: 16,
+      storeBadgeStyle: 'black',
+    });
+    expect(loaded?.status).toBe('draft');
+    expect(loaded?.appStoreAvailability).toBe('not-planned');
+    expect(loaded?.googlePlayAvailability).toBe('not-planned');
   });
 
   it('lists products sorted by name, de-duplicating ids present in both bundled and overlay', () => {

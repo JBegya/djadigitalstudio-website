@@ -69,12 +69,17 @@ editable advertisement) before the full product-management system exists:
       platform size, and full persistence (save → reload → keep editing, never a one-shot
       export). Runs against bundled sample content — no real products yet, no AI, no API cost.
 - [x] **M3 — Brand Manager.** Each Product Profile owns its own logo, app icon, brand colors,
-      screenshots, features, and store links directly — no separate asset-library concept.
-      Bundled seed profiles (`data/products/*.json`) plus a user-writable overlay (never lost on
-      a single-field edit); multipart asset upload with client-side thumbnailing (no
-      server-side image-processing dependency); a Brand Manager screen (product grid + "Add
-      Product") and per-product detail screen (Identity/Store Links/Features/Screenshots,
-      autosave on blur, drag-and-drop or click-to-browse uploads).
+      brand guidelines, status, screenshots, marketing features, and store links directly — no
+      separate asset-library concept. Bundled seed profiles (`data/products/*.json`) plus a
+      user-writable overlay (never lost on a single-field edit, and self-healing if read by a
+      newer schema than it was written with); multipart asset upload with client-side
+      thumbnailing (no server-side image-processing dependency); a Brand Manager screen (product
+      grid + status badges + "Add Product") and per-product detail screen (Status bar, Identity,
+      Brand Guidelines, Store Links, Marketing Features, Screenshots — autosave on blur,
+      drag-and-drop or click-to-browse uploads). Brand Guidelines (corner radius, button style,
+      preferred background, logo clear space, store badge style, typography) and per-feature
+      headline/subheadline/CTA/icon/accent color/priority/suggested screenshot mean the
+      Advertisement Wizard (M4) can auto-populate a template without needing AI.
 - [ ] **M4 — Advertisement Wizard.** A guided Product → Platform → Feature → Style → Editor flow,
       replacing raw template/asset pickers as the primary entry point into the (already-built)
       Template Engine.
