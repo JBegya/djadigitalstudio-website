@@ -56,24 +56,33 @@ UI doesn't pretend otherwise.
 
 This app is being rebuilt from an earlier single-purpose video generator (the daily affirmation
 video pipeline) into the focused static-ad tool described above. Work proceeds as small,
-reviewable milestones:
+reviewable milestones — reordered from the original plan so the app is genuinely usable (a real,
+editable advertisement) before the full product-management system exists:
 
 - [x] **M1 — Project cleanup.** Removed all video/voice/affirmation-specific code and docs;
       renamed the app; landed on a minimal, green skeleton (sidebar shell, Settings screen).
-- [ ] **M2 — Product management.** The Product Profile schema, loader, and Apps screen.
-- [ ] **M3 — Template engine.** The template data model, device-mockup compositing, and render
-      engine.
-- [ ] **M4 — Advertisement builder.** The single-page Create Advertisement workflow and the AI
-      copy service.
-- [ ] **M5 — Export engine.** PNG/JPG/PDF export, the Exports and Library screens, and a real
-      Dashboard.
+- [x] **M2 — Template Engine.** Five production templates (Apple Hero, Problem → Solution,
+      Feature Highlight, Comparison, App Store Screenshot), a live interactive Fabric.js canvas
+      with drag/resize/rotate, inline text editing, hand-rolled alignment-guide snapping, a
+      properties panel (text/color/size/position), parametric device mockups (iPhone, Apple
+      Watch, iPad — no external mockup assets needed), PNG/JPG/PDF export at the exact target
+      platform size, and full persistence (save → reload → keep editing, never a one-shot
+      export). Runs against bundled sample content — no real products yet, no AI, no API cost.
+- [ ] **M3 — Product management.** The Product Profile schema, loader, and Apps screen.
+- [ ] **M4 — Advertisement builder.** Wires Products and the Template Engine together into the
+      real Product → Platform → Template → Screenshot → Feature → Generate workflow.
+- [ ] **M5 — Copy generator.** AI-generated headlines/captions/CTAs/hashtags (the first and only
+      point OpenAI gets used) — always optional, editable like everything else.
+- [ ] **M6 — Export engine polish.** Per-platform batch export, the Exports and Library screens,
+      and a real Dashboard.
 
 ## Test Mode — try it before adding an API key
 
-With no `OPENAI_API_KEY` configured, ad-copy generation falls back to placeholder text instead of
-a real OpenAI call, so the rest of the app (product selection, template layout, screenshot
-placement, export) can be exercised for free. AI copy is always optional in the workflow — you can
-type your own headline/caption instead.
+The Template Engine (M2) needs no API key at all — it runs entirely against bundled sample
+content. Once AI copy generation lands (M5), an unconfigured `OPENAI_API_KEY` will fall back to
+placeholder text instead of a real call, the same Test Mode philosophy used throughout this app:
+the rest of the workflow stays fully exercisable for free, and AI-generated copy is always
+optional — you can type your own headline/caption instead.
 
 ## Getting started
 
@@ -107,22 +116,38 @@ app-data directory), so `.env` is only really needed for first-run defaults or h
 
 ```
 daily-affirmations/
-  data/                  Bundled Product Profile / Template / Content Type JSON (added in M2/M3)
+  data/                  Bundled Product Profile JSON (added in M3) — templates are hand-authored
+                         TS (src/server/config/templates.ts), not JSON: fixed, pixel-tuned, and
+                         versioned tightly with the slot-mapping code that interprets them.
   electron/              Electron main process + preload (desktop shell only)
   src/
     app/                 Next.js App Router — pages + API routes
-    components/          UI (shadcn/ui-style primitives + screen components)
-    lib/                 Client-side helpers (API client, Electron/browser bridge)
+    components/
+      editor/              The Template Engine: EditorCanvas (Fabric.js), PropertiesPanel,
+                           TemplatePicker, DeviceMockupPicker, ExportBar, CreateAdvertisementScreen
+      layout/              Sidebar shell, ComingSoon stub
+      settings/            Settings screen
+      ui/                  shadcn/ui-style primitives
+    lib/
+      editor/              Template↔Fabric-object mapping, parametric device mockups, snapping,
+                           canvas export, sample placeholder content — all client-safe, most of it
+                           pure and unit-tested (see tests/)
+      fonts.ts             Shared next/font/local Inter loader (also used to set Fabric's real
+                           font-family string on canvas text)
+      api.ts, desktop.ts, utils.ts   Client-side helpers (API client, Electron/browser bridge)
     server/
-      config/             Settings, product/template config, paths, model IDs
-      ai-services/        OpenAI client + ad copy writer
-      render-engine/       Static-ad compositing (added in M3)
-      types/                Shared server-only types
-    types/                Shared domain types
-  assets/                 Bundled fonts (Inter, OFL-licensed), logo, device mockups (added in M3)
+      config/              Settings, templates, creations store, paths, model IDs
+      ai-services/         OpenAI client (used starting M5)
+    types/                 Shared domain types
+  assets/
+    sample/                A clearly-labeled placeholder screenshot SVG for the Template Engine
+                           to demo against before real product screenshots exist (M3/M4)
+    fonts/, logo/          Bundled Inter (OFL-licensed) and the DJ&A studio logo
   build/                  electron-builder resources (app icon)
   electron-builder.yml    Desktop packaging config (see "Packaging the desktop app" below)
-  tests/                  Vitest unit tests for the pure logic
+  tests/                  Vitest unit tests — pure logic only (Fabric itself needs a real browser
+                         Canvas 2D context vitest's node environment doesn't provide; those parts
+                         are verified with a manual browser pass instead, not silently skipped)
   scripts/                One-off utility scripts (standalone-build prep)
 ```
 

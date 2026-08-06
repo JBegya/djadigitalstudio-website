@@ -91,5 +91,12 @@ export interface AdCreation {
   thumbnailPath: string;
   exportPaths: string[];
   createdAt: string;
+  updatedAt: string;
   favorite: boolean;
+  /** Fabric's own canvas.toJSON() — every object, position, size, color, and text, tagged with
+   * each object's `djaSlotKey`. Reload with canvas.loadFromJSON() to resume editing exactly
+   * where the user left off, instead of a one-shot export. */
+  canvasJson: Record<string, unknown>;
+  canvasWidthPx: number;
+  canvasHeightPx: number;
 }

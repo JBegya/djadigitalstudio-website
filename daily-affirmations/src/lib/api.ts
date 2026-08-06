@@ -1,4 +1,4 @@
-import type { Settings } from '@/types/domain';
+import type { AdCreation, Settings } from '@/types/domain';
 
 export type RedactedSettings = Settings & { hasOpenAiKey: boolean };
 
@@ -49,4 +49,46 @@ export async function openFolder(targetPath: string): Promise<{ ok: boolean; err
 /** Opens the daily log folder — server-resolved, so this works identically in Electron or a plain browser tab. */
 export async function openLogsFolder(): Promise<{ ok: boolean; error: string | null }> {
   return json(await fetch('/api/system/open-logs', { method: 'POST' }));
+}
+
+export async function listCreations(): Promise<{ creations: AdCreation[] }> {
+  return json(await fetch('/api/creations', { cache: 'no-store' }));
+}
+
+export async function getCreation(id: string): Promise<{ creation: AdCreation }> {
+  return json(await fetch(`/api/creations/${encodeURIComponent(id)}`, { cache: 'no-store' }));
+}
+
+export async function createCreation(creation: Omit<AdCreation, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ creation: AdCreation }> {
+  return json(
+    await fetch('/api/creations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(creation),
+    }),
+  );
+}
+
+export async function updateCreation(id: string, patch: Partial<AdCreation>): Promise<{ creation: AdCreation }> {
+  return json(
+    await fetch(`/api/creations/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    }),
+  );
+}
+
+export async function deleteCreation(id: string): Promise<{ ok: boolean }> {
+  return json(await fetch(`/api/creations/${encodeURIComponent(id)}`, { method: 'DELETE' }));
+}
+
+export async function exportAd(payload: { format: 'png' | 'jpg' | 'pdf'; dataUrl: string; productFolderName?: string; fileName?: string }): Promise<{ path: string }> {
+  return json(
+    await fetch('/api/exports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+  );
 }
