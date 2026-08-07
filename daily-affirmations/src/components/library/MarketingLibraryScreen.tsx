@@ -135,7 +135,8 @@ export function MarketingLibraryScreen() {
                     {featureGroup.packs.map(({ pack, assets }) => (
                       <div key={pack.id}>
                         <div className="flex items-center gap-2">
-                          <Badge>Pack V{pack.version}</Badge>
+                          <p className="text-sm font-semibold text-foreground">{pack.name}</p>
+                          <Badge>V{pack.version}</Badge>
                           <span className="text-xs text-muted-foreground">{new Date(pack.createdAt).toLocaleDateString()}</span>
                         </div>
                         <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">

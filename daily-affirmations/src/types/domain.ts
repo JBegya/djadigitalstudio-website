@@ -296,6 +296,9 @@ export interface MarketingPack {
   id: string;
   productId: ProductId;
   featureKey: string;
+  /** A meaningful creative-concept name (e.g. "Payroll Mistake Story"), not just a version number
+   * — the same feature will eventually have multiple named concepts, each with its own versions. */
+  name: string;
   /** 1-based, sequential per product+feature — computed server-side at creation time. */
   version: number;
   createdAt: string;

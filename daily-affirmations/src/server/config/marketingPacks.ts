@@ -18,11 +18,12 @@ export class MarketingPacksStore {
     return this.load().find((p) => p.id === id) ?? null;
   }
 
-  /** 1-based, sequential per product+feature — the next pack for a feature is always one more
-   * than the highest version seen so far, so a deleted pack never gets its version number reused. */
-  nextVersion(productId: string, featureKey: string): number {
+  /** 1-based, sequential per product+feature+name — each named creative concept ("Payroll
+   * Mistake Story", "Late Finish Early Start") versions independently, so a new concept always
+   * starts at V1 while regenerating the same concept counts up. */
+  nextVersion(productId: string, featureKey: string, name: string): number {
     const versions = this.load()
-      .filter((p) => p.productId === productId && p.featureKey === featureKey)
+      .filter((p) => p.productId === productId && p.featureKey === featureKey && p.name === name)
       .map((p) => p.version);
     return versions.length > 0 ? Math.max(...versions) + 1 : 1;
   }

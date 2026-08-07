@@ -39,7 +39,15 @@ function sampleFeature(overrides: Partial<ProductFeature> = {}): ProductFeature 
 }
 
 function samplePack(overrides: Partial<MarketingPack> = {}): MarketingPack {
-  return { id: 'pack1', productId: 'shiftearn-pro', featureKey: 'short-change-detection', version: 1, createdAt: '2026-08-01T00:00:00.000Z', ...overrides };
+  return {
+    id: 'pack1',
+    productId: 'shiftearn-pro',
+    featureKey: 'short-change-detection',
+    name: 'Payroll Mistake Story',
+    version: 1,
+    createdAt: '2026-08-01T00:00:00.000Z',
+    ...overrides,
+  };
 }
 
 function sampleCreation(overrides: Partial<AdCreation> = {}): AdCreation {

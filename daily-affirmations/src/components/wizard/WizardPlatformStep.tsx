@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { ContentTypeSpec } from '@/types/domain';
 
@@ -11,17 +13,27 @@ export function WizardPlatformStep({
   onChange,
   onGenerateAll,
   generating,
+  suggestedPackName,
 }: {
   contentTypes: ContentTypeSpec[];
   value: string | null;
   onChange: (key: string) => void;
   /** Runs "Generate All" for every checked platform instead of continuing to the single-ad Style
    * step — the Batch Production entry point. Omit to hide multi-select entirely. */
-  onGenerateAll?: (contentTypeKeys: string[]) => void;
+  onGenerateAll?: (contentTypeKeys: string[], packName: string) => void;
   generating?: boolean;
+  /** A starting point for the pack name field, derived from the feature's own stored hook/story
+   * — the user can (and should) rename it to something that identifies this specific creative
+   * concept, since the same feature will eventually have several. */
+  suggestedPackName?: string;
 }) {
   const [multiMode, setMultiMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [packName, setPackName] = useState(suggestedPackName ?? '');
+
+  useEffect(() => {
+    setPackName(suggestedPackName ?? '');
+  }, [suggestedPackName]);
 
   function toggleSelected(key: string) {
     setSelected((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
@@ -37,6 +49,24 @@ export function WizardPlatformStep({
         >
           {multiMode ? 'Choose a single platform instead' : 'Generate for multiple platforms at once'}
         </button>
+      )}
+
+      {multiMode && onGenerateAll && (
+        <div>
+          <Label htmlFor="pack-name" className="text-xs text-muted-foreground">
+            Marketing Pack name
+          </Label>
+          <Input
+            id="pack-name"
+            value={packName}
+            onChange={(e) => setPackName(e.target.value)}
+            placeholder="e.g. Payroll Mistake Story"
+            className="mt-1"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Name this creative concept so it&apos;s easy to tell apart from other packs for the same feature later.
+          </p>
+        </div>
       )}
 
       <div className="space-y-2">
@@ -82,7 +112,11 @@ export function WizardPlatformStep({
       </div>
 
       {multiMode && onGenerateAll && (
-        <Button type="button" onClick={() => onGenerateAll(selected)} disabled={selected.length === 0 || Boolean(generating)}>
+        <Button
+          type="button"
+          onClick={() => onGenerateAll(selected, packName.trim())}
+          disabled={selected.length === 0 || !packName.trim() || Boolean(generating)}
+        >
           {generating ? 'Generating…' : `Generate All (${selected.length})`}
         </Button>
       )}

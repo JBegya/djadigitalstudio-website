@@ -51,6 +51,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
   const availableTemplates = contentTypeKey ? getTemplatesForContentType(contentTypeKey) : [];
   const template = availableTemplates.find((t) => t.key === templateKey) ?? null;
   const contentType = CONTENT_TYPES.find((c) => c.key === contentTypeKey) ?? null;
+  const suggestedPackName = feature ? (feature.marketing.suggestedHook || persona?.storyIdeas[0] || feature.label) : '';
 
   function selectProduct(id: string) {
     setProductId(id);
@@ -73,8 +74,8 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
     onComplete({ product, persona, contentType, feature, template });
   }
 
-  async function generateAll(contentTypeKeys: string[]) {
-    if (!product || !feature || contentTypeKeys.length === 0) return;
+  async function generateAll(contentTypeKeys: string[], packName: string) {
+    if (!product || !feature || contentTypeKeys.length === 0 || !packName.trim()) return;
     const pairs = contentTypeKeys
       .map((key) => {
         const type = CONTENT_TYPES.find((c) => c.key === key);
@@ -90,7 +91,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
 
     setBatchGenerating(true);
     try {
-      const { pack } = await createMarketingPack({ productId: product.id, featureKey: feature.key });
+      const { pack } = await createMarketingPack({ productId: product.id, featureKey: feature.key, name: packName.trim() });
       const screenshot = resolveFeatureScreenshot(product, feature);
       const generated = await generateAdsForPlatforms(pairs, {
         product,
@@ -123,7 +124,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
           }),
         ),
       );
-      toast.success(`Generated Marketing Pack V${pack.version} with ${generated.length} asset${generated.length === 1 ? '' : 's'} for ${feature.label}.`);
+      toast.success(`Generated "${pack.name}" (V${pack.version}) with ${generated.length} asset${generated.length === 1 ? '' : 's'} for ${feature.label}.`);
       router.push('/exports');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Batch generation failed.');
@@ -194,6 +195,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
           onChange={selectContentType}
           onGenerateAll={generateAll}
           generating={batchGenerating}
+          suggestedPackName={suggestedPackName}
         />
       </WizardShell>
     );

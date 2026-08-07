@@ -156,23 +156,31 @@ editable advertisement) before the full product-management system exists:
       infrastructure to producing marketing output — every new feature from here on is measured
       against how much it speeds up producing real, publishable assets. The wizard's Platform step
       gained a multi-select "Generate for multiple platforms at once" mode: pick a feature, check
-      several platforms, and **Generate All** builds a **Marketing Pack** — one versioned record
-      (Pack V1, V2, ...) covering every selected platform's advertisement, using a per-platform
-      default template (`server/config/defaultTemplates.ts`, plain data, not code — easy to retune
-      without touching generation logic). Rendering happens on detached, never-DOM-attached Fabric
-      canvases (`lib/editor/batchGenerate.ts`), so N platform variants render without mounting N
-      visible editors. Every asset stores a `featureKey` and (for pack-generated assets) a `packId`,
-      and carries a lifecycle `status` (Draft/Ready/Published/Archived) — nothing is ever
-      overwritten; regenerating a feature always creates a new pack. The **Marketing Library**
-      (`/exports`, née "Exports") replaces its ComingSoon stub: browse every pack and standalone ad
-      by product → feature → pack version → platform, update an asset's status inline, or open any
-      asset back in the full editor. Deliberately deferred to a later slice, not dropped: a
-      marketing-opportunities Home Dashboard, a Marketing Coverage screen, one-click Batch
-      Variations (style/tone presets), and a Campaign Pack Generator that exports a pack straight
-      to a folder.
+      several platforms, name the creative concept (e.g. "Payroll Mistake Story" — pre-filled from
+      the feature's own stored hook/story, always editable), and **Generate All** builds a
+      **Marketing Pack** — one named, versioned record covering every selected platform's
+      advertisement, using a per-platform default template (`server/config/defaultTemplates.ts`,
+      plain data, not code — easy to retune without touching generation logic). Versioning is
+      scoped per (product, feature, pack name): a new creative concept for the same feature starts
+      its own V1, while regenerating the same named concept counts up (V2, V3, ...) — distinct
+      concepts never share a version sequence. Rendering happens on detached, never-DOM-attached
+      Fabric canvases (`lib/editor/batchGenerate.ts`), so N platform variants render without
+      mounting N visible editors. Every asset stores a `featureKey` and (for pack-generated assets)
+      a `packId`, and carries a lifecycle `status` (Draft/Ready/Published/Archived) — nothing is
+      ever overwritten. The **Marketing Library** (`/exports`, née "Exports") replaces its
+      ComingSoon stub: browse every pack and standalone ad by product → feature → pack name/version
+      → platform, update an asset's status inline, or open any asset back in the full editor.
+      Deliberately sequenced for later, not dropped: **M7 Slice 2 — Publishing Workflow** (richer
+      lifecycle tracking — published date, last-edited — to answer "what have I already used?"),
+      **M7 Slice 3 — Marketing Coverage** (which features/personas/platforms/buying triggers/
+      objections still have no Marketing Pack), then a marketing-opportunities Home Dashboard,
+      one-click Batch Variations (style/tone presets), and a Campaign Pack Generator that exports a
+      pack straight to a folder — all still ahead of AI.
 - [ ] **M8 — AI Copy Assistant.** AI rewrites/varies the copy the Advertisement Intelligence Engine
       already assembled — it improves phrasing, it never invents a claim, feature, screenshot, or
-      testimonial that isn't already grounded in the stored Marketing Intelligence.
+      testimonial that isn't already grounded in the stored Marketing Intelligence. Deliberately
+      last: by the time AI is introduced, it has a mature Product/Persona/Feature/Buying-Trigger/
+      Objection/Marketing-Pack corpus to stay grounded in, rather than a thin one.
 - [ ] **M9 — Storyboard Generator.** Scene-by-scene advertising concepts (no video yet) generated
       from the same stored Product/Persona/Feature/Story data.
 - [ ] **M10 — AI Video Generation.** Connects a chosen storyboard to a video provider through a

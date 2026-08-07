@@ -11,15 +11,16 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as Partial<MarketingPack>;
-  if (!body.productId || !body.featureKey) {
-    return NextResponse.json({ error: 'productId and featureKey are required' }, { status: 400 });
+  if (!body.productId || !body.featureKey || !body.name?.trim()) {
+    return NextResponse.json({ error: 'productId, featureKey, and name are required' }, { status: 400 });
   }
 
   const pack: MarketingPack = {
     id: newId('pack'),
     productId: body.productId,
     featureKey: body.featureKey,
-    version: marketingPacksStore.nextVersion(body.productId, body.featureKey),
+    name: body.name.trim(),
+    version: marketingPacksStore.nextVersion(body.productId, body.featureKey, body.name.trim()),
     createdAt: new Date().toISOString(),
   };
   marketingPacksStore.upsert(pack);
