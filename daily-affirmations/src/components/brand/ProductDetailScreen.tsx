@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { BrandGuidelinesSection } from '@/components/brand/BrandGuidelinesSection';
 import { FeaturesSection } from '@/components/brand/FeaturesSection';
 import { IdentitySection } from '@/components/brand/IdentitySection';
+import { MarketingIdentitySection } from '@/components/brand/MarketingIdentitySection';
+import { PersonasSection } from '@/components/brand/PersonasSection';
 import { ProductStatusBar } from '@/components/brand/ProductStatusBar';
 import { ScreenshotsSection } from '@/components/brand/ScreenshotsSection';
 import { StoreLinksSection } from '@/components/brand/StoreLinksSection';
@@ -68,8 +70,10 @@ export function ProductDetailScreen({ productId }: { productId: string }) {
       <div className="space-y-6">
         <ProductStatusBar product={product} onPatch={patch} />
         <IdentitySection product={product} onPatch={patch} onProductChange={setProduct} />
+        <MarketingIdentitySection product={product} onPatch={patch} />
         <BrandGuidelinesSection product={product} onPatch={patch} />
         <StoreLinksSection product={product} onPatch={patch} />
+        <PersonasSection product={product} onPatch={patch} />
         <FeaturesSection product={product} onPatch={patch} />
         <ScreenshotsSection product={product} onProductChange={setProduct} />
       </div>

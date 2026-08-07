@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { productStore } from '@/server/config/products';
+import { DEFAULT_MARKETING_IDENTITY } from '@/types/domain';
 import type { ProductProfile } from '@/types/domain';
 
 export const runtime = 'nodejs';
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
       logoClearSpacePx: body.brandGuidelines?.logoClearSpacePx ?? 16,
       storeBadgeStyle: body.brandGuidelines?.storeBadgeStyle ?? 'black',
     },
+    marketingIdentity: { ...DEFAULT_MARKETING_IDENTITY, ...body.marketingIdentity },
     fontFamily: body.fontFamily,
     status: body.status ?? 'draft',
     appStoreUrl: body.appStoreUrl ?? '',
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
     termsUrl: body.termsUrl ?? '',
     screenshots: [],
     features: body.features ?? [],
-    targetAudience: body.targetAudience ?? [],
+    personas: body.personas ?? [],
     keywords: body.keywords ?? [],
   };
 

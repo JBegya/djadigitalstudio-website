@@ -5,6 +5,28 @@
   "description": "Placeholder description — replace with real SplitShift Hours copy. An hours-tracking and scheduling companion for workers with split or irregular shifts.",
   "brandColors": { "primary": "#5ad1a8", "secondary": "#0f2a22", "accent": "#f5e663" },
   "brandGuidelines": { "cornerRadiusPx": 16, "buttonStyle": "rounded", "preferredBackground": "solid", "logoClearSpacePx": 16, "storeBadgeStyle": "black" },
+  "marketingIdentity": {
+    "whyThisAppExists": "",
+    "mission": "Help workers accurately track split shifts without confusion.",
+    "corePromise": "Make every hour count.",
+    "primaryAudience": ["Shift workers with split or irregular schedules"],
+    "secondaryAudience": [],
+    "coreProblems": ["Lost hours.", "Manual calculations.", "Multiple shifts.", "Confusing schedules."],
+    "painPoints": [],
+    "emotionalTriggers": [],
+    "benefits": ["Accuracy.", "Time saved.", "Confidence.", "Organisation."],
+    "transformation": { "from": "", "to": "" },
+    "buyingTriggers": [],
+    "objections": [],
+    "brandPersonality": [],
+    "communicationStyle": "",
+    "wordsWePrefer": [],
+    "wordsWeAvoid": [],
+    "styleGuardrails": [],
+    "coreMessage": "",
+    "callToAction": "",
+    "successStory": ""
+  },
   "status": "draft",
   "appStoreUrl": "",
   "appStoreAvailability": "not-planned",
@@ -15,9 +37,41 @@
   "termsUrl": "",
   "screenshots": [],
   "features": [
-    { "key": "split-shift-tracking", "label": "Split Shift Tracking", "description": "Placeholder — logs and totals hours across split shifts in a single day." },
-    { "key": "schedule-reminders", "label": "Schedule Reminders", "description": "Placeholder — alerts before each shift segment starts." }
+    {
+      "key": "split-shift-tracking",
+      "label": "Split Shift Tracking",
+      "description": "Placeholder — logs and totals hours across split shifts in a single day.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    },
+    {
+      "key": "schedule-reminders",
+      "label": "Schedule Reminders",
+      "description": "Placeholder — alerts before each shift segment starts.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    }
   ],
-  "targetAudience": ["Shift workers with split or irregular schedules"],
+  "personas": [],
   "keywords": ["split shift", "hours tracking", "scheduling"]
 }

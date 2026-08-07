@@ -3,7 +3,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ProductStore } from '@/server/config/products';
-import type { ProductProfile } from '@/types/domain';
+import { DEFAULT_FEATURE_MARKETING, DEFAULT_MARKETING_IDENTITY } from '@/types/domain';
+import type { ProductFeature, ProductProfile } from '@/types/domain';
 
 function sampleProfile(overrides: Partial<ProductProfile> = {}): ProductProfile {
   return {
@@ -13,6 +14,7 @@ function sampleProfile(overrides: Partial<ProductProfile> = {}): ProductProfile 
     description: 'Payroll accuracy for shift workers.',
     brandColors: { primary: '#7c9cff', secondary: '#1b1030', accent: '#f5a623' },
     brandGuidelines: { cornerRadiusPx: 16, buttonStyle: 'rounded', preferredBackground: 'solid', logoClearSpacePx: 16, storeBadgeStyle: 'black' },
+    marketingIdentity: DEFAULT_MARKETING_IDENTITY,
     status: 'released',
     appStoreUrl: '',
     appStoreAvailability: 'available',
@@ -23,10 +25,14 @@ function sampleProfile(overrides: Partial<ProductProfile> = {}): ProductProfile 
     termsUrl: '',
     screenshots: [],
     features: [],
-    targetAudience: [],
+    personas: [],
     keywords: [],
     ...overrides,
   };
+}
+
+function sampleFeature(overrides: Partial<ProductFeature> = {}): ProductFeature {
+  return { key: 'callback-pay', label: 'Callback Pay', description: 'Automatically calculates callback pay.', marketing: DEFAULT_FEATURE_MARKETING, ...overrides };
 }
 
 describe('ProductStore', () => {
@@ -96,6 +102,21 @@ describe('ProductStore', () => {
     expect(updated?.brandGuidelines.cornerRadiusPx).toBe(24);
     expect(updated?.brandGuidelines.buttonStyle).toBe('rounded');
     expect(updated?.brandGuidelines.storeBadgeStyle).toBe('black');
+  });
+
+  it('update() merges marketingIdentity one level deep instead of replacing the whole object', () => {
+    writeBundled(sampleProfile());
+    const store = new ProductStore(bundledDir, overlayDir);
+    store.update('shiftearn-pro', { marketingIdentity: { ...DEFAULT_MARKETING_IDENTITY, mission: 'Help shift workers get paid correctly.' } });
+
+    const updated = store.get('shiftearn-pro');
+    expect(updated?.marketingIdentity.mission).toBe('Help shift workers get paid correctly.');
+    expect(updated?.marketingIdentity.corePromise).toBe('');
+
+    store.update('shiftearn-pro', { marketingIdentity: { corePromise: 'Know exactly what every shift is worth.' } as ProductProfile['marketingIdentity'] });
+    const updatedAgain = store.get('shiftearn-pro');
+    expect(updatedAgain?.marketingIdentity.corePromise).toBe('Know exactly what every shift is worth.');
+    expect(updatedAgain?.marketingIdentity.mission).toBe('Help shift workers get paid correctly.');
   });
 
   it('update() throws for a product that does not exist', () => {
@@ -183,6 +204,24 @@ describe('ProductStore', () => {
     expect(loaded?.status).toBe('draft');
     expect(loaded?.appStoreAvailability).toBe('not-planned');
     expect(loaded?.googlePlayAvailability).toBe('not-planned');
+  });
+
+  it('backfills marketingIdentity/personas and each feature\'s marketing profile on data written before those fields existed', () => {
+    const legacyFeature = sampleFeature();
+    // @ts-expect-error simulating a real feature written to disk before this schema change
+    delete legacyFeature.marketing;
+    const legacyProfile = sampleProfile({ features: [legacyFeature] });
+    // @ts-expect-error simulating a real profile written to disk before this schema change
+    delete legacyProfile.marketingIdentity;
+    // @ts-expect-error same — personas didn't exist either
+    delete legacyProfile.personas;
+    writeBundled(legacyProfile);
+
+    const store = new ProductStore(bundledDir, overlayDir);
+    const loaded = store.get('shiftearn-pro');
+    expect(loaded?.marketingIdentity).toEqual(DEFAULT_MARKETING_IDENTITY);
+    expect(loaded?.personas).toEqual([]);
+    expect(loaded?.features[0]?.marketing).toEqual(DEFAULT_FEATURE_MARKETING);
   });
 
   it('lists products sorted by name, de-duplicating ids present in both bundled and overlay', () => {

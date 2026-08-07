@@ -5,6 +5,28 @@
   "description": "Placeholder description — replace with real ShiftEarn Pro copy. Payroll accuracy for shift workers: tracks hours, pay rates, and callback/short-change detection across every shift.",
   "brandColors": { "primary": "#7c9cff", "secondary": "#1b1030", "accent": "#f5a623" },
   "brandGuidelines": { "cornerRadiusPx": 16, "buttonStyle": "rounded", "preferredBackground": "solid", "logoClearSpacePx": 16, "storeBadgeStyle": "black" },
+  "marketingIdentity": {
+    "whyThisAppExists": "Nobody should ever wonder whether they were paid correctly.",
+    "mission": "Help shift workers understand exactly what they have earned.",
+    "corePromise": "Know exactly what every shift is worth.",
+    "primaryAudience": ["Nurses", "Healthcare Assistants", "Support Workers", "FIFO Workers", "Emergency Services", "Retail", "Hospitality", "Security"],
+    "secondaryAudience": [],
+    "coreProblems": ["Not knowing if payroll is correct.", "Confusing payslips.", "Overtime uncertainty.", "Short changes.", "Leave calculation concerns."],
+    "painPoints": [],
+    "emotionalTriggers": ["Financial stress.", "Frustration.", "Uncertainty.", "Feeling undervalued."],
+    "benefits": ["Confidence.", "Peace of mind.", "Financial protection.", "Time saved."],
+    "transformation": { "from": "I hope I was paid correctly.", "to": "I know exactly what I should be paid." },
+    "buyingTriggers": ["Payroll mistake", "Underpaid overtime", "Confusing payslip", "Financial stress", "Tax season", "Performance review", "Changing jobs", "Second job"],
+    "objections": ["It's too expensive.", "I already use Excel.", "My employer already pays correctly.", "I don't have time.", "It looks complicated."],
+    "brandPersonality": ["Professional.", "Trustworthy.", "Accurate.", "Reliable.", "Empowering."],
+    "communicationStyle": "",
+    "wordsWePrefer": [],
+    "wordsWeAvoid": [],
+    "styleGuardrails": ["Never sensational.", "Never make claims that cannot be supported by the app."],
+    "coreMessage": "",
+    "callToAction": "",
+    "successStory": ""
+  },
   "status": "draft",
   "appStoreUrl": "",
   "appStoreAvailability": "not-planned",
@@ -15,16 +37,214 @@
   "termsUrl": "",
   "screenshots": [],
   "features": [
-    { "key": "short-change-detection", "label": "Short Change Detection", "description": "Flags when a paycheck doesn't match the hours actually worked." },
-    { "key": "callback-pay", "label": "Callback Pay", "description": "Automatically calculates callback and on-call pay entitlements." },
-    { "key": "leave-calculator", "label": "Leave Calculator", "description": "Tracks accrued leave balances in real time." },
-    { "key": "two-jobs", "label": "Two Jobs", "description": "Manages pay and shifts across more than one employer at once." },
-    { "key": "fifo", "label": "FIFO", "description": "Built for fly-in fly-out rosters and irregular shift patterns." },
-    { "key": "apple-watch", "label": "Apple Watch", "description": "Clock in, clock out, and check pay from the wrist." },
-    { "key": "offline-privacy", "label": "Offline Privacy", "description": "Works fully offline — your pay data never leaves your device unless you choose to sync it." },
-    { "key": "pdf-payslips", "label": "PDF Payslips", "description": "Generates clean, exportable PDF payslips for every pay period." },
-    { "key": "15-countries", "label": "15 Countries", "description": "Supports pay rules and tax conventions across 15 countries." }
+    {
+      "key": "short-change-detection",
+      "label": "Short Change Detection",
+      "description": "Flags when a paycheck doesn't match the hours actually worked.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": ["registered-nurse"],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    },
+    {
+      "key": "callback-pay",
+      "label": "Callback Pay",
+      "description": "Automatically calculates callback and on-call pay entitlements.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": ["fifo-worker", "support-worker"],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    },
+    {
+      "key": "leave-calculator",
+      "label": "Leave Calculator",
+      "description": "Tracks accrued leave balances in real time.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    },
+    {
+      "key": "two-jobs",
+      "label": "Two Jobs",
+      "description": "Manages pay and shifts across more than one employer at once.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": ["healthcare-assistant"],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    },
+    {
+      "key": "fifo",
+      "label": "FIFO",
+      "description": "Built for fly-in fly-out rosters and irregular shift patterns.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": ["fifo-worker"],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    },
+    {
+      "key": "apple-watch",
+      "label": "Apple Watch",
+      "description": "Clock in, clock out, and check pay from the wrist.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "suggestedDevice": "watch",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    },
+    {
+      "key": "offline-privacy",
+      "label": "Offline Privacy",
+      "description": "Works fully offline — your pay data never leaves your device unless you choose to sync it.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    },
+    {
+      "key": "pdf-payslips",
+      "label": "PDF Payslips",
+      "description": "Generates clean, exportable PDF payslips for every pay period.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    },
+    {
+      "key": "15-countries",
+      "label": "15 Countries",
+      "description": "Supports pay rules and tax conventions across 15 countries.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    }
   ],
-  "targetAudience": ["Shift workers", "Nurses", "Retail and hospitality staff", "FIFO workers"],
+  "personas": [
+    {
+      "id": "registered-nurse",
+      "name": "Registered Nurse",
+      "occupation": "Registered Nurse",
+      "environment": "",
+      "biggestProblems": ["I don't know if payroll paid me correctly."],
+      "biggestFears": [],
+      "biggestFrustrations": [],
+      "desiredOutcomes": [],
+      "emotionalTriggers": ["Frustration"],
+      "storyIdeas": ["Late finish. Early start. Confusing payslip."],
+      "preferredCommunicationStyle": ""
+    },
+    {
+      "id": "healthcare-assistant",
+      "name": "Healthcare Assistant",
+      "occupation": "Healthcare Assistant",
+      "environment": "",
+      "biggestProblems": ["I work two jobs."],
+      "biggestFears": [],
+      "biggestFrustrations": [],
+      "desiredOutcomes": [],
+      "emotionalTriggers": ["Overwhelmed"],
+      "storyIdeas": ["Switching between employers. Different pay rates."],
+      "preferredCommunicationStyle": ""
+    },
+    {
+      "id": "fifo-worker",
+      "name": "FIFO Worker",
+      "occupation": "FIFO Worker",
+      "environment": "",
+      "biggestProblems": ["I work long swings."],
+      "biggestFears": [],
+      "biggestFrustrations": [],
+      "desiredOutcomes": [],
+      "emotionalTriggers": [],
+      "storyIdeas": ["Callback. Overtime. Travel. Allowances."],
+      "preferredCommunicationStyle": ""
+    },
+    {
+      "id": "support-worker",
+      "name": "Support Worker",
+      "occupation": "Support Worker",
+      "environment": "",
+      "biggestProblems": ["I get called back all the time."],
+      "biggestFears": [],
+      "biggestFrustrations": [],
+      "desiredOutcomes": [],
+      "emotionalTriggers": [],
+      "storyIdeas": [],
+      "preferredCommunicationStyle": ""
+    }
+  ],
   "keywords": ["payroll", "shift work", "timesheet", "pay accuracy", "callback pay"]
 }

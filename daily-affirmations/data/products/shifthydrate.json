@@ -5,6 +5,28 @@
   "description": "Placeholder description — replace with real ShiftHydrate copy. A hydration-reminder app built around real shift schedules rather than a generic daily clock.",
   "brandColors": { "primary": "#4fb8e8", "secondary": "#0a1e2b", "accent": "#8fe3d8" },
   "brandGuidelines": { "cornerRadiusPx": 16, "buttonStyle": "rounded", "preferredBackground": "solid", "logoClearSpacePx": 16, "storeBadgeStyle": "black" },
+  "marketingIdentity": {
+    "whyThisAppExists": "The people caring for everyone else deserve to care for themselves too.",
+    "mission": "Help shift workers stay healthy during demanding shifts.",
+    "corePromise": "Take care of yourself while you take care of others.",
+    "primaryAudience": ["Shift workers", "Nurses", "Warehouse and physical-labor workers"],
+    "secondaryAudience": [],
+    "coreProblems": ["Too busy to drink water.", "Fatigue.", "Headaches.", "Dehydration."],
+    "painPoints": [],
+    "emotionalTriggers": [],
+    "benefits": ["Energy.", "Health.", "Focus.", "Performance."],
+    "transformation": { "from": "I forgot to drink water all shift.", "to": "I feel better throughout every shift." },
+    "buyingTriggers": [],
+    "objections": [],
+    "brandPersonality": [],
+    "communicationStyle": "",
+    "wordsWePrefer": [],
+    "wordsWeAvoid": [],
+    "styleGuardrails": [],
+    "coreMessage": "",
+    "callToAction": "",
+    "successStory": ""
+  },
   "status": "draft",
   "appStoreUrl": "",
   "appStoreAvailability": "not-planned",
@@ -15,9 +37,48 @@
   "termsUrl": "",
   "screenshots": [],
   "features": [
-    { "key": "shift-aware-reminders", "label": "Shift-Aware Reminders", "description": "Placeholder — hydration reminders that adjust to your actual shift start/end times." },
-    { "key": "intake-tracking", "label": "Intake Tracking", "description": "Placeholder — logs water intake across a shift, not just a calendar day." }
+    {
+      "key": "shift-aware-reminders",
+      "label": "Shift-Aware Reminders",
+      "description": "Placeholder — hydration reminders that adjust to your actual shift start/end times.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    },
+    {
+      "key": "intake-tracking",
+      "label": "Intake Tracking",
+      "description": "Placeholder — logs water intake across a shift, not just a calendar day.",
+      "marketing": {
+        "coreProblem": "",
+        "corePromise": "",
+        "painPoints": [],
+        "benefits": [],
+        "transformation": { "from": "", "to": "" },
+        "supportingProof": "",
+        "suggestedHook": "",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": []
+      }
+    }
   ],
-  "targetAudience": ["Shift workers", "Nurses", "Warehouse and physical-labor workers"],
+  "personas": [
+    { "id": "icu-nurse", "name": "ICU Nurse", "occupation": "ICU Nurse", "environment": "", "biggestProblems": [], "biggestFears": [], "biggestFrustrations": [], "desiredOutcomes": [], "emotionalTriggers": [], "storyIdeas": [], "preferredCommunicationStyle": "" },
+    { "id": "ed-nurse", "name": "ED Nurse", "occupation": "ED Nurse", "environment": "", "biggestProblems": [], "biggestFears": [], "biggestFrustrations": [], "desiredOutcomes": [], "emotionalTriggers": [], "storyIdeas": [], "preferredCommunicationStyle": "" },
+    { "id": "midwife", "name": "Midwife", "occupation": "Midwife", "environment": "", "biggestProblems": [], "biggestFears": [], "biggestFrustrations": [], "desiredOutcomes": [], "emotionalTriggers": [], "storyIdeas": [], "preferredCommunicationStyle": "" },
+    { "id": "fifo-worker", "name": "FIFO Worker", "occupation": "FIFO Worker", "environment": "", "biggestProblems": [], "biggestFears": [], "biggestFrustrations": [], "desiredOutcomes": [], "emotionalTriggers": [], "storyIdeas": [], "preferredCommunicationStyle": "" },
+    { "id": "warehouse-worker", "name": "Warehouse Worker", "occupation": "Warehouse Worker", "environment": "", "biggestProblems": [], "biggestFears": [], "biggestFrustrations": [], "desiredOutcomes": [], "emotionalTriggers": [], "storyIdeas": [], "preferredCommunicationStyle": "" },
+    { "id": "hospital-cleaner", "name": "Hospital Cleaner", "occupation": "Hospital Cleaner", "environment": "", "biggestProblems": [], "biggestFears": [], "biggestFrustrations": [], "desiredOutcomes": [], "emotionalTriggers": [], "storyIdeas": [], "preferredCommunicationStyle": "" }
+  ],
   "keywords": ["hydration", "shift work", "wellness reminder"]
 }

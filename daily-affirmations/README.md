@@ -25,12 +25,39 @@ tool's one job.
   generation, no video rendering. Version 1 produces static graphics only (PNG/JPG/PDF). This is a
   deliberate scope decision, not an oversight — see "What's explicitly out of scope" below.
 
+## Marketing Philosophy
+
+This tool exists to help DJ&A market its apps effectively enough that a viewer becomes convinced
+an app solves a real problem they have — more downloads, subscriptions, and long-term users, not
+advertisements for their own sake. Every ad has to answer one question: *"Why should I download
+this today?"* That means:
+
+- **We sell outcomes, not software.** Features are supporting evidence for a transformation, never
+  the message itself. Every product's `MarketingIdentity` (see below) captures that transformation
+  as an explicit from/to pair.
+- **Story before features.** A persuasive ad opens with a relatable, real-life moment — a late
+  finish, a missed family dinner, a shift with no water break — never a feature list, a screenshot,
+  or marketing buzzwords. The intended shape is Problem → Emotion → Solution → Transformation →
+  Call to Action.
+- **Marketing Intelligence is the one source of truth.** Every product's `MarketingIdentity`,
+  `CustomerPersona`s, and each feature's `FeatureMarketingProfile` (problem, promise, pain points,
+  benefits, supporting proof, a suggested story hook, and the personas it resonates with) are
+  meant to be reused by *everything* downstream — the ad editor, a future AI Copy Assistant, App
+  Store descriptions, social posts, landing pages, and eventually AI-generated video. One
+  structured knowledge base, not separate copy reinvented per channel.
+- **AI never invents.** When AI is involved (M7 onward), it must never fabricate claims,
+  capabilities, features, screenshots, or customer testimonials — it may only draw from and remix
+  the structured Marketing Intelligence already stored here. The application, not the model, is
+  always the source of truth. `supportingProof`/`successStory` fields are explicitly user-authored
+  only for this reason.
+
 ## Products
 
 Products are **never hardcoded** — each one is a Product Profile loaded from JSON
-(`data/products/*.json`), carrying its name, logo, brand colors, fonts, tagline, description,
-App Store/Play Store/website/privacy/terms URLs, screenshots, reusable feature cards, target
-audience, and keywords. Adding a new product means adding a new JSON file, not writing code.
+(`data/products/*.json`), carrying its name, logo, brand colors/guidelines, fonts, tagline,
+description, App Store/Play Store/website/privacy/terms URLs, screenshots, reusable Marketing
+Features, Customer Personas, structured Marketing Identity (see "Marketing Philosophy" above), and
+keywords. Adding a new product means adding a new JSON file, not writing code.
 
 Initial products: **ShiftEarn Pro**, **SplitShift Hours**, **ShiftHydrate**.
 
@@ -96,10 +123,30 @@ editable advertisement) before the full product-management system exists:
       product's headline/logo/screenshot — still fully editable, template/device/platform
       unrestricted from that point on. A product with no screenshots yet shows an honest empty
       mockup, never a fabricated image.
-- [ ] **M5 — Copy generator.** AI-generated headlines/captions/CTAs/hashtags (the first and only
-      point OpenAI gets used) — always optional, editable like everything else.
-- [ ] **M6 — Export engine polish.** Per-platform batch export, the Exports screen, and a real
+- [x] **M5 — Marketing Intelligence Foundation.** Products no longer just store technical fields —
+      each one now has a structured `MarketingIdentity` (why the app exists, mission, core
+      promise, audiences, problems, emotional triggers, benefits, a from/to transformation, buying
+      triggers, objections, and brand voice), a set of `CustomerPersona`s (the same feature can
+      mean something different to a nurse than a FIFO worker), and each `ProductFeature` carries
+      its own `FeatureMarketingProfile` (core problem/promise, pain points, benefits, supporting
+      proof, a suggested story-opening hook, and links to the personas it resonates with). This is
+      meant to become the one structured knowledge base every future ad, AI-assisted copy, App
+      Store description, and AI-generated video draws from — see "Marketing Philosophy" below.
+      Brand Manager gained three new sections (Marketing Identity, Customer Personas, and an
+      extended Marketing Features editor) to manage all of it. Nothing here is AI-generated or
+      AI-consumed yet — this milestone is the data foundation only.
+- [ ] **M6 — Advertisement Wizard: story-aware.** Wire the Marketing Intelligence data into the
+      wizard/editor — e.g. a feature's suggested hook as a template's opening line, persona-aware
+      copy defaults.
+- [ ] **M7 — Copy generator.** AI-generated headlines/captions/CTAs/hashtags (the first and only
+      point OpenAI gets used) — always grounded in the structured Marketing Intelligence already
+      stored, never inventing claims/features/testimonials, and always optional/editable.
+- [ ] **M8 — Export engine polish.** Per-platform batch export, the Exports screen, and a real
       Dashboard.
+- **Future — AI Video Generation.** Product → Feature → Audience → Story → Storyboard → Scenes
+  (generated via a provider-independent adapter — OpenArt, Runway, Google Veo, Kling, Pika, Luma
+  are all interchangeable without changing the rest of the app) → Assembly. Vision only, not yet
+  scheduled as a numbered milestone.
 
 ## Test Mode — try it before adding an API key
 
@@ -152,8 +199,9 @@ daily-affirmations/
     app/                 Next.js App Router — pages + API routes
     components/
       brand/               Brand Manager: BrandManagerScreen (product grid), ProductDetailScreen
-                           + its Identity/StoreLinks/Features/Screenshots sections,
-                           AssetDropzone, AutosaveField
+                           + its Identity/MarketingIdentity/BrandGuidelines/StoreLinks/Personas/
+                           Features/Screenshots sections, AssetDropzone, AutosaveField
+                           (incl. the shared TagListInput used across the marketing sections)
       editor/              The Template Engine: EditorCanvas (Fabric.js), PropertiesPanel,
                            TemplatePicker, DeviceMockupPicker, ExportBar, CreateAdvertisementScreen
       wizard/               The Advertisement Wizard: WizardShell + one component per step

@@ -23,13 +23,76 @@ export interface ProductScreenshot {
 
 export type FeaturePriority = 'low' | 'medium' | 'high';
 
+export interface Transformation {
+  from: string;
+  to: string;
+}
+
+/** One real-world segment of a product's users — the same feature can mean something completely
+ * different to a nurse than to a FIFO worker, and a persuasive ad needs to speak to one of them
+ * specifically rather than a generic "user." */
+export interface CustomerPersona {
+  id: string;
+  name: string;
+  occupation: string;
+  environment: string;
+  biggestProblems: string[];
+  biggestFears: string[];
+  biggestFrustrations: string[];
+  desiredOutcomes: string[];
+  emotionalTriggers: string[];
+  storyIdeas: string[];
+  preferredCommunicationStyle: string;
+}
+
+/** Structured marketing knowledge for one feature — persuasion-oriented context beyond what's
+ * needed to render a slot, so a future Copy Assistant or story-driven ad flow can draw on real,
+ * user-authored substance instead of inventing claims. Never AI-generated itself. */
+export interface FeatureMarketingProfile {
+  coreProblem: string;
+  corePromise: string;
+  painPoints: string[];
+  benefits: string[];
+  transformation: Transformation;
+  /** User-authored only — e.g. a real stat or quote. Never fabricated by AI. */
+  supportingProof: string;
+  /** The "relatable moment" opening line a story-driven ad should start with — never a feature or
+   * a screenshot. */
+  suggestedHook: string;
+  suggestedDevice?: DeviceKind;
+  /** References CustomerPersona.id values on the same product — the same feature can support
+   * multiple personas' different reasons for caring about it. */
+  linkedPersonaIds: string[];
+  /** Free text, but the Brand Manager UI populates it from the product's own
+   * marketingIdentity.emotionalTriggers so it stays a reference, not independent drift. */
+  suggestedEmotion: string;
+  suggestedStoryTypes: string[];
+}
+
+/** Default/empty shape for a feature's marketing profile — lives here (not in
+ * server/config/products.ts) specifically so client components can use it too without pulling
+ * that file's `fs`/`path` imports into the browser bundle. */
+export const DEFAULT_FEATURE_MARKETING: FeatureMarketingProfile = {
+  coreProblem: '',
+  corePromise: '',
+  painPoints: [],
+  benefits: [],
+  transformation: { from: '', to: '' },
+  supportingProof: '',
+  suggestedHook: '',
+  suggestedDevice: undefined,
+  linkedPersonaIds: [],
+  suggestedEmotion: '',
+  suggestedStoryTypes: [],
+};
+
 export interface ProductFeature {
   key: string;
   label: string;
   description: string;
   /** These make the Advertisement Wizard able to auto-populate a template slot-for-slot without
-   * calling AI at all — the copy assistant (M5) only needs to kick in when the user wants
-   * something better than what's already here. */
+   * calling AI at all — the copy assistant only needs to kick in when the user wants something
+   * better than what's already here. */
   headline?: string;
   subheadline?: string;
   cta?: string;
@@ -39,6 +102,7 @@ export interface ProductFeature {
   priority?: FeaturePriority;
   /** References a ProductScreenshot.id on the same product. */
   suggestedScreenshotId?: string;
+  marketing: FeatureMarketingProfile;
 }
 
 export type ButtonStyle = 'rounded' | 'pill' | 'square';
@@ -59,6 +123,69 @@ export interface BrandGuidelines {
 export type ProductStatus = 'draft' | 'beta' | 'released' | 'archived';
 export type PlatformAvailability = 'available' | 'coming-soon' | 'not-planned';
 
+/** Structured, persuasion-oriented marketing knowledge for a product — the "why should I download
+ * this today" case, kept separate from technical ProductProfile fields. This is meant to become
+ * the single source of truth every future ad, AI-assisted copy, and AI-generated video draws
+ * from — never invented or embellished by AI, only ever authored here by a person. */
+export interface MarketingIdentity {
+  /** The deeper purpose behind the product, beyond its technical function — the emotional
+   * foundation every ad for this product should ultimately trace back to. */
+  whyThisAppExists: string;
+  mission: string;
+  corePromise: string;
+  primaryAudience: string[];
+  secondaryAudience: string[];
+  coreProblems: string[];
+  painPoints: string[];
+  emotionalTriggers: string[];
+  benefits: string[];
+  transformation: Transformation;
+  /** Real-world moments when someone is most likely to search for or download the app (a payroll
+   * mistake, changing jobs, tax season) — what an ad should be timed/targeted around. */
+  buyingTriggers: string[];
+  /** Common reasons someone hesitates to download or subscribe, so future ads/copy can address
+   * them honestly instead of ignoring them. */
+  objections: string[];
+  brandPersonality: string[];
+  communicationStyle: string;
+  wordsWePrefer: string[];
+  wordsWeAvoid: string[];
+  /** Explicit do/don't copywriting rules ("Never sensational", "Always end with hope") — kept
+   * separate from brandPersonality's adjective list since these are rules to follow, not traits
+   * to imitate. */
+  styleGuardrails: string[];
+  coreMessage: string;
+  callToAction: string;
+  /** A real customer narrative, once one exists — never fabricated. */
+  successStory: string;
+}
+
+/** Default/empty shape — lives here (not in server/config/products.ts) specifically so client
+ * components (e.g. the "Add Product" flow, a fresh feature form) can use it without pulling that
+ * file's `fs`/`path` imports into the browser bundle. */
+export const DEFAULT_MARKETING_IDENTITY: MarketingIdentity = {
+  whyThisAppExists: '',
+  mission: '',
+  corePromise: '',
+  primaryAudience: [],
+  secondaryAudience: [],
+  coreProblems: [],
+  painPoints: [],
+  emotionalTriggers: [],
+  benefits: [],
+  transformation: { from: '', to: '' },
+  buyingTriggers: [],
+  objections: [],
+  brandPersonality: [],
+  communicationStyle: '',
+  wordsWePrefer: [],
+  wordsWeAvoid: [],
+  styleGuardrails: [],
+  coreMessage: '',
+  callToAction: '',
+  successStory: '',
+};
+
 export interface ProductProfile {
   id: ProductId;
   name: string;
@@ -72,6 +199,7 @@ export interface ProductProfile {
     accent?: string;
   };
   brandGuidelines: BrandGuidelines;
+  marketingIdentity: MarketingIdentity;
   fontFamily?: string;
   status: ProductStatus;
   appStoreUrl?: string;
@@ -84,7 +212,7 @@ export interface ProductProfile {
   /** [] is a first-class, expected state — the UI shows a clear "add screenshots" placeholder. */
   screenshots: ProductScreenshot[];
   features: ProductFeature[];
-  targetAudience: string[];
+  personas: CustomerPersona[];
   keywords: string[];
 }
 

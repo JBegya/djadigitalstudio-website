@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { DEFAULT_FEATURE_MARKETING, DEFAULT_MARKETING_IDENTITY } from '@/types/domain';
 import type { BrandGuidelines, ProductProfile, ProductScreenshot } from '@/types/domain';
 import { getProductsDir, getUserProductsOverlayDir } from './paths';
 
@@ -21,27 +22,33 @@ const DEFAULT_BRAND_GUIDELINES: BrandGuidelines = {
 };
 
 /** Backfills fields added after some bundled/overlay JSON already existed on disk — otherwise a
- * profile written before `brandGuidelines`/`status`/platform-availability existed would come back
- * missing them entirely (JSON on disk isn't statically typed, so old files just don't have them),
- * and the UI would crash reading e.g. `product.brandGuidelines.cornerRadiusPx`. */
+ * profile written before `brandGuidelines`/`status`/platform-availability/`marketingIdentity`
+ * existed would come back missing them entirely (JSON on disk isn't statically typed, so old
+ * files just don't have them), and the UI would crash reading e.g.
+ * `product.brandGuidelines.cornerRadiusPx` or `product.marketingIdentity.mission`. */
 function withDefaults(profile: ProductProfile): ProductProfile {
   return {
     ...profile,
     brandGuidelines: { ...DEFAULT_BRAND_GUIDELINES, ...profile.brandGuidelines },
+    marketingIdentity: { ...DEFAULT_MARKETING_IDENTITY, ...profile.marketingIdentity },
     status: profile.status ?? 'draft',
     appStoreAvailability: profile.appStoreAvailability ?? 'not-planned',
     googlePlayAvailability: profile.googlePlayAvailability ?? 'not-planned',
+    personas: profile.personas ?? [],
+    features: profile.features.map((f) => ({ ...f, marketing: { ...DEFAULT_FEATURE_MARKETING, ...f.marketing } })),
   };
 }
 
 /** Fields that need a one-level-deep merge rather than a wholesale replace — otherwise patching
- * just `brandColors.primary` (or one `brandGuidelines` field) would silently drop the rest. */
+ * just `brandColors.primary` (or one `brandGuidelines`/`marketingIdentity` field) would silently
+ * drop the rest. */
 function mergeProfile(current: ProductProfile, patch: Partial<ProductProfile>): ProductProfile {
   return {
     ...current,
     ...patch,
     brandColors: { ...current.brandColors, ...patch.brandColors },
     brandGuidelines: { ...current.brandGuidelines, ...patch.brandGuidelines },
+    marketingIdentity: { ...current.marketingIdentity, ...patch.marketingIdentity },
   };
 }
 

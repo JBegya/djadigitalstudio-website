@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { TagListInput } from '@/components/brand/AutosaveField';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import type { FeaturePriority, ProductFeature, ProductProfile, ProductScreenshot } from '@/types/domain';
+import { DEFAULT_FEATURE_MARKETING } from '@/types/domain';
+import type { DeviceKind, FeaturePriority, ProductFeature, ProductProfile } from '@/types/domain';
 
 const PRIORITY_OPTIONS: Array<{ value: FeaturePriority; label: string }> = [
   { value: 'low', label: 'Low' },
@@ -18,7 +20,16 @@ const PRIORITY_OPTIONS: Array<{ value: FeaturePriority; label: string }> = [
   { value: 'high', label: 'High' },
 ];
 
+const DEVICE_OPTIONS: Array<{ value: DeviceKind; label: string }> = [
+  { value: 'iphone', label: 'iPhone' },
+  { value: 'watch', label: 'Apple Watch' },
+  { value: 'ipad', label: 'iPad' },
+  { value: 'mac', label: 'Mac' },
+];
+
 const NO_SUGGESTED_SCREENSHOT = 'none';
+const NO_SUGGESTED_DEVICE = 'none';
+const NO_SUGGESTED_EMOTION = 'none';
 
 export function FeaturesSection({ product, onPatch }: { product: ProductProfile; onPatch: (patch: Partial<ProductProfile>) => void }) {
   const [addingNew, setAddingNew] = useState(false);
@@ -50,21 +61,16 @@ export function FeaturesSection({ product, onPatch }: { product: ProductProfile;
       <CardHeader>
         <CardTitle>Marketing Features</CardTitle>
         <CardDescription>
-          Headline, subheadline, CTA, icon, and priority per feature — enough for the Advertisement Wizard to auto-populate a template without AI.
+          Rendering fields (headline, subheadline, CTA, priority) plus structured marketing knowledge (problem, promise, proof, hook, linked personas) — enough
+          for the Advertisement Wizard and a future Copy Assistant to work from real substance instead of inventing claims.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {product.features.length === 0 && !addingNew && <p className="text-sm text-muted-foreground">No features yet.</p>}
         {product.features.map((feature, i) => (
-          <FeatureRow
-            key={feature.key || i}
-            feature={feature}
-            screenshots={product.screenshots}
-            onSave={(next) => updateFeature(i, next)}
-            onDelete={() => removeFeature(i)}
-          />
+          <FeatureRow key={feature.key || i} feature={feature} product={product} onSave={(next) => updateFeature(i, next)} onDelete={() => removeFeature(i)} />
         ))}
-        {addingNew && <NewFeatureForm screenshots={product.screenshots} onSave={addFeature} onCancel={() => setAddingNew(false)} />}
+        {addingNew && <NewFeatureForm product={product} onSave={addFeature} onCancel={() => setAddingNew(false)} />}
         {!addingNew && (
           <Button type="button" variant="outline" onClick={() => setAddingNew(true)}>
             <Plus className="h-4 w-4" /> Add Feature
@@ -77,12 +83,12 @@ export function FeaturesSection({ product, onPatch }: { product: ProductProfile;
 
 function FeatureRow({
   feature,
-  screenshots,
+  product,
   onSave,
   onDelete,
 }: {
   feature: ProductFeature;
-  screenshots: ProductScreenshot[];
+  product: ProductProfile;
   onSave: (next: ProductFeature) => boolean;
   onDelete: () => void;
 }) {
@@ -100,6 +106,7 @@ function FeatureRow({
           </div>
           <p className="text-xs text-muted-foreground">{feature.description}</p>
           {feature.headline && <p className="text-xs text-muted-foreground">Headline: “{feature.headline}”</p>}
+          {feature.marketing.suggestedHook && <p className="text-xs text-muted-foreground">Hook: “{feature.marketing.suggestedHook}”</p>}
         </div>
         <div className="flex shrink-0 gap-2">
           <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
@@ -115,7 +122,7 @@ function FeatureRow({
 
   return (
     <div className="space-y-3 rounded-lg border border-border px-4 py-4">
-      <FeatureFields draft={draft} setDraft={setDraft} screenshots={screenshots} />
+      <FeatureFields draft={draft} setDraft={setDraft} product={product} />
       <div className="flex justify-end gap-2">
         <Button
           type="button"
@@ -142,20 +149,12 @@ function FeatureRow({
   );
 }
 
-function NewFeatureForm({
-  screenshots,
-  onSave,
-  onCancel,
-}: {
-  screenshots: ProductScreenshot[];
-  onSave: (feature: ProductFeature) => void;
-  onCancel: () => void;
-}) {
-  const [draft, setDraft] = useState<ProductFeature>({ key: '', label: '', description: '' });
+function NewFeatureForm({ product, onSave, onCancel }: { product: ProductProfile; onSave: (feature: ProductFeature) => void; onCancel: () => void }) {
+  const [draft, setDraft] = useState<ProductFeature>({ key: '', label: '', description: '', marketing: DEFAULT_FEATURE_MARKETING });
 
   return (
     <div className="space-y-3 rounded-lg border border-dashed border-border px-4 py-4">
-      <FeatureFields draft={draft} setDraft={setDraft} screenshots={screenshots} />
+      <FeatureFields draft={draft} setDraft={setDraft} product={product} />
       <div className="flex justify-end gap-2">
         <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
           Cancel
@@ -168,15 +167,12 @@ function NewFeatureForm({
   );
 }
 
-function FeatureFields({
-  draft,
-  setDraft,
-  screenshots,
-}: {
-  draft: ProductFeature;
-  setDraft: (f: ProductFeature) => void;
-  screenshots: ProductScreenshot[];
-}) {
+function FeatureFields({ draft, setDraft, product }: { draft: ProductFeature; setDraft: (f: ProductFeature) => void; product: ProductProfile }) {
+  const marketing = draft.marketing;
+  function patchMarketing(fields: Partial<ProductFeature['marketing']>) {
+    setDraft({ ...draft, marketing: { ...marketing, ...fields } });
+  }
+
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -220,7 +216,7 @@ function FeatureFields({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NO_SUGGESTED_SCREENSHOT}>None</SelectItem>
-              {screenshots.map((shot) => (
+              {product.screenshots.map((shot) => (
                 <SelectItem key={shot.id} value={shot.id}>
                   {shot.label}
                 </SelectItem>
@@ -228,6 +224,110 @@ function FeatureFields({
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="border-t border-border pt-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Marketing Knowledge</p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input placeholder="Core Problem" value={marketing.coreProblem} onChange={(e) => patchMarketing({ coreProblem: e.target.value })} />
+        <Input placeholder="Core Promise" value={marketing.corePromise} onChange={(e) => patchMarketing({ corePromise: e.target.value })} />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <TagListInput label="Pain Points" value={marketing.painPoints} onChange={(v) => patchMarketing({ painPoints: v })} />
+        <TagListInput label="Benefits" value={marketing.benefits} onChange={(v) => patchMarketing({ benefits: v })} />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          placeholder="Transformation — From"
+          value={marketing.transformation.from}
+          onChange={(e) => patchMarketing({ transformation: { ...marketing.transformation, from: e.target.value } })}
+        />
+        <Input
+          placeholder="Transformation — To"
+          value={marketing.transformation.to}
+          onChange={(e) => patchMarketing({ transformation: { ...marketing.transformation, to: e.target.value } })}
+        />
+      </div>
+      <Textarea
+        placeholder="Supporting Proof (optional — a real stat or quote, never fabricated)"
+        rows={2}
+        value={marketing.supportingProof}
+        onChange={(e) => patchMarketing({ supportingProof: e.target.value })}
+      />
+      <Input
+        placeholder="Suggested Hook — the relatable moment an ad should open with"
+        value={marketing.suggestedHook}
+        onChange={(e) => patchMarketing({ suggestedHook: e.target.value })}
+      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Suggested Device</Label>
+          <Select
+            value={marketing.suggestedDevice ?? NO_SUGGESTED_DEVICE}
+            onValueChange={(v) => patchMarketing({ suggestedDevice: v === NO_SUGGESTED_DEVICE ? undefined : (v as DeviceKind) })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_SUGGESTED_DEVICE}>None</SelectItem>
+              {DEVICE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Suggested Emotion</Label>
+          <Select
+            value={marketing.suggestedEmotion || NO_SUGGESTED_EMOTION}
+            onValueChange={(v) => patchMarketing({ suggestedEmotion: v === NO_SUGGESTED_EMOTION ? '' : v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_SUGGESTED_EMOTION}>None</SelectItem>
+              {product.marketingIdentity.emotionalTriggers.map((emotion) => (
+                <SelectItem key={emotion} value={emotion}>
+                  {emotion}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <TagListInput label="Suggested Story Types" value={marketing.suggestedStoryTypes} onChange={(v) => patchMarketing({ suggestedStoryTypes: v })} />
+
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground">Linked Personas</Label>
+        {product.personas.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No personas yet — add one below to link this feature to a specific persona.</p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {product.personas.map((persona) => {
+              const linked = marketing.linkedPersonaIds.includes(persona.id);
+              return (
+                <button
+                  key={persona.id}
+                  type="button"
+                  onClick={() =>
+                    patchMarketing({
+                      linkedPersonaIds: linked ? marketing.linkedPersonaIds.filter((id) => id !== persona.id) : [...marketing.linkedPersonaIds, persona.id],
+                    })
+                  }
+                >
+                  <Badge variant={linked ? 'default' : 'outline'}>{persona.name}</Badge>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </>
   );

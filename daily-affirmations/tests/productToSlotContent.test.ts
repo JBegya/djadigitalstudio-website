@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildSlotContentFromProduct, resolveFeatureScreenshot } from '@/lib/editor/productToSlotContent';
+import { DEFAULT_FEATURE_MARKETING, DEFAULT_MARKETING_IDENTITY } from '@/types/domain';
 import type { ProductFeature, ProductProfile, ProductScreenshot } from '@/types/domain';
 
 function sampleProfile(overrides: Partial<ProductProfile> = {}): ProductProfile {
@@ -10,6 +11,7 @@ function sampleProfile(overrides: Partial<ProductProfile> = {}): ProductProfile 
     description: 'Payroll accuracy for shift workers.',
     brandColors: { primary: '#7c9cff', secondary: '#1b1030', accent: '#f5a623' },
     brandGuidelines: { cornerRadiusPx: 16, buttonStyle: 'rounded', preferredBackground: 'solid', logoClearSpacePx: 16, storeBadgeStyle: 'black' },
+    marketingIdentity: DEFAULT_MARKETING_IDENTITY,
     status: 'draft',
     appStoreUrl: '',
     appStoreAvailability: 'not-planned',
@@ -20,14 +22,14 @@ function sampleProfile(overrides: Partial<ProductProfile> = {}): ProductProfile 
     termsUrl: '',
     screenshots: [],
     features: [],
-    targetAudience: [],
+    personas: [],
     keywords: [],
     ...overrides,
   };
 }
 
 function sampleFeature(overrides: Partial<ProductFeature> = {}): ProductFeature {
-  return { key: 'callback-pay', label: 'Callback Pay', description: 'Automatically calculates callback pay.', ...overrides };
+  return { key: 'callback-pay', label: 'Callback Pay', description: 'Automatically calculates callback pay.', marketing: DEFAULT_FEATURE_MARKETING, ...overrides };
 }
 
 function sampleScreenshot(overrides: Partial<ProductScreenshot> = {}): ProductScreenshot {
