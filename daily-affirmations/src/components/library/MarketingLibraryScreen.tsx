@@ -42,6 +42,11 @@ function objectiveLabel(objective: MarketingPack['objective']): string | undefin
   return MARKETING_PACK_OBJECTIVE_OPTIONS.find((o) => o.value === objective)?.label;
 }
 
+function personaLabelFor(pack: MarketingPack, products: ProductProfile[]): string | undefined {
+  if (!pack.personaId) return undefined;
+  return products.find((p) => p.id === pack.productId)?.personas.find((persona) => persona.id === pack.personaId)?.name;
+}
+
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString();
 }
@@ -97,6 +102,7 @@ function PackHeader({
   requiredContentTypes,
   draftReminderDays,
   refreshReminderDays,
+  personaLabel,
   onStatusChange,
 }: {
   pack: MarketingPack;
@@ -104,6 +110,7 @@ function PackHeader({
   requiredContentTypes: ContentTypeSpec[];
   draftReminderDays: number;
   refreshReminderDays: number;
+  personaLabel?: string;
   onStatusChange: (status: AssetStatus) => void;
 }) {
   const readiness = computePackReadiness(assets, requiredContentTypes);
@@ -118,6 +125,7 @@ function PackHeader({
     <div className="flex flex-wrap items-center gap-2">
       <p className="text-sm font-semibold text-foreground">{pack.name}</p>
       <Badge>V{pack.version}</Badge>
+      {personaLabel && <Badge variant="outline">{personaLabel}</Badge>}
       {objectiveLabel(pack.objective) && <Badge variant="outline">{objectiveLabel(pack.objective)}</Badge>}
       <Select value={packStatus} onValueChange={(v) => onStatusChange(v as AssetStatus)}>
         <SelectTrigger className="h-7 w-28 text-xs">
@@ -309,6 +317,7 @@ export function MarketingLibraryScreen() {
                           requiredContentTypes={requiredContentTypesFor(pack.productId)}
                           draftReminderDays={draftReminderDays}
                           refreshReminderDays={refreshReminderDays}
+                          personaLabel={personaLabelFor(pack, products)}
                           onStatusChange={(status) => handlePackStatusChange(pack.id, status)}
                         />
                         <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">

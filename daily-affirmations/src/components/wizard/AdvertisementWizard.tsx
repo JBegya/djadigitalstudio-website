@@ -92,7 +92,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
 
     setBatchGenerating(true);
     try {
-      const { pack } = await createMarketingPack({ productId: product.id, featureKey: feature.key, name: packName.trim(), objective });
+      const { pack } = await createMarketingPack({ productId: product.id, featureKey: feature.key, name: packName.trim(), objective, personaId: persona?.id });
       const screenshot = resolveFeatureScreenshot(product, feature);
       const generated = await generateAdsForPlatforms(pairs, {
         product,

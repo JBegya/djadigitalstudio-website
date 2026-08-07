@@ -330,6 +330,11 @@ export interface MarketingPack {
   id: string;
   productId: ProductId;
   featureKey: string;
+  /** Which persona (CustomerPersona.id on the same product) this pack was generated for — unset
+   * for packs generated with "No specific persona" or made before this field existed. Powers
+   * Marketing Coverage's "campaigns per persona" view; nothing else on this record can derive it.
+   * Deliberately only on the pack (the campaign), not on each individual AdCreation asset. */
+  personaId?: string;
   /** A meaningful creative-concept name (e.g. "Payroll Mistake Story"), not just a version number
    * — the same feature will eventually have multiple named concepts, each with its own versions.
    * Stable across a concept's versions — its opening hook (see AdCreation.headline) is what

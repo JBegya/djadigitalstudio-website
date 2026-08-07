@@ -205,6 +205,29 @@ editable advertisement) before the full product-management system exists:
       Publishing Notes field per asset, and per-platform publication detail (platform, date, URL,
       account, performance) evolving out of today's single `publishedAt` timestamp once Marketing
       Coverage exists to make use of it.
+- [x] **M7 (Slice 3) — Marketing Coverage.** Answers "what haven't I marketed yet?" per product,
+      across three dimensions computed live from data the app already has — nothing new is stored.
+      **Feature Coverage**: a feature counts as covered by either a Marketing Pack or a standalone
+      (packless) asset referencing its `featureKey` — a feature promoted only through the
+      single-ad flow still counts as marketed, it just isn't a campaign. **Persona Coverage**:
+      counts Marketing Packs only, by a new `MarketingPack.personaId` (the one schema addition
+      this slice needed — the wizard already resolved a persona per pack, it just never persisted
+      which one); packs made with "No specific persona" are tallied in a separate
+      `packsWithNoPersonaCount` note rather than silently miscounted against a real persona, and
+      standalone single-ad saves are deliberately excluded since they aren't campaigns.
+      **Platform Coverage** reuses Slice 2's per-product required-platform Settings, falling back
+      to every registered content type when a product hasn't configured one. A new `/coverage`
+      screen (Marketing Coverage in the sidebar) shows one section per product with a headline
+      Feature Coverage percentage and three ✓/✗ lists. **Explicitly deferred, not dropped**:
+      Buying Trigger/Objection coverage ("Payroll Error ✓ / Second Job ✗") — `MarketingIdentity`'s
+      buying triggers and objections are flat strings with no structural link to any Feature,
+      Persona, or Marketing Pack today, unlike `FeatureMarketingProfile.linkedPersonaIds`.
+      Computing that dimension honestly would mean either fabricating a text-matching heuristic
+      (against this app's own rule of never inferring an unsupported claim) or adding a real link
+      first — raised directly, and deferred until one exists, e.g. when the AI Copy Assistant needs
+      one anyway. The Marketing Intelligence model stays exactly as frozen as it was after Slice 1.
+      The Home Dashboard is next — it can summarize the production, publishing, and coverage data
+      already built here rather than inventing new concepts.
 - [ ] **M8 — AI Copy Assistant.** AI rewrites/varies the copy the Advertisement Intelligence Engine
       already assembled — it improves phrasing, it never invents a claim, feature, screenshot, or
       testimonial that isn't already grounded in the stored Marketing Intelligence. Deliberately

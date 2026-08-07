@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     id: newId('pack'),
     productId: body.productId,
     featureKey: body.featureKey,
+    personaId: body.personaId,
     name: body.name.trim(),
     version: marketingPacksStore.nextVersion(body.productId, body.featureKey, body.name.trim()),
     createdAt: now,

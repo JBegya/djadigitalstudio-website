@@ -98,7 +98,7 @@ export async function listMarketingPacks(): Promise<{ packs: MarketingPack[] }> 
 }
 
 export async function createMarketingPack(
-  pack: Pick<MarketingPack, 'productId' | 'featureKey' | 'name'> & Partial<Pick<MarketingPack, 'objective'>>,
+  pack: Pick<MarketingPack, 'productId' | 'featureKey' | 'name'> & Partial<Pick<MarketingPack, 'objective' | 'personaId'>>,
 ): Promise<{ pack: MarketingPack }> {
   return json(
     await fetch('/api/marketing-packs', {
