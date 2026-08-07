@@ -86,9 +86,16 @@ editable advertisement) before the full product-management system exists:
       preferred background, logo clear space, store badge style, typography) and per-feature
       headline/subheadline/CTA/icon/accent color/priority/suggested screenshot mean the
       Advertisement Wizard (M4) can auto-populate a template without needing AI.
-- [ ] **M4 — Advertisement Wizard.** A guided Product → Platform → Feature → Style → Editor flow,
-      replacing raw template/asset pickers as the primary entry point into the (already-built)
-      Template Engine.
+- [x] **M4 — Advertisement Wizard.** A guided, one-question-per-screen Product → Platform →
+      Feature → Style → Editor flow is now the entry point at `/create` — real Brand Manager
+      products and their features (not sample content) drive the choices, a real
+      platform/content-type registry (Facebook, Instagram, LinkedIn, X, App Store Screenshot)
+      replaces the old placeholder list, and a template can restrict itself to specific platforms
+      (only App Store Screenshot does, so it never shows up as a style option for a social post).
+      Finishing the wizard opens the same Fabric.js editor from M2, pre-populated with the real
+      product's headline/logo/screenshot — still fully editable, template/device/platform
+      unrestricted from that point on. A product with no screenshots yet shows an honest empty
+      mockup, never a fabricated image.
 - [ ] **M5 — Copy generator.** AI-generated headlines/captions/CTAs/hashtags (the first and only
       point OpenAI gets used) — always optional, editable like everything else.
 - [ ] **M6 — Export engine polish.** Per-platform batch export, the Exports screen, and a real
@@ -149,6 +156,8 @@ daily-affirmations/
                            AssetDropzone, AutosaveField
       editor/              The Template Engine: EditorCanvas (Fabric.js), PropertiesPanel,
                            TemplatePicker, DeviceMockupPicker, ExportBar, CreateAdvertisementScreen
+      wizard/               The Advertisement Wizard: WizardShell + one component per step
+                           (Product/Platform/Feature/Style), AdvertisementWizard orchestrator
       layout/              Sidebar shell, ComingSoon stub
       settings/            Settings screen
       ui/                  shadcn/ui-style primitives
@@ -156,18 +165,18 @@ daily-affirmations/
       assets/              Client-side screenshot thumbnailing (canvas-based, no server-side
                            image-processing dependency)
       editor/              Template↔Fabric-object mapping, parametric device mockups, snapping,
-                           canvas export, sample placeholder content — all client-safe, most of it
-                           pure and unit-tested (see tests/)
+                           canvas export, and the ProductProfile→SlotContent mapping the wizard
+                           hands off to the editor with — all client-safe, most of it pure and
+                           unit-tested (see tests/)
       fonts.ts             Shared next/font/local Inter loader (also used to set Fabric's real
                            font-family string on canvas text)
       api.ts, desktop.ts, utils.ts   Client-side helpers (API client, Electron/browser bridge)
     server/
-      config/              Settings, templates, creations store, products store, paths, model IDs
+      config/              Settings, templates, content-type (platform) registry, creations store,
+                           products store, paths, model IDs
       ai-services/         OpenAI client (used starting M5)
     types/                 Shared domain types
   assets/
-    sample/                A clearly-labeled placeholder screenshot SVG for the Template Engine
-                           to demo against before real product screenshots exist
     fonts/, logo/          Bundled Inter (OFL-licensed) and the DJ&A studio logo
   build/                  electron-builder resources (app icon)
   electron-builder.yml    Desktop packaging config (see "Packaging the desktop app" below)

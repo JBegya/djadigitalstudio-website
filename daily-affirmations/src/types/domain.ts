@@ -113,6 +113,10 @@ export interface TemplateDefinition {
   description: string;
   background: { kind: 'solid' | 'gradient'; colors: string[] };
   slots: TemplateSlot[];
+  /** Optional whitelist of ContentTypeSpec keys this template is valid for — omitted means
+   * universal/social-safe. Used to keep e.g. a native-App-Store-styled template from being
+   * offered for a Facebook/Instagram/LinkedIn/X post in the Advertisement Wizard. */
+  contentTypeKeys?: string[];
 }
 
 /** One saved advertisement, listed on the Dashboard/Exports screens. */

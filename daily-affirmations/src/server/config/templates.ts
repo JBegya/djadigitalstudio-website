@@ -63,9 +63,20 @@ export const TEMPLATES: TemplateDefinition[] = [
       { key: 'headline', kind: 'headline', rect: { xPct: 8, yPct: 6, wPct: 84, hPct: 16 }, style: { fontSize: 44, fontWeight: '800', textAlign: 'center', fill: '#f5f5f7' } },
       { key: 'screenshot', kind: 'screenshot', device: 'iphone', rect: { xPct: 18, yPct: 24, wPct: 64, hPct: 74 } },
     ],
+    // Looks like a native App Store screenshot, not a social post — pairing it with a
+    // Facebook/Instagram/LinkedIn/X placement would be semantically wrong even though it would
+    // technically render fine (slots are percentage-based and orthogonal to aspect ratio).
+    contentTypeKeys: ['app-store-screenshot'],
   },
 ];
 
 export function getTemplate(key: string): TemplateDefinition | undefined {
   return TEMPLATES.find((t) => t.key === key);
+}
+
+/** Used by the Advertisement Wizard's Style step to only offer templates that make sense for the
+ * already-chosen platform. The free-editing TemplatePicker inside the editor itself always shows
+ * the full unfiltered list — this filter never locks the user out once they're in the editor. */
+export function getTemplatesForContentType(contentTypeKey: string): TemplateDefinition[] {
+  return TEMPLATES.filter((t) => !t.contentTypeKeys || t.contentTypeKeys.includes(contentTypeKey));
 }

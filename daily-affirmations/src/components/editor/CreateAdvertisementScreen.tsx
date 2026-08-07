@@ -4,14 +4,16 @@ import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useState } from 'react';
 import type { Canvas } from 'fabric';
 import { toast } from 'sonner';
+import { AdvertisementWizard, type WizardSelection } from '@/components/wizard/AdvertisementWizard';
+import { CONTENT_TYPES, getContentType } from '@/server/config/contentTypes';
 import { TEMPLATES, getTemplate } from '@/server/config/templates';
-import { SAMPLE_CONTENT_TYPES, SAMPLE_SLOT_CONTENT, getSampleContentType } from '@/lib/editor/sampleContent';
 import { computeWorkingSize } from '@/lib/editor/workingSize';
-import { extractSlotText } from '@/lib/editor/templateToCanvas';
+import { extractSlotText, type SlotContent } from '@/lib/editor/templateToCanvas';
+import { buildSlotContentFromProduct, resolveFeatureScreenshot } from '@/lib/editor/productToSlotContent';
 import { exportCanvasToDataUrl } from '@/lib/editor/exportCanvas';
 import type { MockupDevice } from '@/lib/editor/deviceMockup';
-import { createCreation, exportAd, getCreation, updateCreation } from '@/lib/api';
-import type { AdCreation } from '@/types/domain';
+import { createCreation, exportAd, getCreation, getProduct, mediaUrl, updateCreation } from '@/lib/api';
+import type { AdCreation, ProductFeature, ProductProfile } from '@/types/domain';
 import { TemplatePicker } from './TemplatePicker';
 import { DeviceMockupPicker } from './DeviceMockupPicker';
 import { ExportBar, type ExportFormat } from './ExportBar';
@@ -25,38 +27,66 @@ const EditorCanvas = dynamic(() => import('./EditorCanvas').then((m) => m.Editor
 const MAX_PANEL_WIDTH_PX = 420;
 const MAX_PANEL_HEIGHT_PX = 600;
 
-export function CreateAdvertisementScreen({
-  sampleScreenshotDataUrl,
-  logoDataUrl,
-  initialCreationId,
-}: {
-  sampleScreenshotDataUrl: string;
-  logoDataUrl: string;
-  initialCreationId?: string;
-}) {
+export function CreateAdvertisementScreen({ initialCreationId }: { initialCreationId?: string }) {
+  const [mode, setMode] = useState<'wizard' | 'editor'>(initialCreationId ? 'editor' : 'wizard');
   const [templateKey, setTemplateKey] = useState(TEMPLATES[0]?.key ?? '');
-  const [contentTypeKey, setContentTypeKey] = useState(SAMPLE_CONTENT_TYPES[0]?.key ?? '');
+  const [contentTypeKey, setContentTypeKey] = useState(CONTENT_TYPES[0]?.key ?? '');
   const [device, setDevice] = useState<MockupDevice>('iphone');
   const [canvas, setCanvas] = useState<Canvas | null>(null);
   const [creationId, setCreationId] = useState<string | null>(null);
   const [loadedCreation, setLoadedCreation] = useState<AdCreation | null>(null);
+  const [product, setProduct] = useState<ProductProfile | null>(null);
+  const [feature, setFeature] = useState<ProductFeature | null>(null);
+  const [slotContent, setSlotContent] = useState<SlotContent | null>(null);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
 
   useEffect(() => {
     if (!initialCreationId) return;
     getCreation(initialCreationId)
-      .then(({ creation }) => {
+      .then(async ({ creation }) => {
         setCreationId(creation.id);
         setTemplateKey(creation.templateKey);
         setContentTypeKey(creation.contentTypeKey);
         setLoadedCreation(creation);
+        try {
+          setProduct((await getProduct(creation.productId)).product);
+        } catch {
+          // Best-effort — a deleted product shouldn't block reopening a saved ad. Canvas content
+          // comes from the saved canvasJson, not this fetch.
+        }
       })
       .catch(() => toast.error('Could not load that advertisement — starting a new one instead.'));
   }, [initialCreationId]);
 
+  const handleReady = useCallback((next: Canvas | null) => setCanvas(next), []);
+
+  function handleWizardComplete(selection: WizardSelection) {
+    const screenshot = resolveFeatureScreenshot(selection.product, selection.feature);
+    const content = buildSlotContentFromProduct(
+      selection.product,
+      selection.feature,
+      screenshot ? mediaUrl(screenshot.path) : undefined,
+      selection.product.logoPath ? mediaUrl(selection.product.logoPath) : undefined,
+    );
+    setProduct(selection.product);
+    setFeature(selection.feature);
+    setTemplateKey(selection.template.key);
+    setContentTypeKey(selection.contentType.key);
+    setSlotContent(content);
+    setMode('editor');
+  }
+
+  if (mode === 'wizard') {
+    return <AdvertisementWizard onComplete={handleWizardComplete} />;
+  }
+
   const template = getTemplate(templateKey) ?? TEMPLATES[0];
-  const contentType = getSampleContentType(contentTypeKey);
+  const contentType = getContentType(contentTypeKey) ?? CONTENT_TYPES[0];
+
+  if (!template || !contentType) {
+    return <div className="p-8 text-sm text-muted-foreground">No templates or content types configured.</div>;
+  }
 
   // Once the user makes an explicit choice, resume normal template-driven building instead of
   // replaying the loaded JSON — this only affects reopening a saved ad, not everyday editing.
@@ -77,14 +107,19 @@ export function CreateAdvertisementScreen({
     ? { width: loadedCreation.canvasWidthPx, height: loadedCreation.canvasHeightPx }
     : computeWorkingSize(contentType.widthPx, contentType.heightPx, MAX_PANEL_WIDTH_PX, MAX_PANEL_HEIGHT_PX);
 
-  const handleReady = useCallback((next: Canvas | null) => setCanvas(next), []);
+  // Only actually read by EditorCanvas when initialJson is absent — i.e. a saved ad reopened and
+  // then a picker changed, forcing a fresh build. Falls back to the ad's own real saved fields
+  // rather than fabricated sample text.
+  const fallbackContent: SlotContent = loadedCreation
+    ? { headline: loadedCreation.headline, subheadline: loadedCreation.caption, cta: loadedCreation.cta, accentColor: product?.brandColors.primary ?? '#7c9cff' }
+    : { accentColor: '#7c9cff' };
 
   async function handleSave() {
     if (!canvas) return;
     setSaving(true);
     try {
       const payload = {
-        productId: loadedCreation?.productId ?? 'sample',
+        productId: loadedCreation?.productId ?? product?.id ?? 'sample',
         templateKey,
         contentTypeKey,
         headline: extractSlotText(canvas, 'headline'),
@@ -115,30 +150,27 @@ export function CreateAdvertisementScreen({
     }
   }
 
-  async function handleExport(format: ExportFormat) {
+  const handleExport = async (format: ExportFormat) => {
     if (!canvas) return;
     setExporting(format);
     try {
       const dataUrl = await exportCanvasToDataUrl(canvas, { format, targetWidthPx: contentType.widthPx, targetHeightPx: contentType.heightPx });
-      const { path } = await exportAd({ format, dataUrl, productFolderName: 'Sample', fileName: `${templateKey}-${contentTypeKey}-${Date.now()}` });
+      const { path } = await exportAd({ format, dataUrl, productFolderName: product?.name ?? 'Sample', fileName: `${templateKey}-${contentTypeKey}-${Date.now()}` });
       toast.success(`Exported to ${path}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Export failed.');
     } finally {
       setExporting(null);
     }
-  }
-
-  if (!template) {
-    return <div className="p-8 text-sm text-muted-foreground">No templates configured.</div>;
-  }
+  };
 
   return (
     <div className="flex h-screen flex-col">
       <header className="border-b border-border px-6 py-4">
         <h1 className="font-display text-xl font-semibold text-foreground">Create Advertisement</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Sample content shown below — real products, screenshots, and AI copy arrive in later milestones. Everything here stays fully editable after you save.
+          {product ? `${product.name}${feature ? ` — ${feature.label}` : ''}` : 'Editing a saved advertisement.'} — fully editable, change template, device,
+          or platform anytime below.
         </p>
       </header>
       <div className="flex flex-1 overflow-hidden">
@@ -150,7 +182,7 @@ export function CreateAdvertisementScreen({
         </aside>
         <main className="flex flex-1 flex-col items-center gap-4 overflow-auto p-6">
           <ExportBar
-            contentTypes={SAMPLE_CONTENT_TYPES}
+            contentTypes={CONTENT_TYPES}
             contentTypeKey={contentTypeKey}
             onContentTypeChange={selectContentType}
             onSave={handleSave}
@@ -161,7 +193,7 @@ export function CreateAdvertisementScreen({
           <div className="flex flex-1 items-center justify-center">
             <EditorCanvas
               template={template}
-              content={{ ...SAMPLE_SLOT_CONTENT, screenshotUrl: sampleScreenshotDataUrl, logoUrl: logoDataUrl, storeBadgeUrl: logoDataUrl }}
+              content={slotContent ?? fallbackContent}
               device={device}
               widthPx={workingSize.width}
               heightPx={workingSize.height}
