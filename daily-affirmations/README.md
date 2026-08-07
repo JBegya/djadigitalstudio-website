@@ -178,12 +178,33 @@ editable advertisement) before the full product-management system exists:
       Persona/MarketingIdentity) is considered feature-complete for Version 1 as of here — new
       fields only get added to Marketing Pack/AdCreation (the production-tracking records) when a
       production workflow genuinely needs one, never to the frozen knowledge base itself.
-      Deliberately sequenced for later, not dropped: **M7 Slice 2 — Publishing Workflow** (richer
-      lifecycle tracking — published date, last-edited — to answer "what have I already used?"),
-      **M7 Slice 3 — Marketing Coverage** (which features/personas/platforms/buying triggers/
-      objections still have no Marketing Pack), then a marketing-opportunities Home Dashboard,
-      one-click Batch Variations (style/tone presets), and a Campaign Pack Generator that exports a
-      pack straight to a folder — all still ahead of AI.
+- [x] **M7 (Slice 2) — Publishing Workflow.** Managing content that already exists, not scheduling
+      or social integrations. A Marketing Pack now carries its own lifecycle `status`
+      (Draft/Ready/Published/Archived) — independent of, and never auto-synchronized with, its
+      individual assets' own statuses, matching how a real marketing team tracks a campaign
+      separately from each of its platform posts. Every asset and pack gains a `publishedAt`,
+      always the *first* publish date and never overwritten by a later one; editing a saved,
+      already-published asset automatically drops it back to Ready for review, the same way
+      creative-approval workflows work. Two computed, never-stored views drive the Marketing
+      Library (`lib/library/packReadiness.ts`): **readiness** — a completion percentage plus which
+      of a product's own configured required platforms (Settings → Publishing, per product, so
+      adding a new platform later never breaks an existing pack's readiness) a pack is still
+      missing — and **attention**, three severities (Action Required / Needs Review / Suggestion,
+      user-facing language rather than software severity) surfaced from existing data: a missing
+      required platform or thumbnail, a stale Draft, a Ready pack still holding a Draft asset, or a
+      Published pack overdue for a refresh, both reminder windows configurable in Settings instead
+      of hardcoded. A pack only ever shows "Ready to Publish ✓" while its own status is Ready — a
+      Published or Archived pack never does, even though the underlying completeness check stays
+      the same either way. The status filter gained "Ready to Publish" and "Needs Attention" as
+      genuinely distinct views from the plain workflow statuses. Deliberately sequenced for later,
+      not dropped: **M7 Slice 3 — Marketing Coverage** (which features/personas/platforms/buying
+      triggers/objections still have no Marketing Pack — chosen to come *before* a Home Dashboard,
+      since coverage tells you what to create next while a dashboard only summarizes what already
+      exists), then one-click Batch Variations (style/tone presets) and a Campaign Pack Generator
+      that exports a pack straight to a folder — all still ahead of AI. Backlogged, not built: a
+      Publishing Notes field per asset, and per-platform publication detail (platform, date, URL,
+      account, performance) evolving out of today's single `publishedAt` timestamp once Marketing
+      Coverage exists to make use of it.
 - [ ] **M8 — AI Copy Assistant.** AI rewrites/varies the copy the Advertisement Intelligence Engine
       already assembled — it improves phrasing, it never invents a claim, feature, screenshot, or
       testimonial that isn't already grounded in the stored Marketing Intelligence. Deliberately

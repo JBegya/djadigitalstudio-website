@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { creationsStore } from '@/server/config/creations';
+import { nextPublishedAt } from '@/server/utils/publishing';
 import type { AdCreation } from '@/types/domain';
 
 export const runtime = 'nodejs';
@@ -16,6 +17,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
   const patch = (await request.json().catch(() => ({}))) as Partial<AdCreation>;
   const next: AdCreation = { ...existing, ...patch, id: existing.id, createdAt: existing.createdAt, updatedAt: new Date().toISOString() };
+  next.publishedAt = nextPublishedAt(existing.publishedAt, patch.status, next.updatedAt);
   creationsStore.upsert(next);
   return NextResponse.json({ creation: next });
 }

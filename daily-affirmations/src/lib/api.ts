@@ -109,6 +109,16 @@ export async function createMarketingPack(
   );
 }
 
+export async function updateMarketingPack(id: string, patch: Partial<MarketingPack>): Promise<{ pack: MarketingPack }> {
+  return json(
+    await fetch(`/api/marketing-packs/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    }),
+  );
+}
+
 export async function deleteMarketingPack(id: string): Promise<{ ok: boolean }> {
   return json(await fetch(`/api/marketing-packs/${encodeURIComponent(id)}`, { method: 'DELETE' }));
 }

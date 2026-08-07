@@ -6,6 +6,15 @@ export type ProductId = string;
 export interface Settings {
   openaiApiKey: string;
   outputFolder: string;
+  /** Which platforms (ContentTypeSpec keys) a product is actually meant to be marketed on —
+   * keyed here rather than on ProductProfile so it stays workflow configuration, not part of the
+   * frozen Marketing Intelligence model. Missing/empty for a product means "not configured yet,"
+   * in which case Ready-to-Publish readiness is judged purely on asset completion. */
+  requiredPublishingPlatformKeysByProduct?: Record<ProductId, string[]>;
+  /** Days a pack can sit in Draft before the Marketing Library flags it as needing review. */
+  draftReminderDays?: number;
+  /** Days after first publishing before the Marketing Library suggests a refresh. */
+  refreshReminderDays?: number;
 }
 
 /** Category of a real, user-supplied screenshot — determines which device mockup it's composited into. */
@@ -277,6 +286,12 @@ export interface AdCreation {
   favorite: boolean;
   /** Defaults to 'draft' — unset on ads saved before this field existed. */
   status?: AssetStatus;
+  /** Stamped the first time `status` becomes `'published'` and never overwritten after — always
+   * the *first* publication date, even if the asset later moves back to Ready (see
+   * CreateAdvertisementScreen's edit-drops-to-ready workflow) and gets published again. A future
+   * Marketing Coverage milestone may want per-platform publication detail (platform, date, URL,
+   * account, performance) — this single timestamp is deliberately not that yet. */
+  publishedAt?: string;
   /** Fabric's own canvas.toJSON() — every object, position, size, color, and text, tagged with
    * each object's `djaSlotKey`. Reload with canvas.loadFromJSON() to resume editing exactly
    * where the user left off, instead of a one-shot export. */
@@ -285,13 +300,6 @@ export interface AdCreation {
   canvasHeightPx: number;
 }
 
-/**
- * The primary unit of marketing output: everything generated for one feature in a single "Generate
- * Marketing Pack" run, across every platform selected. Individual per-platform assets (AdCreation)
- * reference a pack via `packId` rather than the pack listing its assets, so the asset list can
- * never go stale. The pack itself is versioned as a whole — regenerating a feature always creates
- * a new pack (Pack V2, V3, ...) rather than overwriting the last one.
- */
 /** Why a pack was made — optional, purely for the creator's own future reference ("why did I
  * create this pack?"). Not consumed by any logic today. */
 export type MarketingPackObjective =
@@ -311,6 +319,13 @@ export const MARKETING_PACK_OBJECTIVE_OPTIONS: { value: MarketingPackObjective; 
   { value: 're-engage-inactive-users', label: 'Re-engage Inactive Users' },
 ];
 
+/**
+ * The primary unit of marketing output: everything generated for one feature in a single "Generate
+ * Marketing Pack" run, across every platform selected. Individual per-platform assets (AdCreation)
+ * reference a pack via `packId` rather than the pack listing its assets, so the asset list can
+ * never go stale. The pack itself is versioned as a whole — regenerating a feature always creates
+ * a new pack (Pack V2, V3, ...) rather than overwriting the last one.
+ */
 export interface MarketingPack {
   id: string;
   productId: ProductId;
@@ -323,5 +338,15 @@ export interface MarketingPack {
   /** 1-based, sequential per product+feature+name — computed server-side at creation time. */
   version: number;
   createdAt: string;
+  /** The pack's own lifecycle stage — independent of, and never auto-synchronized with, its
+   * individual assets' own `AssetStatus` (a pack can be Ready while one asset is still Draft).
+   * Always populated for packs created from here on; optional in the type only so a pre-existing
+   * local dev pack from before this field existed doesn't crash the UI. */
+  status?: AssetStatus;
+  /** Bumped on every change to the pack's own fields (currently just `status`). */
+  updatedAt?: string;
+  /** Stamped the first time the pack's own `status` becomes `'published'`; never overwritten after
+   * — see the identical note on `AdCreation.publishedAt`. */
+  publishedAt?: string;
   objective?: MarketingPackObjective;
 }

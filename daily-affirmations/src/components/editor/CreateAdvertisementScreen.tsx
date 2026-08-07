@@ -131,6 +131,10 @@ export function CreateAdvertisementScreen({ initialCreationId }: { initialCreati
     setSaving(true);
     try {
       const thumbnailPath = await exportCanvasToDataUrl(canvas, { format: 'jpg', targetWidthPx: 400, targetHeightPx: Math.round((400 * canvas.getHeight()) / canvas.getWidth()), quality: 0.7 });
+      // Editing a published asset sends it back to Ready — real content changes should go through
+      // review again before being considered published a second time. publishedAt itself is never
+      // cleared; only a later transition back to 'published' would touch it, and only if unset.
+      const wasPublished = loadedCreation?.status === 'published';
       const payload = {
         productId: loadedCreation?.productId ?? product?.id ?? 'sample',
         featureKey: loadedCreation?.featureKey ?? feature?.key,
@@ -144,7 +148,7 @@ export function CreateAdvertisementScreen({ initialCreationId }: { initialCreati
         thumbnailPath,
         exportPaths: loadedCreation?.exportPaths ?? [],
         favorite: loadedCreation?.favorite ?? false,
-        status: loadedCreation?.status ?? 'draft',
+        status: wasPublished ? 'ready' : (loadedCreation?.status ?? 'draft'),
         canvasJson: canvas.toJSON(),
         canvasWidthPx: canvas.getWidth(),
         canvasHeightPx: canvas.getHeight(),
@@ -152,7 +156,7 @@ export function CreateAdvertisementScreen({ initialCreationId }: { initialCreati
       if (creationId) {
         const { creation } = await updateCreation(creationId, payload);
         setLoadedCreation(creation);
-        toast.success('Saved.');
+        toast.success(wasPublished ? 'Saved — moved back to Ready for review since this was published.' : 'Saved.');
       } else {
         const { creation } = await createCreation(payload);
         setCreationId(creation.id);

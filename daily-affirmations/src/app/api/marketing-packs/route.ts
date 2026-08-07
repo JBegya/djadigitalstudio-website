@@ -15,13 +15,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'productId, featureKey, and name are required' }, { status: 400 });
   }
 
+  const now = new Date().toISOString();
   const pack: MarketingPack = {
     id: newId('pack'),
     productId: body.productId,
     featureKey: body.featureKey,
     name: body.name.trim(),
     version: marketingPacksStore.nextVersion(body.productId, body.featureKey, body.name.trim()),
-    createdAt: new Date().toISOString(),
+    createdAt: now,
+    status: 'draft',
+    updatedAt: now,
     objective: body.objective,
   };
   marketingPacksStore.upsert(pack);

@@ -13,6 +13,8 @@ function samplePack(overrides: Partial<MarketingPack> = {}): MarketingPack {
     name: 'Payroll Mistake Story',
     version: 1,
     createdAt: '2026-08-06T00:00:00.000Z',
+    status: 'draft',
+    updatedAt: '2026-08-06T00:00:00.000Z',
     ...overrides,
   };
 }
