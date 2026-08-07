@@ -34,6 +34,12 @@ audience, and keywords. Adding a new product means adding a new JSON file, not w
 
 Initial products: **ShiftEarn Pro**, **SplitShift Hours**, **ShiftHydrate**.
 
+Release status, store URLs, and platform availability are **user-managed configuration, set
+through the Brand Manager UI** — never inferred from anything else (e.g. this monorepo's own
+marketing pages). Bundled seed profiles ship with these as placeholders (`status: "draft"`,
+`"not-planned"`, empty URLs) regardless of what a product's real-world status happens to be, so
+the Brand Manager stays the single source of truth.
+
 ## The workflow
 
 ```
