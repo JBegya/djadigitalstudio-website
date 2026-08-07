@@ -1,6 +1,19 @@
-import type { AdCreation, ContentTypeSpec, MarketingPack } from '@/types/domain';
+import { CONTENT_TYPES } from '@/server/config/contentTypes';
+import type { AdCreation, ContentTypeSpec, MarketingPack, ProductId } from '@/types/domain';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Resolves a product's required-for-readiness platforms from Settings. Unconfigured (empty/missing)
+ * means "no requirement set yet" — readiness then reflects pure asset completion, never falsely
+ * penalizing a product for platforms it was never meant to use. This is deliberately different from
+ * Marketing Coverage's own resolver (`computeCoverage.ts`), which falls back to every registered
+ * platform instead — coverage and readiness ask different questions and shouldn't share a fallback.
+ */
+export function resolveReadinessContentTypes(productId: ProductId, requiredPlatformKeysByProduct: Record<ProductId, string[]>): ContentTypeSpec[] {
+  const keys = requiredPlatformKeysByProduct[productId] ?? [];
+  return CONTENT_TYPES.filter((ct) => keys.includes(ct.key));
+}
 
 export interface PackReadiness {
   /** Assets with status 'ready' or 'published'. */

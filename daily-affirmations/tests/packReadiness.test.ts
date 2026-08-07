@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeAttentionFlags, computePackReadiness } from '@/lib/library/packReadiness';
+import { computeAttentionFlags, computePackReadiness, resolveReadinessContentTypes } from '@/lib/library/packReadiness';
 import type { AdCreation, ContentTypeSpec, MarketingPack } from '@/types/domain';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -79,6 +79,28 @@ describe('computePackReadiness', () => {
     const readiness = computePackReadiness([], []);
     expect(readiness.completionPercent).toBe(0);
     expect(readiness.readyToPublish).toBe(false);
+  });
+});
+
+describe('resolveReadinessContentTypes', () => {
+  it('returns no required platforms when the product has none configured', () => {
+    expect(resolveReadinessContentTypes('shiftearn-pro', {})).toEqual([]);
+  });
+
+  it('returns only the configured subset of registered content types', () => {
+    const resolved = resolveReadinessContentTypes('shiftearn-pro', { 'shiftearn-pro': ['facebook-feed'] });
+    expect(resolved.map((ct) => ct.key)).toEqual(['facebook-feed']);
+  });
+
+  it('ignores an unknown configured key rather than crashing', () => {
+    const resolved = resolveReadinessContentTypes('shiftearn-pro', { 'shiftearn-pro': ['not-a-real-platform'] });
+    expect(resolved).toEqual([]);
+  });
+
+  it('resolves each product independently', () => {
+    const keys = { 'shiftearn-pro': ['facebook-feed'], shifthydrate: ['linkedin-post'] };
+    expect(resolveReadinessContentTypes('shiftearn-pro', keys).map((ct) => ct.key)).toEqual(['facebook-feed']);
+    expect(resolveReadinessContentTypes('shifthydrate', keys).map((ct) => ct.key)).toEqual(['linkedin-post']);
   });
 });
 

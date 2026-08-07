@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { deleteCreation, getSettings, listCreations, listMarketingPacks, listProducts, updateCreation, updateMarketingPack, type RedactedSettings } from '@/lib/api';
 import { buildMarketingLibrary, type AssetEntry } from '@/lib/library/buildMarketingLibrary';
-import { ATTENTION_SEVERITY_LABELS, computeAttentionFlags, computePackReadiness, type AttentionSeverity } from '@/lib/library/packReadiness';
+import { ATTENTION_SEVERITY_LABELS, computeAttentionFlags, computePackReadiness, resolveReadinessContentTypes, type AttentionSeverity } from '@/lib/library/packReadiness';
 import { CONTENT_TYPES } from '@/server/config/contentTypes';
 import { MARKETING_PACK_OBJECTIVE_OPTIONS } from '@/types/domain';
 import type { AdCreation, AssetStatus, ContentTypeSpec, MarketingPack, ProductProfile } from '@/types/domain';
@@ -191,8 +191,7 @@ export function MarketingLibraryScreen() {
   const refreshReminderDays = settings?.refreshReminderDays ?? 183;
 
   function requiredContentTypesFor(productId: string): ContentTypeSpec[] {
-    const keys = settings?.requiredPublishingPlatformKeysByProduct?.[productId] ?? [];
-    return CONTENT_TYPES.filter((ct) => keys.includes(ct.key));
+    return resolveReadinessContentTypes(productId, settings?.requiredPublishingPlatformKeysByProduct ?? {});
   }
 
   function packMatchesFilter(pack: MarketingPack, assets: AdCreation[]): boolean {

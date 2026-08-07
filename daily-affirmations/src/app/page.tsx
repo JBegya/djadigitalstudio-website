@@ -1,5 +1,5 @@
-import { ComingSoon } from '@/components/layout/ComingSoon';
+import { HomeDashboardScreen } from '@/components/dashboard/HomeDashboardScreen';
 
 export default function Page() {
-  return <ComingSoon feature="Dashboard" />;
+  return <HomeDashboardScreen />;
 }

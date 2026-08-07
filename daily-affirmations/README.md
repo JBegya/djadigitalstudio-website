@@ -226,8 +226,30 @@ editable advertisement) before the full product-management system exists:
       (against this app's own rule of never inferring an unsupported claim) or adding a real link
       first — raised directly, and deferred until one exists, e.g. when the AI Copy Assistant needs
       one anyway. The Marketing Intelligence model stays exactly as frozen as it was after Slice 1.
-      The Home Dashboard is next — it can summarize the production, publishing, and coverage data
-      already built here rather than inventing new concepts.
+- [x] **M7 (Slice 4) — Home Dashboard.** Closes out M7. The `/` route, replacing its ComingSoon
+      stub, summarizing exactly the three things Slices 1–3 already built — nothing new is stored,
+      and no new domain concept is introduced. **Production**: total products/packs/advertisements,
+      a Draft/Ready/Published/Archived breakdown, and a "Recently Generated" list (the app's first
+      sort-by-recency, over `updatedAt ?? createdAt` — new code, not a new concept, the same category
+      of display ordering as `buildMarketingLibrary`'s existing sort by pack version). **Publishing**:
+      `computePackReadiness`/`computeAttentionFlags` rolled up across every pack instead of one at a
+      time — a Ready-to-Publish count and a severity-bucketed "Needs Attention" worklist (each
+      flagged pack counted once, under its highest severity, matching the single badge it already
+      shows in the Marketing Library). This rollup faithfully inherits Slice 2's existing behavior
+      as-is, including that an Archived pack overdue for a refresh still surfaces that flag — the
+      Dashboard summarizes what's already computed, it doesn't add a new archived-pack exclusion
+      that doesn't exist in the logic it's reusing. **Coverage**: `computeAllCoverage` reused
+      untouched, plus one small new (not pass-through) computation — a "lowest coverage" highlight,
+      the single product with the most room to grow, mirroring how the Coverage screen itself
+      already headlines `featureCoveragePercent` as its primary badge. Two small extractions came
+      out of writing this, both driven by a genuine second consumer rather than "this looks
+      generic": `resolveReadinessContentTypes` moved out of `MarketingLibraryScreen.tsx` into
+      `packReadiness.ts` (kept deliberately separate from Coverage's own required-platform resolver,
+      since the two intentionally use different fallback rules), and `ProgressPercent` moved out of
+      `MarketingCoverageScreen.tsx` into a small shared `components/ui` primitive. Considered and
+      declined: a `?filter=` deep-link from the worklist into the Marketing Library — packs have no
+      per-item permalink today, so pre-filtering only narrows the list without landing on the pack
+      itself; a half-measure deferred until pack-level permalinks make it worth doing properly.
 - [ ] **M8 — AI Copy Assistant.** AI rewrites/varies the copy the Advertisement Intelligence Engine
       already assembled — it improves phrasing, it never invents a claim, feature, screenshot, or
       testimonial that isn't already grounded in the stored Marketing Intelligence. Deliberately
