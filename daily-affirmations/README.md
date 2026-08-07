@@ -135,18 +135,31 @@ editable advertisement) before the full product-management system exists:
       Brand Manager gained three new sections (Marketing Identity, Customer Personas, and an
       extended Marketing Features editor) to manage all of it. Nothing here is AI-generated or
       AI-consumed yet — this milestone is the data foundation only.
-- [ ] **M6 — Advertisement Wizard: story-aware.** Wire the Marketing Intelligence data into the
-      wizard/editor — e.g. a feature's suggested hook as a template's opening line, persona-aware
-      copy defaults.
-- [ ] **M7 — Copy generator.** AI-generated headlines/captions/CTAs/hashtags (the first and only
-      point OpenAI gets used) — always grounded in the structured Marketing Intelligence already
-      stored, never inventing claims/features/testimonials, and always optional/editable.
-- [ ] **M8 — Export engine polish.** Per-platform batch export, the Exports screen, and a real
-      Dashboard.
-- **Future — AI Video Generation.** Product → Feature → Audience → Story → Storyboard → Scenes
-  (generated via a provider-independent adapter — OpenArt, Runway, Google Veo, Kling, Pika, Luma
-  are all interchangeable without changing the rest of the app) → Assembly. Vision only, not yet
-  scheduled as a numbered milestone.
+
+      **The data model is frozen as of M5.** Product/Feature/Persona/MarketingIdentity already
+      cover product identity, why the app exists, personas, pain points, benefits, emotional and
+      buying triggers, objections, features, brand guidelines, screenshots, and templates — enough
+      to produce compelling marketing. No more fields get added on spec; the risk past this point
+      is designing the perfect marketing system instead of shipping ads. New fields only get added
+      if real-world use surfaces a genuine gap.
+- [x] **M6 — Advertisement Intelligence Engine.** The wizard now assembles content from what's
+      already stored instead of generic fallbacks: headline prefers a feature's `suggestedHook`
+      (and, failing that, a selected persona's own story idea) before falling back to the bare
+      feature label; subheadline prefers `corePromise` before the feature description; a store
+      badge renders as a real text button when the product has a real App Store/Play Store URL
+      (never a link to nowhere, and never a fabricated trademarked badge image). The wizard gained
+      a **Persona** step (Product → Persona → Feature → Platform → Style) — picking a persona
+      narrows the Feature step to that persona's linked features when any exist. Still entirely
+      rule-based, no AI — just using the M5 data model that was already there. Explicit manual
+      overrides in Brand Manager always win over every fallback.
+- [ ] **M7 — AI Copy Assistant.** AI rewrites/varies the copy the Advertisement Intelligence Engine
+      already assembled — it improves phrasing, it never invents a claim, feature, screenshot, or
+      testimonial that isn't already grounded in the stored Marketing Intelligence.
+- [ ] **M8 — Storyboard Generator.** Scene-by-scene advertising concepts (no video yet) generated
+      from the same stored Product/Persona/Feature/Story data.
+- [ ] **M9 — AI Video Generation.** Connects a chosen storyboard to a video provider through a
+      provider-agnostic interface — OpenArt, Runway, Google Veo, Kling, Pika, and Luma are all
+      meant to be interchangeable without changing the rest of the app.
 
 ## Test Mode — try it before adding an API key
 

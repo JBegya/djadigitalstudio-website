@@ -5,7 +5,18 @@ import { resolveFeatureScreenshot } from '@/lib/editor/productToSlotContent';
 import { cn } from '@/lib/utils';
 import type { ProductProfile } from '@/types/domain';
 
-export function WizardFeatureStep({ product, value, onChange }: { product: ProductProfile; value: string | null; onChange: (key: string) => void }) {
+export function WizardFeatureStep({
+  product,
+  personaId,
+  value,
+  onChange,
+}: {
+  product: ProductProfile;
+  /** A CustomerPersona.id, or undefined/NO_PERSONA when no specific persona was chosen. */
+  personaId?: string;
+  value: string | null;
+  onChange: (key: string) => void;
+}) {
   if (product.features.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -18,9 +29,16 @@ export function WizardFeatureStep({ product, value, onChange }: { product: Produ
     );
   }
 
+  const linkedFeatures = personaId ? product.features.filter((f) => f.marketing.linkedPersonaIds.includes(personaId)) : [];
+  const showingFilteredList = linkedFeatures.length > 0;
+  const features = showingFilteredList ? linkedFeatures : product.features;
+
   return (
     <div className="space-y-2">
-      {product.features.map((feature) => {
+      {personaId && !showingFilteredList && (
+        <p className="px-1 text-xs text-muted-foreground">No features are linked to this persona yet — showing all features.</p>
+      )}
+      {features.map((feature) => {
         const screenshot = resolveFeatureScreenshot(product, feature);
         return (
           <button

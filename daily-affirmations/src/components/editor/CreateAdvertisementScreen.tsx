@@ -68,6 +68,7 @@ export function CreateAdvertisementScreen({ initialCreationId }: { initialCreati
       selection.feature,
       screenshot ? mediaUrl(screenshot.path) : undefined,
       selection.product.logoPath ? mediaUrl(selection.product.logoPath) : undefined,
+      selection.persona ?? undefined,
     );
     setProduct(selection.product);
     setFeature(selection.feature);

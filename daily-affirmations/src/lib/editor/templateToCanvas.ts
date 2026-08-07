@@ -16,6 +16,9 @@ export interface SlotContent {
   screenshotUrl?: string;
   logoUrl?: string;
   storeBadgeUrl?: string;
+  /** Rendered as a CTA-styled text button when storeBadgeUrl is unset — this project doesn't
+   * bundle (and won't fabricate) real Apple/Google trademarked badge artwork. */
+  storeBadgeText?: string;
   accentColor: string;
 }
 
@@ -112,7 +115,9 @@ async function createSlotObject(
     case 'logo':
       return makeContainFitImage(content.logoUrl, rect);
     case 'storeBadge':
-      return makeContainFitImage(content.storeBadgeUrl, rect);
+      if (content.storeBadgeUrl) return makeContainFitImage(content.storeBadgeUrl, rect);
+      if (content.storeBadgeText) return makeTextbox(content.storeBadgeText, rect, { backgroundColor: content.accentColor, ...slot.style }, fontFamily, '#0a0a0c', fontScale);
+      return null;
     case 'screenshot': {
       const group = await buildDeviceMockupGroup({
         device: deviceOverride ?? slot.device ?? 'iphone',

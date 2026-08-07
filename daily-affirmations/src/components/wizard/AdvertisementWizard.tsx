@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { WizardFeatureStep } from '@/components/wizard/WizardFeatureStep';
+import { WizardPersonaStep, NO_PERSONA } from '@/components/wizard/WizardPersonaStep';
 import { WizardPlatformStep } from '@/components/wizard/WizardPlatformStep';
 import { WizardProductStep } from '@/components/wizard/WizardProductStep';
 import { WizardShell } from '@/components/wizard/WizardShell';
@@ -10,23 +11,25 @@ import { WizardStyleStep } from '@/components/wizard/WizardStyleStep';
 import { listProducts } from '@/lib/api';
 import { CONTENT_TYPES } from '@/server/config/contentTypes';
 import { getTemplatesForContentType } from '@/server/config/templates';
-import type { ContentTypeSpec, ProductFeature, ProductProfile, TemplateDefinition } from '@/types/domain';
+import type { ContentTypeSpec, CustomerPersona, ProductFeature, ProductProfile, TemplateDefinition } from '@/types/domain';
 
 export interface WizardSelection {
   product: ProductProfile;
+  persona: CustomerPersona | null;
   contentType: ContentTypeSpec;
   feature: ProductFeature;
   template: TemplateDefinition;
 }
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 export function AdvertisementWizard({ onComplete }: { onComplete: (selection: WizardSelection) => void }) {
   const [products, setProducts] = useState<ProductProfile[] | null>(null);
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [productId, setProductId] = useState<string | null>(null);
-  const [contentTypeKey, setContentTypeKey] = useState<string | null>(null);
+  const [personaId, setPersonaId] = useState<string | null>(null);
   const [featureKey, setFeatureKey] = useState<string | null>(null);
+  const [contentTypeKey, setContentTypeKey] = useState<string | null>(null);
   const [templateKey, setTemplateKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,6 +39,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
   }, []);
 
   const product = products?.find((p) => p.id === productId) ?? null;
+  const persona = product?.personas.find((p) => p.id === personaId) ?? null;
   const feature = product?.features.find((f) => f.key === featureKey) ?? null;
   const availableTemplates = contentTypeKey ? getTemplatesForContentType(contentTypeKey) : [];
   const template = availableTemplates.find((t) => t.key === templateKey) ?? null;
@@ -43,6 +47,12 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
 
   function selectProduct(id: string) {
     setProductId(id);
+    setPersonaId(null);
+    setFeatureKey(null);
+  }
+
+  function selectPersona(id: string) {
+    setPersonaId(id);
     setFeatureKey(null);
   }
 
@@ -53,7 +63,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
 
   function finish() {
     if (!product || !contentType || !feature || !template) return;
-    onComplete({ product, contentType, feature, template });
+    onComplete({ product, persona, contentType, feature, template });
   }
 
   if (!products) {
@@ -62,13 +72,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
 
   if (step === 1) {
     return (
-      <WizardShell
-        stepNumber={1}
-        totalSteps={TOTAL_STEPS}
-        title="Which app?"
-        onContinue={() => setStep(2)}
-        continueDisabled={!product}
-      >
+      <WizardShell stepNumber={1} totalSteps={TOTAL_STEPS} title="Which app?" onContinue={() => setStep(2)} continueDisabled={!product}>
         <WizardProductStep products={products} value={productId} onChange={selectProduct} />
       </WizardShell>
     );
@@ -79,12 +83,13 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
       <WizardShell
         stepNumber={2}
         totalSteps={TOTAL_STEPS}
-        title="Where are you posting?"
+        title="Who are you talking to?"
+        subtitle={product ? `${product.name}'s personas` : undefined}
         onBack={() => setStep(1)}
         onContinue={() => setStep(3)}
-        continueDisabled={!contentType}
+        continueDisabled={!personaId}
       >
-        <WizardPlatformStep contentTypes={CONTENT_TYPES} value={contentTypeKey} onChange={selectContentType} />
+        {product && <WizardPersonaStep product={product} value={personaId} onChange={selectPersona} />}
       </WizardShell>
     );
   }
@@ -100,19 +105,36 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
         onContinue={() => setStep(4)}
         continueDisabled={!feature}
       >
-        {product && <WizardFeatureStep product={product} value={featureKey} onChange={setFeatureKey} />}
+        {product && (
+          <WizardFeatureStep product={product} personaId={personaId && personaId !== NO_PERSONA ? personaId : undefined} value={featureKey} onChange={setFeatureKey} />
+        )}
+      </WizardShell>
+    );
+  }
+
+  if (step === 4) {
+    return (
+      <WizardShell
+        stepNumber={4}
+        totalSteps={TOTAL_STEPS}
+        title="Where are you posting?"
+        onBack={() => setStep(3)}
+        onContinue={() => setStep(5)}
+        continueDisabled={!contentType}
+      >
+        <WizardPlatformStep contentTypes={CONTENT_TYPES} value={contentTypeKey} onChange={selectContentType} />
       </WizardShell>
     );
   }
 
   return (
     <WizardShell
-      stepNumber={4}
+      stepNumber={5}
       totalSteps={TOTAL_STEPS}
       title="What style?"
-      onBack={() => setStep(3)}
+      onBack={() => setStep(4)}
       onContinue={finish}
-      continueLabel="Open Editor"
+      continueLabel="Generate Advertisement"
       continueDisabled={!template}
     >
       <WizardStyleStep templates={availableTemplates} value={templateKey} onChange={setTemplateKey} />
