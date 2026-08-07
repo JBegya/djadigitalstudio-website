@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ContentTypeSpec } from '@/types/domain';
 
@@ -7,29 +9,83 @@ export function WizardPlatformStep({
   contentTypes,
   value,
   onChange,
+  onGenerateAll,
+  generating,
 }: {
   contentTypes: ContentTypeSpec[];
   value: string | null;
   onChange: (key: string) => void;
+  /** Runs "Generate All" for every checked platform instead of continuing to the single-ad Style
+   * step — the Batch Production entry point. Omit to hide multi-select entirely. */
+  onGenerateAll?: (contentTypeKeys: string[]) => void;
+  generating?: boolean;
 }) {
+  const [multiMode, setMultiMode] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+
+  function toggleSelected(key: string) {
+    setSelected((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  }
+
   return (
-    <div className="space-y-2">
-      {contentTypes.map((contentType) => (
+    <div className="space-y-3">
+      {onGenerateAll && (
         <button
-          key={contentType.key}
           type="button"
-          onClick={() => onChange(contentType.key)}
-          className={cn(
-            'flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors',
-            value === contentType.key ? 'border-primary/60 bg-secondary text-secondary-foreground' : 'border-border hover:bg-secondary/50',
-          )}
+          onClick={() => setMultiMode((m) => !m)}
+          className="text-xs font-medium text-primary underline-offset-4 hover:underline"
         >
-          <p className="text-sm font-medium text-foreground">{contentType.label}</p>
-          <p className="text-xs text-muted-foreground">
-            {contentType.widthPx}×{contentType.heightPx}px
-          </p>
+          {multiMode ? 'Choose a single platform instead' : 'Generate for multiple platforms at once'}
         </button>
-      ))}
+      )}
+
+      <div className="space-y-2">
+        {contentTypes.map((contentType) =>
+          multiMode ? (
+            <label
+              key={contentType.key}
+              className={cn(
+                'flex w-full cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors',
+                selected.includes(contentType.key) ? 'border-primary/60 bg-secondary text-secondary-foreground' : 'border-border hover:bg-secondary/50',
+              )}
+            >
+              <span className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={selected.includes(contentType.key)}
+                  onChange={() => toggleSelected(contentType.key)}
+                  className="h-4 w-4 rounded border-border accent-primary"
+                />
+                <p className="text-sm font-medium text-foreground">{contentType.label}</p>
+              </span>
+              <p className="text-xs text-muted-foreground">
+                {contentType.widthPx}×{contentType.heightPx}px
+              </p>
+            </label>
+          ) : (
+            <button
+              key={contentType.key}
+              type="button"
+              onClick={() => onChange(contentType.key)}
+              className={cn(
+                'flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors',
+                value === contentType.key ? 'border-primary/60 bg-secondary text-secondary-foreground' : 'border-border hover:bg-secondary/50',
+              )}
+            >
+              <p className="text-sm font-medium text-foreground">{contentType.label}</p>
+              <p className="text-xs text-muted-foreground">
+                {contentType.widthPx}×{contentType.heightPx}px
+              </p>
+            </button>
+          ),
+        )}
+      </div>
+
+      {multiMode && onGenerateAll && (
+        <Button type="button" onClick={() => onGenerateAll(selected)} disabled={selected.length === 0 || Boolean(generating)}>
+          {generating ? 'Generating…' : `Generate All (${selected.length})`}
+        </Button>
+      )}
     </div>
   );
 }

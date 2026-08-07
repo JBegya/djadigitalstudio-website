@@ -1,5 +1,5 @@
-import { ComingSoon } from '@/components/layout/ComingSoon';
+import { MarketingLibraryScreen } from '@/components/library/MarketingLibraryScreen';
 
 export default function Page() {
-  return <ComingSoon feature="Exports" />;
+  return <MarketingLibraryScreen />;
 }

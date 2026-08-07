@@ -19,6 +19,8 @@ export async function POST(request: NextRequest) {
   const creation: AdCreation = {
     id: newId('ad'),
     productId: body.productId ?? 'sample',
+    featureKey: body.featureKey,
+    packId: body.packId,
     templateKey: body.templateKey,
     contentTypeKey: body.contentTypeKey,
     headline: body.headline ?? '',
@@ -30,6 +32,7 @@ export async function POST(request: NextRequest) {
     createdAt: now,
     updatedAt: now,
     favorite: body.favorite ?? false,
+    status: body.status ?? 'draft',
     canvasJson: body.canvasJson,
     canvasWidthPx: body.canvasWidthPx ?? 1080,
     canvasHeightPx: body.canvasHeightPx ?? 1080,

@@ -40,6 +40,12 @@ export function CreateAdvertisementScreen({ initialCreationId }: { initialCreati
   const [slotContent, setSlotContent] = useState<SlotContent | null>(null);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  // Gates EditorCanvas out of the first render entirely when reopening a saved ad — mounting it
+  // immediately with placeholder defaults and then again moments later once the fetch resolves
+  // creates two Fabric Canvas instances on the same underlying <canvas> element in quick
+  // succession, and Fabric's own dispose() isn't guaranteed to finish tearing down the first
+  // before the second's async template/image loading starts touching it.
+  const [loadingCreation, setLoadingCreation] = useState(Boolean(initialCreationId));
 
   useEffect(() => {
     if (!initialCreationId) return;
@@ -56,7 +62,8 @@ export function CreateAdvertisementScreen({ initialCreationId }: { initialCreati
           // comes from the saved canvasJson, not this fetch.
         }
       })
-      .catch(() => toast.error('Could not load that advertisement — starting a new one instead.'));
+      .catch(() => toast.error('Could not load that advertisement — starting a new one instead.'))
+      .finally(() => setLoadingCreation(false));
   }, [initialCreationId]);
 
   const handleReady = useCallback((next: Canvas | null) => setCanvas(next), []);
@@ -80,6 +87,10 @@ export function CreateAdvertisementScreen({ initialCreationId }: { initialCreati
 
   if (mode === 'wizard') {
     return <AdvertisementWizard onComplete={handleWizardComplete} />;
+  }
+
+  if (loadingCreation) {
+    return <div className="p-8 text-sm text-muted-foreground">Loading advertisement…</div>;
   }
 
   const template = getTemplate(templateKey) ?? TEMPLATES[0];
@@ -119,17 +130,21 @@ export function CreateAdvertisementScreen({ initialCreationId }: { initialCreati
     if (!canvas) return;
     setSaving(true);
     try {
+      const thumbnailPath = await exportCanvasToDataUrl(canvas, { format: 'jpg', targetWidthPx: 400, targetHeightPx: Math.round((400 * canvas.getHeight()) / canvas.getWidth()), quality: 0.7 });
       const payload = {
         productId: loadedCreation?.productId ?? product?.id ?? 'sample',
+        featureKey: loadedCreation?.featureKey ?? feature?.key,
+        packId: loadedCreation?.packId,
         templateKey,
         contentTypeKey,
         headline: extractSlotText(canvas, 'headline'),
         caption: extractSlotText(canvas, 'subheadline'),
         cta: extractSlotText(canvas, 'cta'),
         hashtags: loadedCreation?.hashtags ?? [],
-        thumbnailPath: loadedCreation?.thumbnailPath ?? '',
+        thumbnailPath,
         exportPaths: loadedCreation?.exportPaths ?? [],
         favorite: loadedCreation?.favorite ?? false,
+        status: loadedCreation?.status ?? 'draft',
         canvasJson: canvas.toJSON(),
         canvasWidthPx: canvas.getWidth(),
         canvasHeightPx: canvas.getHeight(),

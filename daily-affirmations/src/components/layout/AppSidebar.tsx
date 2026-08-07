@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/brand', label: 'Brand Manager', icon: Grid2x2 },
   { href: '/create', label: 'Create Advertisement', icon: PlusSquare },
-  { href: '/exports', label: 'Exports', icon: FolderOutput },
+  { href: '/exports', label: 'Marketing Library', icon: FolderOutput },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

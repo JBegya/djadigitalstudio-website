@@ -45,7 +45,7 @@ this today?"* That means:
   meant to be reused by *everything* downstream — the ad editor, a future AI Copy Assistant, App
   Store descriptions, social posts, landing pages, and eventually AI-generated video. One
   structured knowledge base, not separate copy reinvented per channel.
-- **AI never invents.** When AI is involved (M7 onward), it must never fabricate claims,
+- **AI never invents.** When AI is involved (M8 onward), it must never fabricate claims,
   capabilities, features, screenshots, or customer testimonials — it may only draw from and remix
   the structured Marketing Intelligence already stored here. The application, not the model, is
   always the source of truth. `supportingProof`/`successStory` fields are explicitly user-authored
@@ -152,12 +152,30 @@ editable advertisement) before the full product-management system exists:
       narrows the Feature step to that persona's linked features when any exist. Still entirely
       rule-based, no AI — just using the M5 data model that was already there. Explicit manual
       overrides in Brand Manager always win over every fallback.
-- [ ] **M7 — AI Copy Assistant.** AI rewrites/varies the copy the Advertisement Intelligence Engine
+- [x] **M7 (Slice 1) — Batch Production & Marketing Library.** The focus shifts from building
+      infrastructure to producing marketing output — every new feature from here on is measured
+      against how much it speeds up producing real, publishable assets. The wizard's Platform step
+      gained a multi-select "Generate for multiple platforms at once" mode: pick a feature, check
+      several platforms, and **Generate All** builds a **Marketing Pack** — one versioned record
+      (Pack V1, V2, ...) covering every selected platform's advertisement, using a per-platform
+      default template (`server/config/defaultTemplates.ts`, plain data, not code — easy to retune
+      without touching generation logic). Rendering happens on detached, never-DOM-attached Fabric
+      canvases (`lib/editor/batchGenerate.ts`), so N platform variants render without mounting N
+      visible editors. Every asset stores a `featureKey` and (for pack-generated assets) a `packId`,
+      and carries a lifecycle `status` (Draft/Ready/Published/Archived) — nothing is ever
+      overwritten; regenerating a feature always creates a new pack. The **Marketing Library**
+      (`/exports`, née "Exports") replaces its ComingSoon stub: browse every pack and standalone ad
+      by product → feature → pack version → platform, update an asset's status inline, or open any
+      asset back in the full editor. Deliberately deferred to a later slice, not dropped: a
+      marketing-opportunities Home Dashboard, a Marketing Coverage screen, one-click Batch
+      Variations (style/tone presets), and a Campaign Pack Generator that exports a pack straight
+      to a folder.
+- [ ] **M8 — AI Copy Assistant.** AI rewrites/varies the copy the Advertisement Intelligence Engine
       already assembled — it improves phrasing, it never invents a claim, feature, screenshot, or
       testimonial that isn't already grounded in the stored Marketing Intelligence.
-- [ ] **M8 — Storyboard Generator.** Scene-by-scene advertising concepts (no video yet) generated
+- [ ] **M9 — Storyboard Generator.** Scene-by-scene advertising concepts (no video yet) generated
       from the same stored Product/Persona/Feature/Story data.
-- [ ] **M9 — AI Video Generation.** Connects a chosen storyboard to a video provider through a
+- [ ] **M10 — AI Video Generation.** Connects a chosen storyboard to a video provider through a
       provider-agnostic interface — OpenArt, Runway, Google Veo, Kling, Pika, and Luma are all
       meant to be interchangeable without changing the rest of the app.
 

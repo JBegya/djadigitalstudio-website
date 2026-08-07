@@ -1,4 +1,4 @@
-import type { AdCreation, DeviceKind, ProductProfile, Settings } from '@/types/domain';
+import type { AdCreation, DeviceKind, MarketingPack, ProductProfile, Settings } from '@/types/domain';
 
 export type RedactedSettings = Settings & { hasOpenAiKey: boolean };
 
@@ -91,6 +91,24 @@ export async function exportAd(payload: { format: 'png' | 'jpg' | 'pdf'; dataUrl
       body: JSON.stringify(payload),
     }),
   );
+}
+
+export async function listMarketingPacks(): Promise<{ packs: MarketingPack[] }> {
+  return json(await fetch('/api/marketing-packs', { cache: 'no-store' }));
+}
+
+export async function createMarketingPack(pack: Pick<MarketingPack, 'productId' | 'featureKey'>): Promise<{ pack: MarketingPack }> {
+  return json(
+    await fetch('/api/marketing-packs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pack),
+    }),
+  );
+}
+
+export async function deleteMarketingPack(id: string): Promise<{ ok: boolean }> {
+  return json(await fetch(`/api/marketing-packs/${encodeURIComponent(id)}`, { method: 'DELETE' }));
 }
 
 export async function listProducts(): Promise<{ products: ProductProfile[] }> {

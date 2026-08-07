@@ -247,25 +247,56 @@ export interface TemplateDefinition {
   contentTypeKeys?: string[];
 }
 
-/** One saved advertisement, listed on the Dashboard/Exports screens. */
+/** Where a generated asset stands in its real-world lifecycle — separate from the app's own CRUD
+ * state, which never deletes history. Tracked per asset (not per pack): a Marketing Pack's
+ * platforms are typically published on different days. */
+export type AssetStatus = 'draft' | 'ready' | 'published' | 'archived';
+
+/** One saved advertisement, listed in the Marketing Library. */
 export interface AdCreation {
   id: string;
   productId: ProductId;
+  /** Which feature this ad promotes — unset on ads saved before this field existed. Powers
+   * grouping/versioning in the Marketing Library; nothing else on this record can derive it. */
+  featureKey?: string;
+  /** The Marketing Pack this asset was generated as part of — unset for ads saved one at a time
+   * through the single-ad wizard/editor flow, which don't create a pack. */
+  packId?: string;
   templateKey: string;
   contentTypeKey: string;
   headline: string;
   caption: string;
   cta: string;
   hashtags: string[];
+  /** A small JPEG data URL preview, not a filesystem path — no separate export-to-disk step
+   * happens at save time. */
   thumbnailPath: string;
   exportPaths: string[];
   createdAt: string;
   updatedAt: string;
   favorite: boolean;
+  /** Defaults to 'draft' — unset on ads saved before this field existed. */
+  status?: AssetStatus;
   /** Fabric's own canvas.toJSON() — every object, position, size, color, and text, tagged with
    * each object's `djaSlotKey`. Reload with canvas.loadFromJSON() to resume editing exactly
    * where the user left off, instead of a one-shot export. */
   canvasJson: Record<string, unknown>;
   canvasWidthPx: number;
   canvasHeightPx: number;
+}
+
+/**
+ * The primary unit of marketing output: everything generated for one feature in a single "Generate
+ * Marketing Pack" run, across every platform selected. Individual per-platform assets (AdCreation)
+ * reference a pack via `packId` rather than the pack listing its assets, so the asset list can
+ * never go stale. The pack itself is versioned as a whole — regenerating a feature always creates
+ * a new pack (Pack V2, V3, ...) rather than overwriting the last one.
+ */
+export interface MarketingPack {
+  id: string;
+  productId: ProductId;
+  featureKey: string;
+  /** 1-based, sequential per product+feature — computed server-side at creation time. */
+  version: number;
+  createdAt: string;
 }

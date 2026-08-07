@@ -45,6 +45,10 @@ export function getCreationsFilePath(): string {
   return path.join(getUserDataDir(), 'creations.json');
 }
 
+export function getMarketingPacksFilePath(): string {
+  return path.join(getUserDataDir(), 'marketing-packs.json');
+}
+
 /** Bundled seed Product Profile JSON — shipped like today's `assets/`, read-only. */
 export function getProductsDir(): string {
   return path.join(getAppRoot(), 'data', 'products');
