@@ -10,12 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { deleteCreation, listCreations, listMarketingPacks, listProducts, updateCreation } from '@/lib/api';
 import { buildMarketingLibrary, type AssetEntry } from '@/lib/library/buildMarketingLibrary';
 import { CONTENT_TYPES } from '@/server/config/contentTypes';
+import { MARKETING_PACK_OBJECTIVE_OPTIONS } from '@/types/domain';
 import type { AdCreation, AssetStatus, MarketingPack, ProductProfile } from '@/types/domain';
 
 const STATUS_OPTIONS: AssetStatus[] = ['draft', 'ready', 'published', 'archived'];
 
 function platformLabel(contentTypeKey: string): string {
   return CONTENT_TYPES.find((c) => c.key === contentTypeKey)?.label ?? contentTypeKey;
+}
+
+function objectiveLabel(objective: MarketingPack['objective']): string | undefined {
+  return MARKETING_PACK_OBJECTIVE_OPTIONS.find((o) => o.value === objective)?.label;
 }
 
 function AssetCard({ entry, onStatusChange, onDelete }: { entry: AssetEntry; onStatusChange: (status: AssetStatus) => void; onDelete: () => void }) {
@@ -137,6 +142,7 @@ export function MarketingLibraryScreen() {
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-semibold text-foreground">{pack.name}</p>
                           <Badge>V{pack.version}</Badge>
+                          {objectiveLabel(pack.objective) && <Badge variant="outline">{objectiveLabel(pack.objective)}</Badge>}
                           <span className="text-xs text-muted-foreground">{new Date(pack.createdAt).toLocaleDateString()}</span>
                         </div>
                         <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">

@@ -97,7 +97,9 @@ export async function listMarketingPacks(): Promise<{ packs: MarketingPack[] }> 
   return json(await fetch('/api/marketing-packs', { cache: 'no-store' }));
 }
 
-export async function createMarketingPack(pack: Pick<MarketingPack, 'productId' | 'featureKey' | 'name'>): Promise<{ pack: MarketingPack }> {
+export async function createMarketingPack(
+  pack: Pick<MarketingPack, 'productId' | 'featureKey' | 'name'> & Partial<Pick<MarketingPack, 'objective'>>,
+): Promise<{ pack: MarketingPack }> {
   return json(
     await fetch('/api/marketing-packs', {
       method: 'POST',

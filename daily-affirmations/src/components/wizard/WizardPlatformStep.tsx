@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import type { ContentTypeSpec } from '@/types/domain';
+import { MARKETING_PACK_OBJECTIVE_OPTIONS, type ContentTypeSpec, type MarketingPackObjective } from '@/types/domain';
+
+const NO_OBJECTIVE = 'none';
 
 export function WizardPlatformStep({
   contentTypes,
@@ -14,26 +17,37 @@ export function WizardPlatformStep({
   onGenerateAll,
   generating,
   suggestedPackName,
+  suggestedHook,
 }: {
   contentTypes: ContentTypeSpec[];
   value: string | null;
   onChange: (key: string) => void;
   /** Runs "Generate All" for every checked platform instead of continuing to the single-ad Style
    * step — the Batch Production entry point. Omit to hide multi-select entirely. */
-  onGenerateAll?: (contentTypeKeys: string[], packName: string) => void;
+  onGenerateAll?: (contentTypeKeys: string[], packName: string, hook: string, objective?: MarketingPackObjective) => void;
   generating?: boolean;
-  /** A starting point for the pack name field, derived from the feature's own stored hook/story
-   * — the user can (and should) rename it to something that identifies this specific creative
-   * concept, since the same feature will eventually have several. */
+  /** A starting point for the campaign name field — the user should rename it to something that
+   * identifies this specific creative concept, since the same feature will eventually have
+   * several, each evolving through its own hooks/versions. */
   suggestedPackName?: string;
+  /** A starting point for the opening hook, derived from the feature's own stored hook/persona
+   * story idea. Unlike the campaign name, the hook is expected to change from version to version
+   * (A/B testing different openings under the same named campaign). */
+  suggestedHook?: string;
 }) {
   const [multiMode, setMultiMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [packName, setPackName] = useState(suggestedPackName ?? '');
+  const [hook, setHook] = useState(suggestedHook ?? '');
+  const [objective, setObjective] = useState<string>(NO_OBJECTIVE);
 
   useEffect(() => {
     setPackName(suggestedPackName ?? '');
   }, [suggestedPackName]);
+
+  useEffect(() => {
+    setHook(suggestedHook ?? '');
+  }, [suggestedHook]);
 
   function toggleSelected(key: string) {
     setSelected((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
@@ -52,20 +66,45 @@ export function WizardPlatformStep({
       )}
 
       {multiMode && onGenerateAll && (
-        <div>
-          <Label htmlFor="pack-name" className="text-xs text-muted-foreground">
-            Marketing Pack name
-          </Label>
-          <Input
-            id="pack-name"
-            value={packName}
-            onChange={(e) => setPackName(e.target.value)}
-            placeholder="e.g. Payroll Mistake Story"
-            className="mt-1"
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Name this creative concept so it&apos;s easy to tell apart from other packs for the same feature later.
-          </p>
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="pack-name" className="text-xs text-muted-foreground">
+              Campaign name
+            </Label>
+            <Input id="pack-name" value={packName} onChange={(e) => setPackName(e.target.value)} placeholder="e.g. Payroll Mistake Story" className="mt-1" />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Identifies this creative concept — stays the same across its versions, even as the hook below changes.
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="pack-hook" className="text-xs text-muted-foreground">
+              Opening hook
+            </Label>
+            <Input id="pack-hook" value={hook} onChange={(e) => setHook(e.target.value)} placeholder="e.g. You finished at 11pm. You're back at 7am." className="mt-1" />
+            <p className="mt-1 text-xs text-muted-foreground">
+              The headline generated onto every platform in this pack — free to change on the next version for A/B testing.
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="pack-objective" className="text-xs text-muted-foreground">
+              Objective (optional)
+            </Label>
+            <Select value={objective} onValueChange={setObjective}>
+              <SelectTrigger id="pack-objective" className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_OBJECTIVE}>Not set</SelectItem>
+                {MARKETING_PACK_OBJECTIVE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       )}
 
@@ -114,8 +153,8 @@ export function WizardPlatformStep({
       {multiMode && onGenerateAll && (
         <Button
           type="button"
-          onClick={() => onGenerateAll(selected, packName.trim())}
-          disabled={selected.length === 0 || !packName.trim() || Boolean(generating)}
+          onClick={() => onGenerateAll(selected, packName.trim(), hook.trim(), objective === NO_OBJECTIVE ? undefined : (objective as MarketingPackObjective))}
+          disabled={selected.length === 0 || !packName.trim() || !hook.trim() || Boolean(generating)}
         >
           {generating ? 'Generating…' : `Generate All (${selected.length})`}
         </Button>

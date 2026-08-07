@@ -292,14 +292,36 @@ export interface AdCreation {
  * never go stale. The pack itself is versioned as a whole — regenerating a feature always creates
  * a new pack (Pack V2, V3, ...) rather than overwriting the last one.
  */
+/** Why a pack was made — optional, purely for the creator's own future reference ("why did I
+ * create this pack?"). Not consumed by any logic today. */
+export type MarketingPackObjective =
+  | 'increase-downloads'
+  | 'increase-subscriptions'
+  | 'feature-awareness'
+  | 'new-release'
+  | 'retarget-existing-users'
+  | 're-engage-inactive-users';
+
+export const MARKETING_PACK_OBJECTIVE_OPTIONS: { value: MarketingPackObjective; label: string }[] = [
+  { value: 'increase-downloads', label: 'Increase Downloads' },
+  { value: 'increase-subscriptions', label: 'Increase Subscriptions' },
+  { value: 'feature-awareness', label: 'Feature Awareness' },
+  { value: 'new-release', label: 'New Release' },
+  { value: 'retarget-existing-users', label: 'Retarget Existing Users' },
+  { value: 're-engage-inactive-users', label: 'Re-engage Inactive Users' },
+];
+
 export interface MarketingPack {
   id: string;
   productId: ProductId;
   featureKey: string;
   /** A meaningful creative-concept name (e.g. "Payroll Mistake Story"), not just a version number
-   * — the same feature will eventually have multiple named concepts, each with its own versions. */
+   * — the same feature will eventually have multiple named concepts, each with its own versions.
+   * Stable across a concept's versions — its opening hook (see AdCreation.headline) is what
+   * varies from version to version, e.g. for A/B testing different openings under one campaign. */
   name: string;
-  /** 1-based, sequential per product+feature — computed server-side at creation time. */
+  /** 1-based, sequential per product+feature+name — computed server-side at creation time. */
   version: number;
   createdAt: string;
+  objective?: MarketingPackObjective;
 }

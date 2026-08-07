@@ -16,7 +16,7 @@ import { inter } from '@/lib/fonts';
 import { CONTENT_TYPES } from '@/server/config/contentTypes';
 import { getDefaultTemplateForContentType } from '@/server/config/defaultTemplates';
 import { getTemplatesForContentType } from '@/server/config/templates';
-import type { ContentTypeSpec, CustomerPersona, ProductFeature, ProductProfile, TemplateDefinition } from '@/types/domain';
+import type { ContentTypeSpec, CustomerPersona, MarketingPackObjective, ProductFeature, ProductProfile, TemplateDefinition } from '@/types/domain';
 
 export interface WizardSelection {
   product: ProductProfile;
@@ -51,7 +51,8 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
   const availableTemplates = contentTypeKey ? getTemplatesForContentType(contentTypeKey) : [];
   const template = availableTemplates.find((t) => t.key === templateKey) ?? null;
   const contentType = CONTENT_TYPES.find((c) => c.key === contentTypeKey) ?? null;
-  const suggestedPackName = feature ? (feature.marketing.suggestedHook || persona?.storyIdeas[0] || feature.label) : '';
+  const suggestedPackName = feature?.label ?? '';
+  const suggestedHook = feature ? (feature.marketing.suggestedHook || persona?.storyIdeas[0] || feature.label) : '';
 
   function selectProduct(id: string) {
     setProductId(id);
@@ -74,8 +75,8 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
     onComplete({ product, persona, contentType, feature, template });
   }
 
-  async function generateAll(contentTypeKeys: string[], packName: string) {
-    if (!product || !feature || contentTypeKeys.length === 0 || !packName.trim()) return;
+  async function generateAll(contentTypeKeys: string[], packName: string, hook: string, objective?: MarketingPackObjective) {
+    if (!product || !feature || contentTypeKeys.length === 0 || !packName.trim() || !hook.trim()) return;
     const pairs = contentTypeKeys
       .map((key) => {
         const type = CONTENT_TYPES.find((c) => c.key === key);
@@ -91,7 +92,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
 
     setBatchGenerating(true);
     try {
-      const { pack } = await createMarketingPack({ productId: product.id, featureKey: feature.key, name: packName.trim() });
+      const { pack } = await createMarketingPack({ productId: product.id, featureKey: feature.key, name: packName.trim(), objective });
       const screenshot = resolveFeatureScreenshot(product, feature);
       const generated = await generateAdsForPlatforms(pairs, {
         product,
@@ -101,6 +102,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
         logoUrl: product.logoPath ? mediaUrl(product.logoPath) : undefined,
         fontFamily: inter.style.fontFamily,
         device: 'iphone',
+        headlineOverride: hook.trim(),
       });
       await Promise.all(
         generated.map((ad) =>
@@ -196,6 +198,7 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
           onGenerateAll={generateAll}
           generating={batchGenerating}
           suggestedPackName={suggestedPackName}
+          suggestedHook={suggestedHook}
         />
       </WizardShell>
     );

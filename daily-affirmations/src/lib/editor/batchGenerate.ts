@@ -17,6 +17,11 @@ export interface GenerateAdForPlatformParams {
   logoUrl?: string;
   fontFamily: string;
   device: MockupDevice;
+  /** Overrides the fallback-chain headline (feature hook / persona story idea / label) with a
+   * specific line of copy for this generation — the Marketing Pack's "opening hook," which can
+   * change from version to version (A/B testing different openings) independently of the pack's
+   * stable campaign name and of the feature's own stored suggestedHook. */
+  headlineOverride?: string;
 }
 
 export interface GeneratedAd {
@@ -38,8 +43,9 @@ export interface GeneratedAd {
  * without mounting N visible editors: build, render, export, dispose, repeat.
  */
 export async function generateAdForPlatform(params: GenerateAdForPlatformParams): Promise<GeneratedAd> {
-  const { product, feature, persona, contentType, template, screenshotUrl, logoUrl, fontFamily, device } = params;
-  const content = buildSlotContentFromProduct(product, feature, screenshotUrl, logoUrl, persona ?? undefined);
+  const { product, feature, persona, contentType, template, screenshotUrl, logoUrl, fontFamily, device, headlineOverride } = params;
+  const baseContent = buildSlotContentFromProduct(product, feature, screenshotUrl, logoUrl, persona ?? undefined);
+  const content = headlineOverride?.trim() ? { ...baseContent, headline: headlineOverride.trim() } : baseContent;
 
   const canvas = new Canvas(document.createElement('canvas'), { width: contentType.widthPx, height: contentType.heightPx });
   try {

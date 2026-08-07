@@ -156,20 +156,28 @@ editable advertisement) before the full product-management system exists:
       infrastructure to producing marketing output — every new feature from here on is measured
       against how much it speeds up producing real, publishable assets. The wizard's Platform step
       gained a multi-select "Generate for multiple platforms at once" mode: pick a feature, check
-      several platforms, name the creative concept (e.g. "Payroll Mistake Story" — pre-filled from
-      the feature's own stored hook/story, always editable), and **Generate All** builds a
-      **Marketing Pack** — one named, versioned record covering every selected platform's
-      advertisement, using a per-platform default template (`server/config/defaultTemplates.ts`,
-      plain data, not code — easy to retune without touching generation logic). Versioning is
-      scoped per (product, feature, pack name): a new creative concept for the same feature starts
-      its own V1, while regenerating the same named concept counts up (V2, V3, ...) — distinct
-      concepts never share a version sequence. Rendering happens on detached, never-DOM-attached
-      Fabric canvases (`lib/editor/batchGenerate.ts`), so N platform variants render without
-      mounting N visible editors. Every asset stores a `featureKey` and (for pack-generated assets)
-      a `packId`, and carries a lifecycle `status` (Draft/Ready/Published/Archived) — nothing is
-      ever overwritten. The **Marketing Library** (`/exports`, née "Exports") replaces its
-      ComingSoon stub: browse every pack and standalone ad by product → feature → pack name/version
-      → platform, update an asset's status inline, or open any asset back in the full editor.
+      several platforms, then set three things before **Generate All** builds a **Marketing Pack**:
+      a **campaign name** (e.g. "Payroll Mistake Story," pre-filled from the feature's label, stable
+      across the concept's versions), an **opening hook** (the actual headline generated onto every
+      platform in the pack, pre-filled from the feature's stored hook/persona story idea, free to
+      change on the next version for A/B testing under the same campaign name), and an optional
+      **objective** (Increase Downloads/Subscriptions, Feature Awareness, New Release, Retarget or
+      Re-engage Users — purely for future reference, not consumed by any logic). Pack generation
+      uses a per-platform default template (`server/config/defaultTemplates.ts`, plain data, not
+      code — easy to retune without touching generation logic). Versioning is scoped per (product,
+      feature, campaign name): a new creative concept for the same feature starts its own V1, while
+      regenerating the same named concept (even with a different hook) counts up (V2, V3, ...) —
+      distinct concepts never share a version sequence. Rendering happens on detached,
+      never-DOM-attached Fabric canvases (`lib/editor/batchGenerate.ts`), so N platform variants
+      render without mounting N visible editors. Every asset stores a `featureKey` and (for
+      pack-generated assets) a `packId`, and carries a lifecycle `status`
+      (Draft/Ready/Published/Archived) — nothing is ever overwritten. The **Marketing Library**
+      (`/exports`, née "Exports") replaces its ComingSoon stub: browse every pack and standalone ad
+      by product → feature → campaign name/version → platform, update an asset's status inline, or
+      open any asset back in the full editor. The Marketing Intelligence model (Product/Feature/
+      Persona/MarketingIdentity) is considered feature-complete for Version 1 as of here — new
+      fields only get added to Marketing Pack/AdCreation (the production-tracking records) when a
+      production workflow genuinely needs one, never to the frozen knowledge base itself.
       Deliberately sequenced for later, not dropped: **M7 Slice 2 — Publishing Workflow** (richer
       lifecycle tracking — published date, last-edited — to answer "what have I already used?"),
       **M7 Slice 3 — Marketing Coverage** (which features/personas/platforms/buying triggers/

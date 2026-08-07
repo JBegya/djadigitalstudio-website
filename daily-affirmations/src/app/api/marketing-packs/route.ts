@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     name: body.name.trim(),
     version: marketingPacksStore.nextVersion(body.productId, body.featureKey, body.name.trim()),
     createdAt: new Date().toISOString(),
+    objective: body.objective,
   };
   marketingPacksStore.upsert(pack);
   return NextResponse.json({ pack });
