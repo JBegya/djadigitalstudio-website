@@ -129,7 +129,7 @@ export function HomeDashboardScreen() {
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
             <StatTile label="Products" value={production.totalProducts} />
             <StatTile label="Marketing Packs" value={production.totalPacks} />
-            <StatTile label="Advertisements Generated" value={production.totalCreations} />
+            <StatTile label="Assets Generated" value={production.totalCreations} />
           </div>
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span>Draft {production.creationsByStatus.draft}</span>
@@ -138,7 +138,7 @@ export function HomeDashboardScreen() {
             <span>Archived {production.creationsByStatus.archived}</span>
           </div>
 
-          <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recently Generated</h3>
+          <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recent Marketing Packs</h3>
           <div className="mt-2">
             {production.recentPacks.length === 0 ? (
               <p className="text-xs text-muted-foreground">No Marketing Packs generated yet.</p>

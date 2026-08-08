@@ -85,3 +85,37 @@ export function buildMarketingLibrary(packs: MarketingPack[], creations: AdCreat
 
   return productGroups;
 }
+
+function compareIsoAscending(a: string | undefined, b: string | undefined): number {
+  if (!a && !b) return 0;
+  if (!a) return -1;
+  if (!b) return 1;
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/**
+ * Ascending: lower version first, then (on a version tie) older updatedAt first, then older
+ * createdAt first — treats a missing updatedAt as older than any present value. Sorting a
+ * campaign's packs with this and taking the last element reliably yields "the current, definitive
+ * version" even if two packs ever tie on version number (hand-edited or imported data), rather
+ * than depending on array/iteration order.
+ */
+export function compareByVersionThenRecency(a: MarketingPack, b: MarketingPack): number {
+  if (a.version !== b.version) return a.version - b.version;
+  const updatedDiff = compareIsoAscending(a.updatedAt, b.updatedAt);
+  if (updatedDiff !== 0) return updatedDiff;
+  return compareIsoAscending(a.createdAt, b.createdAt);
+}
+
+/**
+ * A named campaign's full version history within `packs`, oldest→newest. Scoped by
+ * productId+featureKey+name together (not name alone) so it never merges two different features'
+ * campaigns that happen to share a name, even if `packs` wasn't pre-scoped by the caller. Callers
+ * derive whatever they need from the result: the latest version (last element), a count, a
+ * timeline.
+ */
+export function getCampaignVersions(packs: PackGroup[], productId: string, featureKey: string, name: string): PackGroup[] {
+  return packs
+    .filter((pg) => pg.pack.productId === productId && pg.pack.featureKey === featureKey && pg.pack.name === name)
+    .sort((a, b) => compareByVersionThenRecency(a.pack, b.pack));
+}

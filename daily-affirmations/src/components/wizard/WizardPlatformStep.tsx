@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { findNearDuplicatePackName } from '@/lib/library/campaignNameMatch';
 import { cn } from '@/lib/utils';
-import { MARKETING_PACK_OBJECTIVE_OPTIONS, type ContentTypeSpec, type MarketingPackObjective } from '@/types/domain';
+import { MARKETING_PACK_OBJECTIVE_OPTIONS, type ContentTypeSpec, type MarketingPack, type MarketingPackObjective } from '@/types/domain';
 
 const NO_OBJECTIVE = 'none';
 
@@ -18,6 +19,9 @@ export function WizardPlatformStep({
   generating,
   suggestedPackName,
   suggestedHook,
+  productId,
+  featureKey,
+  existingPacks,
 }: {
   contentTypes: ContentTypeSpec[];
   value: string | null;
@@ -34,20 +38,35 @@ export function WizardPlatformStep({
    * story idea. Unlike the campaign name, the hook is expected to change from version to version
    * (A/B testing different openings under the same named campaign). */
   suggestedHook?: string;
+  /** The currently selected product/feature, used to scope the near-duplicate-name check below to
+   * the same (productId, featureKey) that MarketingPacksStore.nextVersion itself keys on. */
+  productId?: string;
+  featureKey?: string;
+  /** All known Marketing Packs, for the near-duplicate-name check. Omit (or an empty array) if not
+   * loaded yet — the warning simply won't fire until it is, never a false positive. */
+  existingPacks?: MarketingPack[];
 }) {
   const [multiMode, setMultiMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [packName, setPackName] = useState(suggestedPackName ?? '');
   const [hook, setHook] = useState(suggestedHook ?? '');
   const [objective, setObjective] = useState<string>(NO_OBJECTIVE);
+  const [dismissedNearDuplicateFor, setDismissedNearDuplicateFor] = useState<string | null>(null);
 
   useEffect(() => {
     setPackName(suggestedPackName ?? '');
+    setDismissedNearDuplicateFor(null);
   }, [suggestedPackName]);
 
   useEffect(() => {
     setHook(suggestedHook ?? '');
   }, [suggestedHook]);
+
+  const nearDuplicate = useMemo(
+    () => (productId && featureKey ? findNearDuplicatePackName(packName, productId, featureKey, existingPacks ?? []) : null),
+    [packName, productId, featureKey, existingPacks],
+  );
+  const showNearDuplicateWarning = nearDuplicate !== null && packName !== dismissedNearDuplicateFor;
 
   function toggleSelected(key: string) {
     setSelected((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
@@ -75,6 +94,31 @@ export function WizardPlatformStep({
             <p className="mt-1 text-xs text-muted-foreground">
               Identifies this creative concept — stays the same across its versions, even as the hook below changes.
             </p>
+            {showNearDuplicateWarning && nearDuplicate && (
+              <div className="mt-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-600 dark:text-amber-400">
+                <p>
+                  This looks like &quot;{nearDuplicate.existingPack.name}&quot; (currently at V{nearDuplicate.existingPack.version}) — typing it exactly will
+                  add a new version to that campaign instead of starting a separate one.
+                </p>
+                <div className="mt-1.5 flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => {
+                      setPackName(nearDuplicate.existingPack.name);
+                      setDismissedNearDuplicateFor(null);
+                    }}
+                  >
+                    Use &quot;{nearDuplicate.existingPack.name}&quot;
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => setDismissedNearDuplicateFor(packName)}>
+                    Keep as a new campaign
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>

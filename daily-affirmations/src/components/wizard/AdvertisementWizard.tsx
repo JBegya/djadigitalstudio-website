@@ -9,14 +9,12 @@ import { WizardPlatformStep } from '@/components/wizard/WizardPlatformStep';
 import { WizardProductStep } from '@/components/wizard/WizardProductStep';
 import { WizardShell } from '@/components/wizard/WizardShell';
 import { WizardStyleStep } from '@/components/wizard/WizardStyleStep';
-import { createCreation, createMarketingPack, listProducts, mediaUrl } from '@/lib/api';
-import { generateAdsForPlatforms } from '@/lib/editor/batchGenerate';
-import { resolveFeatureScreenshot } from '@/lib/editor/productToSlotContent';
+import { listMarketingPacks, listProducts } from '@/lib/api';
+import { generateMarketingPackVersion } from '@/lib/editor/generateMarketingPack';
 import { inter } from '@/lib/fonts';
 import { CONTENT_TYPES } from '@/server/config/contentTypes';
-import { getDefaultTemplateForContentType } from '@/server/config/defaultTemplates';
 import { getTemplatesForContentType } from '@/server/config/templates';
-import type { ContentTypeSpec, CustomerPersona, MarketingPackObjective, ProductFeature, ProductProfile, TemplateDefinition } from '@/types/domain';
+import type { ContentTypeSpec, CustomerPersona, MarketingPack, MarketingPackObjective, ProductFeature, ProductProfile, TemplateDefinition } from '@/types/domain';
 
 export interface WizardSelection {
   product: ProductProfile;
@@ -31,6 +29,7 @@ const TOTAL_STEPS = 5;
 export function AdvertisementWizard({ onComplete }: { onComplete: (selection: WizardSelection) => void }) {
   const router = useRouter();
   const [products, setProducts] = useState<ProductProfile[] | null>(null);
+  const [packs, setPacks] = useState<MarketingPack[]>([]);
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [productId, setProductId] = useState<string | null>(null);
   const [personaId, setPersonaId] = useState<string | null>(null);
@@ -40,8 +39,11 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
   const [batchGenerating, setBatchGenerating] = useState(false);
 
   useEffect(() => {
-    listProducts()
-      .then((r) => setProducts(r.products))
+    Promise.all([listProducts(), listMarketingPacks()])
+      .then(([productsRes, packsRes]) => {
+        setProducts(productsRes.products);
+        setPacks(packsRes.packs);
+      })
       .catch(() => toast.error('Could not load products'));
   }, []);
 
@@ -76,57 +78,14 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
   }
 
   async function generateAll(contentTypeKeys: string[], packName: string, hook: string, objective?: MarketingPackObjective) {
-    if (!product || !feature || contentTypeKeys.length === 0 || !packName.trim() || !hook.trim()) return;
-    const pairs = contentTypeKeys
-      .map((key) => {
-        const type = CONTENT_TYPES.find((c) => c.key === key);
-        const defaultTemplate = getDefaultTemplateForContentType(key);
-        return type && defaultTemplate ? { contentType: type, template: defaultTemplate } : null;
-      })
-      .filter((p): p is { contentType: ContentTypeSpec; template: TemplateDefinition } => p !== null);
-
-    if (pairs.length < contentTypeKeys.length) {
-      toast.error('Some selected platforms have no template configured yet — skipping those.');
-    }
-    if (pairs.length === 0) return;
-
+    if (!product || !feature) return;
     setBatchGenerating(true);
     try {
-      const { pack } = await createMarketingPack({ productId: product.id, featureKey: feature.key, name: packName.trim(), objective, personaId: persona?.id });
-      const screenshot = resolveFeatureScreenshot(product, feature);
-      const generated = await generateAdsForPlatforms(pairs, {
-        product,
-        feature,
-        persona,
-        screenshotUrl: screenshot ? mediaUrl(screenshot.path) : undefined,
-        logoUrl: product.logoPath ? mediaUrl(product.logoPath) : undefined,
-        fontFamily: inter.style.fontFamily,
-        device: 'iphone',
-        headlineOverride: hook.trim(),
-      });
-      await Promise.all(
-        generated.map((ad) =>
-          createCreation({
-            productId: product.id,
-            featureKey: feature.key,
-            packId: pack.id,
-            templateKey: ad.template.key,
-            contentTypeKey: ad.contentType.key,
-            headline: ad.headline,
-            caption: ad.subheadline,
-            cta: ad.cta,
-            hashtags: [],
-            thumbnailPath: ad.thumbnailDataUrl,
-            exportPaths: [],
-            favorite: false,
-            status: 'draft',
-            canvasJson: ad.canvasJson,
-            canvasWidthPx: ad.widthPx,
-            canvasHeightPx: ad.heightPx,
-          }),
-        ),
-      );
-      toast.success(`Generated "${pack.name}" (V${pack.version}) with ${generated.length} asset${generated.length === 1 ? '' : 's'} for ${feature.label}.`);
+      const result = await generateMarketingPackVersion({ product, feature, persona, contentTypeKeys, packName, hook, objective, fontFamily: inter.style.fontFamily });
+      if (result.skippedPlatformCount > 0) {
+        toast.error('Some selected platforms have no template configured yet — skipping those.');
+      }
+      toast.success(`Generated "${result.pack.name}" (V${result.pack.version}) with ${result.creations.length} asset${result.creations.length === 1 ? '' : 's'} for ${feature.label}.`);
       router.push('/exports');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Batch generation failed.');
@@ -199,6 +158,9 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
           generating={batchGenerating}
           suggestedPackName={suggestedPackName}
           suggestedHook={suggestedHook}
+          productId={product?.id}
+          featureKey={feature?.key}
+          existingPacks={packs}
         />
       </WizardShell>
     );

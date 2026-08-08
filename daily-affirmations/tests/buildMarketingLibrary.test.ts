@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildMarketingLibrary, type ProductLibraryGroup } from '@/lib/library/buildMarketingLibrary';
+import { buildMarketingLibrary, getCampaignVersions, type PackGroup, type ProductLibraryGroup } from '@/lib/library/buildMarketingLibrary';
 import { DEFAULT_FEATURE_MARKETING, DEFAULT_MARKETING_IDENTITY } from '@/types/domain';
 import type { AdCreation, MarketingPack, ProductFeature, ProductProfile } from '@/types/domain';
 
@@ -126,5 +126,73 @@ describe('buildMarketingLibrary', () => {
     const pack = samplePack();
     const group = firstGroup(buildMarketingLibrary([pack], [], [product]));
     expect(group.features[0]?.packs[0]?.assets).toEqual([]);
+  });
+});
+
+function packGroup(pack: MarketingPack): PackGroup {
+  return { pack, assets: [] };
+}
+
+describe('getCampaignVersions', () => {
+  it('returns a name\'s full history oldest-to-newest, and the last element is the latest version', () => {
+    const v1 = samplePack({ id: 'p1', version: 1 });
+    const v2 = samplePack({ id: 'p2', version: 2 });
+    const v3 = samplePack({ id: 'p3', version: 3 });
+    // Deliberately out of order to prove version order, not input order, wins.
+    const versions = getCampaignVersions([v3, v1, v2].map(packGroup), 'shiftearn-pro', 'short-change-detection', 'Payroll Mistake Story');
+    expect(versions.map((pg) => pg.pack.id)).toEqual(['p1', 'p2', 'p3']);
+    expect(versions.at(-1)?.pack.id).toBe('p3');
+  });
+
+  it('resolves a version-number tie deterministically via updatedAt, not array order', () => {
+    const older = samplePack({ id: 'p1', version: 2, updatedAt: '2026-08-01T00:00:00.000Z' });
+    const newer = samplePack({ id: 'p2', version: 2, updatedAt: '2026-08-05T00:00:00.000Z' });
+    // older is listed after newer — if this passed, plain array order would be doing the work instead.
+    const versions = getCampaignVersions([newer, older].map(packGroup), 'shiftearn-pro', 'short-change-detection', 'Payroll Mistake Story');
+    expect(versions.at(-1)?.pack.id).toBe('p2');
+  });
+
+  it('falls back to createdAt when updatedAt is missing or tied', () => {
+    const older = samplePack({ id: 'p1', version: 2, createdAt: '2026-08-01T00:00:00.000Z', updatedAt: undefined });
+    const newer = samplePack({ id: 'p2', version: 2, createdAt: '2026-08-05T00:00:00.000Z', updatedAt: undefined });
+    const versions = getCampaignVersions([newer, older].map(packGroup), 'shiftearn-pro', 'short-change-detection', 'Payroll Mistake Story');
+    expect(versions.at(-1)?.pack.id).toBe('p2');
+  });
+
+  it('keeps two differently-named campaigns in the same feature independent', () => {
+    const a = samplePack({ id: 'p1', name: 'Payroll Mistake Story', version: 1 });
+    const b = samplePack({ id: 'p2', name: 'Fast Payout Awareness', version: 1 });
+    const versions = getCampaignVersions([a, b].map(packGroup), 'shiftearn-pro', 'short-change-detection', 'Payroll Mistake Story');
+    expect(versions.map((pg) => pg.pack.id)).toEqual(['p1']);
+  });
+
+  it('never includes a same-named campaign belonging to a different feature or product, even in the same input array', () => {
+    const thisFeature = samplePack({ id: 'p1', productId: 'shiftearn-pro', featureKey: 'short-change-detection', name: 'Payroll Mistake Story', version: 1 });
+    const otherFeature = samplePack({ id: 'p2', productId: 'shiftearn-pro', featureKey: 'callback-pay', name: 'Payroll Mistake Story', version: 1 });
+    const otherProduct = samplePack({ id: 'p3', productId: 'shifthydrate', featureKey: 'short-change-detection', name: 'Payroll Mistake Story', version: 1 });
+    const versions = getCampaignVersions(
+      [thisFeature, otherFeature, otherProduct].map(packGroup),
+      'shiftearn-pro',
+      'short-change-detection',
+      'Payroll Mistake Story',
+    );
+    expect(versions.map((pg) => pg.pack.id)).toEqual(['p1']);
+  });
+
+  it('returns an empty array for a name with no matches', () => {
+    const versions = getCampaignVersions([samplePack()].map(packGroup), 'shiftearn-pro', 'short-change-detection', 'Nonexistent Campaign');
+    expect(versions).toEqual([]);
+  });
+
+  it('regression: the latest version migrates to the newest survivor after the current one is removed', () => {
+    const v1 = samplePack({ id: 'p1', version: 1 });
+    const v2 = samplePack({ id: 'p2', version: 2 });
+    const v3 = samplePack({ id: 'p3', version: 3 });
+    const withAllThree = getCampaignVersions([v1, v2, v3].map(packGroup), 'shiftearn-pro', 'short-change-detection', 'Payroll Mistake Story');
+    expect(withAllThree.at(-1)?.pack.id).toBe('p3');
+
+    // Simulates deleting V3 — nothing else needs to change for "latest" to update correctly.
+    const afterDeletingV3 = getCampaignVersions([v1, v2].map(packGroup), 'shiftearn-pro', 'short-change-detection', 'Payroll Mistake Story');
+    expect(afterDeletingV3.at(-1)?.pack.id).toBe('p2');
   });
 });

@@ -8,11 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { deleteCreation, getSettings, listCreations, listMarketingPacks, listProducts, updateCreation, updateMarketingPack, type RedactedSettings } from '@/lib/api';
-import { buildMarketingLibrary, type AssetEntry } from '@/lib/library/buildMarketingLibrary';
+import { buildMarketingLibrary, getCampaignVersions, type AssetEntry, type PackGroup } from '@/lib/library/buildMarketingLibrary';
 import { ATTENTION_SEVERITY_LABELS, computeAttentionFlags, computePackReadiness, resolveReadinessContentTypes, type AttentionSeverity } from '@/lib/library/packReadiness';
+import { NewVersionForm } from '@/components/library/NewVersionForm';
 import { CONTENT_TYPES } from '@/server/config/contentTypes';
 import { MARKETING_PACK_OBJECTIVE_OPTIONS } from '@/types/domain';
-import type { AdCreation, AssetStatus, ContentTypeSpec, MarketingPack, ProductProfile } from '@/types/domain';
+import type { AdCreation, AssetStatus, ContentTypeSpec, CustomerPersona, MarketingPack, ProductProfile } from '@/types/domain';
 
 const STATUS_OPTIONS: AssetStatus[] = ['draft', 'ready', 'published', 'archived'];
 
@@ -104,6 +105,7 @@ function PackHeader({
   refreshReminderDays,
   personaLabel,
   onStatusChange,
+  onNewVersion,
 }: {
   pack: MarketingPack;
   assets: AdCreation[];
@@ -112,6 +114,9 @@ function PackHeader({
   refreshReminderDays: number;
   personaLabel?: string;
   onStatusChange: (status: AssetStatus) => void;
+  /** Undefined hides the button — shown only on a campaign's latest-version row, and only when
+   * its underlying feature/product can still be found (nothing safe to regenerate against otherwise). */
+  onNewVersion?: () => void;
 }) {
   const readiness = computePackReadiness(assets, requiredContentTypes);
   const attention = computeAttentionFlags(pack, assets, readiness, Date.now(), draftReminderDays, refreshReminderDays);
@@ -160,6 +165,11 @@ function PackHeader({
       )}
       <span className="text-xs text-muted-foreground">{formatDate(pack.createdAt)}</span>
       {pack.publishedAt && <span className="text-xs text-muted-foreground">First Published On {formatDate(pack.publishedAt)}</span>}
+      {onNewVersion && (
+        <Button type="button" size="sm" variant="outline" className="ml-auto" onClick={onNewVersion}>
+          New Version
+        </Button>
+      )}
     </div>
   );
 }
@@ -170,6 +180,7 @@ export function MarketingLibraryScreen() {
   const [products, setProducts] = useState<ProductProfile[]>([]);
   const [settings, setSettings] = useState<RedactedSettings | null>(null);
   const [filter, setFilter] = useState<LibraryFilter>('all');
+  const [newVersionPackId, setNewVersionPackId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([listMarketingPacks(), listCreations(), listProducts(), getSettings()])
@@ -192,6 +203,13 @@ export function MarketingLibraryScreen() {
 
   function requiredContentTypesFor(productId: string): ContentTypeSpec[] {
     return resolveReadinessContentTypes(productId, settings?.requiredPublishingPlatformKeysByProduct ?? {});
+  }
+
+  // The unfiltered pack list for a given product+feature — used to determine "is this the latest
+  // version of this campaign" independent of the active status filter, which must not be able to
+  // hide the true latest version from that computation.
+  function allPacksForFeature(productId: string, featureKey: string): PackGroup[] {
+    return groups.find((g) => g.productId === productId)?.features.find((fg) => fg.featureKey === featureKey)?.packs ?? [];
   }
 
   function packMatchesFilter(pack: MarketingPack, assets: AdCreation[]): boolean {
@@ -233,6 +251,12 @@ export function MarketingLibraryScreen() {
       setPacks((prev) => (prev ? prev.map((p) => (p.id === packId ? { ...p, status: previousStatus } : p)) : prev));
       toast.error('Could not update that pack’s status.');
     }
+  }
+
+  function handleNewVersionCreated(newPack: MarketingPack, newCreations: AdCreation[]) {
+    setPacks((prev) => (prev ? [...prev, newPack] : prev));
+    setCreations((prev) => [...prev, ...newCreations]);
+    setNewVersionPackId(null);
   }
 
   async function handleDelete(id: string) {
@@ -308,29 +332,48 @@ export function MarketingLibraryScreen() {
                 <div key={featureGroup.featureKey}>
                   <h3 className="text-sm font-semibold text-muted-foreground">{featureGroup.featureLabel}</h3>
                   <div className="mt-3 space-y-6">
-                    {featureGroup.packs.map(({ pack, assets }) => (
-                      <div key={pack.id}>
-                        <PackHeader
-                          pack={pack}
-                          assets={assets.map((a) => a.creation)}
-                          requiredContentTypes={requiredContentTypesFor(pack.productId)}
-                          draftReminderDays={draftReminderDays}
-                          refreshReminderDays={refreshReminderDays}
-                          personaLabel={personaLabelFor(pack, products)}
-                          onStatusChange={(status) => handlePackStatusChange(pack.id, status)}
-                        />
-                        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                          {assets.map((entry) => (
-                            <AssetCard
-                              key={entry.creation.id}
-                              entry={entry}
-                              onStatusChange={(status) => handleStatusChange(entry.creation.id, status)}
-                              onDelete={() => handleDelete(entry.creation.id)}
+                    {featureGroup.packs.map(({ pack, assets }) => {
+                      const isLatest = getCampaignVersions(allPacksForFeature(pack.productId, pack.featureKey), pack.productId, pack.featureKey, pack.name).at(-1)
+                        ?.pack.id === pack.id;
+                      const product = products.find((p) => p.id === pack.productId);
+                      const feature = product?.features.find((f) => f.key === pack.featureKey);
+                      const persona: CustomerPersona | null = pack.personaId ? (product?.personas.find((p) => p.id === pack.personaId) ?? null) : null;
+                      return (
+                        <div key={pack.id}>
+                          <PackHeader
+                            pack={pack}
+                            assets={assets.map((a) => a.creation)}
+                            requiredContentTypes={requiredContentTypesFor(pack.productId)}
+                            draftReminderDays={draftReminderDays}
+                            refreshReminderDays={refreshReminderDays}
+                            personaLabel={personaLabelFor(pack, products)}
+                            onStatusChange={(status) => handlePackStatusChange(pack.id, status)}
+                            onNewVersion={isLatest && product && feature ? () => setNewVersionPackId(pack.id) : undefined}
+                          />
+                          {newVersionPackId === pack.id && product && feature && (
+                            <NewVersionForm
+                              product={product}
+                              feature={feature}
+                              persona={persona}
+                              pack={pack}
+                              assets={assets.map((a) => a.creation)}
+                              onCancel={() => setNewVersionPackId(null)}
+                              onCreated={handleNewVersionCreated}
                             />
-                          ))}
+                          )}
+                          <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                            {assets.map((entry) => (
+                              <AssetCard
+                                key={entry.creation.id}
+                                entry={entry}
+                                onStatusChange={(status) => handleStatusChange(entry.creation.id, status)}
+                                onDelete={() => handleDelete(entry.creation.id)}
+                              />
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {featureGroup.standaloneAssets.length > 0 && (
                       <div>
