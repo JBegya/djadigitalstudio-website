@@ -355,3 +355,51 @@ export interface MarketingPack {
   publishedAt?: string;
   objective?: MarketingPackObjective;
 }
+
+/** One structured beat in a Storyboard — a fixed sequence of these, not free-form prose. `goal` is
+ * free text rather than a rigid enum ('Hook' | 'Problem' | ...): forcing exact AI vocabulary would
+ * fight natural variety, even though Test Mode's deterministic mock always uses a canonical
+ * six-label sequence. */
+export interface StoryboardScene {
+  /** 1-based, sequential — display/edit order and the identifier used when flagging a scene for
+   * review. Reordering scenes is out of scope for v1. */
+  number: number;
+  goal: string;
+  /** What the scene visually needs — a reference/description, never a generated image (e.g.
+   * "Device mockup of the shift clock-in screen", "Testimonial-style text card"). Image/video
+   * generation is a future milestone's job. */
+  visualDescription: string;
+  /** Literal text shown on-screen (title/caption card) — independent of voiceover. */
+  onScreenText: string;
+  voiceover: string;
+  /** References a ProductScreenshot.id on the pack's product. Always human-attached afterward via
+   * the same picker pattern as FeaturesSection.tsx — never guessed by AI, which has no visual
+   * access to the actual images. */
+  screenshotId?: string;
+  /** Defaults from feature.marketing.suggestedDevice at generation time; editable per scene. */
+  device?: DeviceKind;
+  /** Populated mainly on the closing scene(s); most scenes have none. */
+  cta?: string;
+}
+
+/**
+ * A fixed sequence of structured scenes generated FROM an existing MarketingPack — the stage
+ * between the AI Copy Assistant and a future Video Generator. The opening Hook scene is seeded
+ * from the pack's own already-approved hook (AdCreation.headline), never a newly invented line. No
+ * denormalized display names (product/feature/pack names are resolved via lookup at render time,
+ * exactly like buildMarketingLibrary.ts does for MarketingPack) and no lifecycle/status field in
+ * v1. Multiple storyboards per pack are allowed, unrestricted — generating always creates a new one.
+ */
+export interface Storyboard {
+  id: string;
+  productId: ProductId;
+  featureKey: string;
+  personaId?: string;
+  /** Every storyboard traces to exactly one pack — required, unlike AdCreation.packId which is
+   * optional because standalone (non-pack) ads exist. */
+  packId: string;
+  scenes: StoryboardScene[];
+  createdAt: string;
+  /** Bumped on every scene edit — the only thing a person changes post-generation in v1. */
+  updatedAt?: string;
+}

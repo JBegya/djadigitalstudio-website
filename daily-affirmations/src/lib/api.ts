@@ -1,4 +1,4 @@
-import type { AdCreation, DeviceKind, MarketingPack, MarketingPackObjective, ProductProfile, Settings } from '@/types/domain';
+import type { AdCreation, DeviceKind, MarketingPack, MarketingPackObjective, ProductProfile, Settings, Storyboard } from '@/types/domain';
 
 export type RedactedSettings = Settings & { hasOpenAiKey: boolean };
 
@@ -195,6 +195,34 @@ export async function deleteProductScreenshot(id: string, screenshotId: string):
   return json(
     await fetch(`/api/products/${encodeURIComponent(id)}/assets?kind=screenshot&assetId=${encodeURIComponent(screenshotId)}`, { method: 'DELETE' }),
   );
+}
+
+export async function listStoryboards(): Promise<{ storyboards: Storyboard[] }> {
+  return json(await fetch('/api/storyboards', { cache: 'no-store' }));
+}
+
+export async function generateStoryboard(payload: { packId: string }): Promise<{ storyboard: Storyboard; source: 'openai' | 'mock'; flaggedSceneNumbers: number[] }> {
+  return json(
+    await fetch('/api/storyboards/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+  );
+}
+
+export async function updateStoryboard(id: string, patch: Partial<Storyboard>): Promise<{ storyboard: Storyboard }> {
+  return json(
+    await fetch(`/api/storyboards/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    }),
+  );
+}
+
+export async function deleteStoryboard(id: string): Promise<{ ok: boolean }> {
+  return json(await fetch(`/api/storyboards/${encodeURIComponent(id)}`, { method: 'DELETE' }));
 }
 
 export async function getHookSuggestions(payload: {

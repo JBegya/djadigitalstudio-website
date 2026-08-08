@@ -2,18 +2,30 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { deleteCreation, getSettings, listCreations, listMarketingPacks, listProducts, updateCreation, updateMarketingPack, type RedactedSettings } from '@/lib/api';
+import {
+  deleteCreation,
+  generateStoryboard,
+  getSettings,
+  listCreations,
+  listMarketingPacks,
+  listProducts,
+  listStoryboards,
+  updateCreation,
+  updateMarketingPack,
+  type RedactedSettings,
+} from '@/lib/api';
 import { buildMarketingLibrary, getCampaignVersions, type AssetEntry, type PackGroup } from '@/lib/library/buildMarketingLibrary';
 import { ATTENTION_SEVERITY_LABELS, computeAttentionFlags, computePackReadiness, resolveReadinessContentTypes, type AttentionSeverity } from '@/lib/library/packReadiness';
 import { NewVersionForm } from '@/components/library/NewVersionForm';
 import { CONTENT_TYPES } from '@/server/config/contentTypes';
 import { MARKETING_PACK_OBJECTIVE_OPTIONS } from '@/types/domain';
-import type { AdCreation, AssetStatus, ContentTypeSpec, CustomerPersona, MarketingPack, ProductProfile } from '@/types/domain';
+import type { AdCreation, AssetStatus, ContentTypeSpec, CustomerPersona, MarketingPack, ProductProfile, Storyboard } from '@/types/domain';
 
 const STATUS_OPTIONS: AssetStatus[] = ['draft', 'ready', 'published', 'archived'];
 
@@ -106,6 +118,9 @@ function PackHeader({
   personaLabel,
   onStatusChange,
   onNewVersion,
+  storyboardCount,
+  generatingStoryboard,
+  onGenerateStoryboard,
 }: {
   pack: MarketingPack;
   assets: AdCreation[];
@@ -117,6 +132,9 @@ function PackHeader({
   /** Undefined hides the button — shown only on a campaign's latest-version row, and only when
    * its underlying feature/product can still be found (nothing safe to regenerate against otherwise). */
   onNewVersion?: () => void;
+  storyboardCount: number;
+  generatingStoryboard: boolean;
+  onGenerateStoryboard: () => void;
 }) {
   const readiness = computePackReadiness(assets, requiredContentTypes);
   const attention = computeAttentionFlags(pack, assets, readiness, Date.now(), draftReminderDays, refreshReminderDays);
@@ -165,8 +183,18 @@ function PackHeader({
       )}
       <span className="text-xs text-muted-foreground">{formatDate(pack.createdAt)}</span>
       {pack.publishedAt && <span className="text-xs text-muted-foreground">First Published On {formatDate(pack.publishedAt)}</span>}
+      <Button type="button" size="sm" variant="outline" className="ml-auto" onClick={onGenerateStoryboard} disabled={generatingStoryboard}>
+        {generatingStoryboard ? 'Generating…' : 'Generate Storyboard'}
+      </Button>
+      {storyboardCount > 0 && (
+        <Link href="/storyboards">
+          <Button type="button" size="sm" variant="outline">
+            View Storyboards ({storyboardCount})
+          </Button>
+        </Link>
+      )}
       {onNewVersion && (
-        <Button type="button" size="sm" variant="outline" className="ml-auto" onClick={onNewVersion}>
+        <Button type="button" size="sm" variant="outline" onClick={onNewVersion}>
           New Version
         </Button>
       )}
@@ -175,20 +203,24 @@ function PackHeader({
 }
 
 export function MarketingLibraryScreen() {
+  const router = useRouter();
   const [packs, setPacks] = useState<MarketingPack[] | null>(null);
   const [creations, setCreations] = useState<AdCreation[]>([]);
   const [products, setProducts] = useState<ProductProfile[]>([]);
   const [settings, setSettings] = useState<RedactedSettings | null>(null);
+  const [storyboards, setStoryboards] = useState<Storyboard[]>([]);
+  const [generatingStoryboardPackId, setGeneratingStoryboardPackId] = useState<string | null>(null);
   const [filter, setFilter] = useState<LibraryFilter>('all');
   const [newVersionPackId, setNewVersionPackId] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([listMarketingPacks(), listCreations(), listProducts(), getSettings()])
-      .then(([packsRes, creationsRes, productsRes, settingsRes]) => {
+    Promise.all([listMarketingPacks(), listCreations(), listProducts(), getSettings(), listStoryboards()])
+      .then(([packsRes, creationsRes, productsRes, settingsRes, storyboardsRes]) => {
         setPacks(packsRes.packs);
         setCreations(creationsRes.creations);
         setProducts(productsRes.products);
         setSettings(settingsRes);
+        setStoryboards(storyboardsRes.storyboards);
       })
       .catch(() => {
         toast.error('Could not load the Marketing Library.');
@@ -250,6 +282,24 @@ export function MarketingLibraryScreen() {
     } catch {
       setPacks((prev) => (prev ? prev.map((p) => (p.id === packId ? { ...p, status: previousStatus } : p)) : prev));
       toast.error('Could not update that pack’s status.');
+    }
+  }
+
+  async function handleGenerateStoryboard(packId: string) {
+    setGeneratingStoryboardPackId(packId);
+    try {
+      const result = await generateStoryboard({ packId });
+      setStoryboards((prev) => [...prev, result.storyboard]);
+      toast.success(
+        result.flaggedSceneNumbers.length > 0
+          ? `Storyboard generated — ${result.flaggedSceneNumbers.length} scene(s) flagged for review.`
+          : 'Storyboard generated.',
+      );
+      router.push('/storyboards');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not generate storyboard.');
+    } finally {
+      setGeneratingStoryboardPackId(null);
     }
   }
 
@@ -349,6 +399,9 @@ export function MarketingLibraryScreen() {
                             personaLabel={personaLabelFor(pack, products)}
                             onStatusChange={(status) => handlePackStatusChange(pack.id, status)}
                             onNewVersion={isLatest && product && feature ? () => setNewVersionPackId(pack.id) : undefined}
+                            storyboardCount={storyboards.filter((s) => s.packId === pack.id).length}
+                            generatingStoryboard={generatingStoryboardPackId === pack.id}
+                            onGenerateStoryboard={() => handleGenerateStoryboard(pack.id)}
                           />
                           {newVersionPackId === pack.id && product && feature && (
                             <NewVersionForm

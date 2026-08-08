@@ -1,7 +1,7 @@
 // Centralized model identifiers. If OpenAI renames or deprecates a model, this is the
 // only file that needs to change.
 export const MODELS = {
-  /** Ad copy: headlines, captions, CTAs, hashtags. */
+  /** Ad copy: headlines, captions, CTAs, hashtags, storyboard scene copy. */
   copy: process.env.DJA_COPY_MODEL || 'gpt-5.5',
 } as const;
 

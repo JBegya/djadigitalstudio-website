@@ -269,8 +269,25 @@ editable advertisement) before the full product-management system exists:
       if it's identical to the hook already showing. Picking a suggestion is exactly `setHook(text)`
       — indistinguishable from typing it — so zero new fields were added to `AdCreation` or
       `MarketingPack`.
-- [ ] **M9 — Storyboard Generator.** Scene-by-scene advertising concepts (no video yet) generated
-      from the same stored Product/Persona/Feature/Story data.
+- [x] **M9 — Storyboard Generator.** The next pipeline stage: `Marketing Intelligence → AI Copy
+      Assistant (M8) → Storyboard Generator (M9) → Video Generator (M10)`. Generates a fixed
+      sequence of 5-8 **structured** scenes (Goal / Visual / On-screen text / Voiceover /
+      Screenshot-device reference / optional CTA) from an existing Marketing Pack — never a
+      screenplay or prose. The Hook scene builds directly on the pack's own already-approved hook
+      (`AdCreation.headline`) rather than inventing a new opening line, so a storyboard is always
+      grounded in copy a person already chose. No image or video generation here — each scene only
+      *describes* what it needs (a screenshot reference a human attaches afterward, a device
+      toggle); that's M10's job. Same grounding/Test Mode/anti-fabrication philosophy as M8, with
+      one deliberate difference: a storyboard's scenes are a sequential, interdependent narrative,
+      so a `wordsWeAvoid` hit is **flagged, never dropped** — silently deleting a scene would break
+      the story. "Generate Storyboard" lives on each Marketing Pack in the Library; a new
+      `/storyboards` screen lists every generated storyboard, grouped by product/feature/pack, with
+      every scene field fully editable in place via the existing `AutosaveInput`/`AutosaveTextarea`
+      components. Caught and fixed during manual verification: `/api/storyboards`' GET-only route
+      had no mutating sibling method in the same file, which Next.js was statically optimizing at
+      build time (confirmed in `next build`'s own output) — the only collection route in this app
+      not already saved from that by pairing GET with POST — fixed with `export const dynamic =
+      'force-dynamic'`.
 - [ ] **M10 — AI Video Generation.** Connects a chosen storyboard to a video provider through a
       provider-agnostic interface — OpenArt, Runway, Google Veo, Kling, Pika, and Luma are all
       meant to be interchangeable without changing the rest of the app.
