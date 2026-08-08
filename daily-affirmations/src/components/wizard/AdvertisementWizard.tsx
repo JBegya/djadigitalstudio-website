@@ -161,6 +161,9 @@ export function AdvertisementWizard({ onComplete }: { onComplete: (selection: Wi
           productId={product?.id}
           featureKey={feature?.key}
           existingPacks={packs}
+          product={product}
+          feature={feature}
+          persona={persona}
         />
       </WizardShell>
     );

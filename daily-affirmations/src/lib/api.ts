@@ -1,4 +1,4 @@
-import type { AdCreation, DeviceKind, MarketingPack, ProductProfile, Settings } from '@/types/domain';
+import type { AdCreation, DeviceKind, MarketingPack, MarketingPackObjective, ProductProfile, Settings } from '@/types/domain';
 
 export type RedactedSettings = Settings & { hasOpenAiKey: boolean };
 
@@ -194,5 +194,21 @@ export async function deleteProductIcon(id: string): Promise<{ product: ProductP
 export async function deleteProductScreenshot(id: string, screenshotId: string): Promise<{ product: ProductProfile }> {
   return json(
     await fetch(`/api/products/${encodeURIComponent(id)}/assets?kind=screenshot&assetId=${encodeURIComponent(screenshotId)}`, { method: 'DELETE' }),
+  );
+}
+
+export async function getHookSuggestions(payload: {
+  productId: string;
+  featureKey: string;
+  personaId?: string;
+  currentHook: string;
+  objective?: MarketingPackObjective;
+}): Promise<{ suggestions: string[]; source: 'openai' | 'mock' }> {
+  return json(
+    await fetch('/api/copy-assistant/hook-suggestions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
   );
 }

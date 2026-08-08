@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { HookSuggestions } from '@/components/copy/HookSuggestions';
 import { findNearDuplicatePackName } from '@/lib/library/campaignNameMatch';
 import { cn } from '@/lib/utils';
-import { MARKETING_PACK_OBJECTIVE_OPTIONS, type ContentTypeSpec, type MarketingPack, type MarketingPackObjective } from '@/types/domain';
+import type { ContentTypeSpec, CustomerPersona, MarketingPack, MarketingPackObjective, ProductFeature, ProductProfile } from '@/types/domain';
+import { MARKETING_PACK_OBJECTIVE_OPTIONS } from '@/types/domain';
 
 const NO_OBJECTIVE = 'none';
 
@@ -22,6 +24,9 @@ export function WizardPlatformStep({
   productId,
   featureKey,
   existingPacks,
+  product,
+  feature,
+  persona,
 }: {
   contentTypes: ContentTypeSpec[];
   value: string | null;
@@ -45,6 +50,11 @@ export function WizardPlatformStep({
   /** All known Marketing Packs, for the near-duplicate-name check. Omit (or an empty array) if not
    * loaded yet — the warning simply won't fire until it is, never a false positive. */
   existingPacks?: MarketingPack[];
+  /** Full objects for the currently selected product/feature/persona, used only to power the AI
+   * Copy Assistant below — omit (or leave any of them unresolved) to simply hide that affordance. */
+  product?: ProductProfile | null;
+  feature?: ProductFeature | null;
+  persona?: CustomerPersona | null;
 }) {
   const [multiMode, setMultiMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
@@ -129,6 +139,16 @@ export function WizardPlatformStep({
             <p className="mt-1 text-xs text-muted-foreground">
               The headline generated onto every platform in this pack — free to change on the next version for A/B testing.
             </p>
+            {product && feature && (
+              <HookSuggestions
+                product={product}
+                feature={feature}
+                persona={persona ?? null}
+                currentHook={hook}
+                objective={objective === NO_OBJECTIVE ? undefined : (objective as MarketingPackObjective)}
+                onSelect={setHook}
+              />
+            )}
           </div>
 
           <div>

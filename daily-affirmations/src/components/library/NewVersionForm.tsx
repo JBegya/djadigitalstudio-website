@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { HookSuggestions } from '@/components/copy/HookSuggestions';
 import { generateMarketingPackVersion } from '@/lib/editor/generateMarketingPack';
 import { inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
@@ -84,6 +85,14 @@ export function NewVersionForm({
           New hook
         </Label>
         <Input id={`nv-hook-${pack.id}`} value={hook} onChange={(e) => setHook(e.target.value)} className="mt-1" autoFocus />
+        <HookSuggestions
+          product={product}
+          feature={feature}
+          persona={persona}
+          currentHook={hook}
+          objective={objective === NO_OBJECTIVE ? undefined : (objective as MarketingPackObjective)}
+          onSelect={setHook}
+        />
       </div>
 
       <div>

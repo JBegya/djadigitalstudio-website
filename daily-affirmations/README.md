@@ -250,11 +250,25 @@ editable advertisement) before the full product-management system exists:
       declined: a `?filter=` deep-link from the worklist into the Marketing Library — packs have no
       per-item permalink today, so pre-filtering only narrows the list without landing on the pack
       itself; a half-measure deferred until pack-level permalinks make it worth doing properly.
-- [ ] **M8 — AI Copy Assistant.** AI rewrites/varies the copy the Advertisement Intelligence Engine
-      already assembled — it improves phrasing, it never invents a claim, feature, screenshot, or
-      testimonial that isn't already grounded in the stored Marketing Intelligence. Deliberately
-      last: by the time AI is introduced, it has a mature Product/Persona/Feature/Buying-Trigger/
-      Objection/Marketing-Pack corpus to stay grounded in, rather than a thin one.
+- [x] **M8 — AI Copy Assistant.** The app's first genuinely AI-powered feature — every milestone
+      before this was rule-based. Scoped to **the headline/hook field only** (v1): the one field
+      with real per-field text-input UI today, in both the Wizard's batch-creation step and the
+      Marketing Library's "New Version" shortcut — subheadline/CTA have no per-field input anywhere
+      yet (only generic canvas-selection editing), so AI-rewriting them is a real follow-up, not
+      built here. Click "✨ AI Suggestions" under either hook field to get up to 3 AI-varied
+      phrasings of the current hook, grounded in that product/feature/persona's own stored
+      Marketing Intelligence (brand voice, core problems/promises, pain points, benefits,
+      persona-specific fears/desires) — never invented beyond it. A shared `HookSuggestions`
+      component powers both entry points identically, with zero new plumbing needed in the Library
+      form (it already had every prop in scope). Uses the OpenAI Responses API
+      (`getOpenAIClient`/`retryWithBackoff`/`parseStructuredResponse`, already built for this),
+      with **Test Mode**: no API key configured means deterministic, network-free mock variations
+      instead — the app's first real consumer of `isTestMode`. Every suggestion, mock or real, runs
+      through the same anti-fabrication filter: dropped if it matches the brand's own `wordsWeAvoid`
+      list (the first real enforcement of that field, previously only displayed in Brand Manager) or
+      if it's identical to the hook already showing. Picking a suggestion is exactly `setHook(text)`
+      — indistinguishable from typing it — so zero new fields were added to `AdCreation` or
+      `MarketingPack`.
 - [ ] **M9 — Storyboard Generator.** Scene-by-scene advertising concepts (no video yet) generated
       from the same stored Product/Persona/Feature/Story data.
 - [ ] **M10 — AI Video Generation.** Connects a chosen storyboard to a video provider through a
