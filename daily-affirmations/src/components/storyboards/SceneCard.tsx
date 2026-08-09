@@ -38,7 +38,18 @@ export function SceneCard({
       <AutosaveTextarea label="Visual" value={scene.visualDescription} onSave={(v) => onChange({ visualDescription: v })} />
       <AutosaveTextarea label="On-screen text" value={scene.onScreenText} onSave={(v) => onChange({ onScreenText: v })} />
       <AutosaveTextarea label="Voiceover" value={scene.voiceover} onSave={(v) => onChange({ voiceover: v })} />
-      <AutosaveInput label="CTA (optional)" value={scene.cta ?? ''} onSave={(v) => onChange({ cta: v.trim() || undefined })} />
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <AutosaveInput label="CTA (optional)" value={scene.cta ?? ''} onSave={(v) => onChange({ cta: v.trim() || undefined })} />
+        <AutosaveInput
+          label="Duration (seconds)"
+          value={scene.durationSeconds !== undefined ? String(scene.durationSeconds) : ''}
+          onSave={(v) => {
+            const parsed = Number(v.trim());
+            onChange({ durationSeconds: v.trim() && Number.isFinite(parsed) && parsed > 0 ? parsed : undefined });
+          }}
+        />
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">

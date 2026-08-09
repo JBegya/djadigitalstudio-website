@@ -287,7 +287,12 @@ editable advertisement) before the full product-management system exists:
       had no mutating sibling method in the same file, which Next.js was statically optimizing at
       build time (confirmed in `next build`'s own output) — the only collection route in this app
       not already saved from that by pairing GET with POST — fixed with `export const dynamic =
-      'force-dynamic'`.
+      'force-dynamic'`. Every scene also carries an editable `durationSeconds`, defaulted by goal
+      keyword (Hook 3s, Problem 4s, Solution 5s, Proof/Benefit/Differentiator 4s, Call to Action
+      3s, unrecognized goals 4s) — added ahead of M10 specifically so a Video Generator can render
+      an already-timed storyboard instead of inventing its own pacing. Deterministic and
+      app-assigned rather than AI-proposed, matching every other production/pacing concern in this
+      app that isn't itself a copy-creativity question.
 - [ ] **M10 — AI Video Generation.** Connects a chosen storyboard to a video provider through a
       provider-agnostic interface — OpenArt, Runway, Google Veo, Kling, Pika, and Luma are all
       meant to be interchangeable without changing the rest of the app.

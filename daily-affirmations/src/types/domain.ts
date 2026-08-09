@@ -380,6 +380,10 @@ export interface StoryboardScene {
   device?: DeviceKind;
   /** Populated mainly on the closing scene(s); most scenes have none. */
   cta?: string;
+  /** Pacing, in seconds, for a future Video Generator to render this scene at — so that milestone
+   * consumes an already-timed storyboard instead of inventing pacing itself. Defaulted at
+   * generation time from the scene's goal (see storyboardGenerator.ts), always editable after. */
+  durationSeconds?: number;
 }
 
 /**

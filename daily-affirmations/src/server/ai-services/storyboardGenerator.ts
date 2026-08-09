@@ -27,6 +27,32 @@ export interface StoryboardGenerationResult {
 
 const MAX_SCENES = 12;
 
+// Pacing default (seconds) per scene goal — every video engine needs timing, so every generated
+// scene gets a sensible duration up front rather than leaving a future Video Generator to invent
+// pacing. Matched by keyword against the scene's free-text goal (not exact equality), since the
+// real branch's goals are AI-generated and won't always match Test Mode's canonical labels
+// verbatim. Deterministic and app-assigned, not asked of the AI — pacing is a production concern,
+// not a copy-creativity one.
+const GOAL_DURATION_DEFAULTS: { keyword: string; seconds: number }[] = [
+  { keyword: 'hook', seconds: 3 },
+  { keyword: 'problem', seconds: 4 },
+  { keyword: 'solution', seconds: 5 },
+  { keyword: 'proof', seconds: 4 },
+  { keyword: 'differentiator', seconds: 4 },
+  { keyword: 'benefit', seconds: 4 },
+  { keyword: 'cta', seconds: 3 },
+  { keyword: 'call to action', seconds: 3 },
+];
+const DEFAULT_SCENE_DURATION_SECONDS = 4;
+
+export function defaultDurationForGoal(goal: string): number {
+  const normalized = goal.toLowerCase();
+  for (const { keyword, seconds } of GOAL_DURATION_DEFAULTS) {
+    if (normalized.includes(keyword)) return seconds;
+  }
+  return DEFAULT_SCENE_DURATION_SECONDS;
+}
+
 /**
  * Generates a fixed sequence of structured storyboard scenes FROM an existing Marketing Pack —
  * grounded in the same Marketing Intelligence the AI Copy Assistant reads, never inventing beyond
@@ -97,7 +123,7 @@ export function buildMockScenes(request: StoryboardGenerationRequest): Storyboar
       cta: cta || undefined,
     },
   ];
-  return scenes.map((scene, i) => ({ number: i + 1, ...scene }));
+  return scenes.map((scene, i) => ({ number: i + 1, ...scene, durationSeconds: defaultDurationForGoal(scene.goal) }));
 }
 
 interface RawStoryboardScene {
@@ -155,14 +181,18 @@ async function callOpenAiForStoryboardScenes(apiKey: string, request: Storyboard
 function normalizeScenes(raw: RawStoryboardScene[]): StoryboardScene[] {
   if (raw.length === 0) throw new Error('OpenAI returned a storyboard with no scenes.');
   if (raw.length > MAX_SCENES) throw new Error(`OpenAI returned an unreasonably long storyboard (${raw.length} scenes).`);
-  return raw.map((scene, i) => ({
-    number: i + 1,
-    goal: scene.goal.trim(),
-    visualDescription: scene.visualDescription.trim(),
-    onScreenText: scene.onScreenText.trim(),
-    voiceover: scene.voiceover.trim(),
-    cta: scene.cta.trim() || undefined,
-  }));
+  return raw.map((scene, i) => {
+    const goal = scene.goal.trim();
+    return {
+      number: i + 1,
+      goal,
+      visualDescription: scene.visualDescription.trim(),
+      onScreenText: scene.onScreenText.trim(),
+      voiceover: scene.voiceover.trim(),
+      cta: scene.cta.trim() || undefined,
+      durationSeconds: defaultDurationForGoal(goal),
+    };
+  });
 }
 
 function buildInstructions(request: StoryboardGenerationRequest): string {

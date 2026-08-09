@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildMockScenes, flagScenes, generateStoryboardScenes, type StoryboardGenerationRequest } from '@/server/ai-services/storyboardGenerator';
+import { buildMockScenes, defaultDurationForGoal, flagScenes, generateStoryboardScenes, type StoryboardGenerationRequest } from '@/server/ai-services/storyboardGenerator';
 import { DEFAULT_FEATURE_MARKETING, DEFAULT_MARKETING_IDENTITY } from '@/types/domain';
 import type { Settings, StoryboardScene } from '@/types/domain';
 
@@ -71,6 +71,33 @@ describe('buildMockScenes', () => {
   it("a scene's device defaults from the feature's own suggestedDevice", () => {
     const scenes = buildMockScenes(sampleRequest({ feature: { ...DEFAULT_FEATURE_MARKETING, suggestedDevice: 'watch' } }));
     expect(scenes[2]?.device).toBe('watch');
+  });
+
+  it('every scene gets a per-goal default duration', () => {
+    const scenes = buildMockScenes(sampleRequest());
+    expect(scenes.map((s) => s.durationSeconds)).toEqual([3, 4, 5, 4, 4, 3]);
+  });
+});
+
+describe('defaultDurationForGoal', () => {
+  it('matches each canonical goal to its documented default', () => {
+    expect(defaultDurationForGoal('Hook')).toBe(3);
+    expect(defaultDurationForGoal('Problem')).toBe(4);
+    expect(defaultDurationForGoal('Solution')).toBe(5);
+    expect(defaultDurationForGoal('Proof')).toBe(4);
+    expect(defaultDurationForGoal('Benefit')).toBe(4);
+    expect(defaultDurationForGoal('Differentiator')).toBe(4);
+    expect(defaultDurationForGoal('Call to Action')).toBe(3);
+  });
+
+  it('matches case-insensitively and by keyword, not exact equality — real AI-generated goal labels vary', () => {
+    expect(defaultDurationForGoal('the hook')).toBe(3);
+    expect(defaultDurationForGoal('CTA')).toBe(3);
+    expect(defaultDurationForGoal('Social Proof')).toBe(4);
+  });
+
+  it('falls back to a sensible default for an unrecognized goal label', () => {
+    expect(defaultDurationForGoal('Something Unexpected')).toBe(4);
   });
 });
 
