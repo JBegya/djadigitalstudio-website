@@ -15,12 +15,16 @@ const MIME_TYPES: Record<string, string> = {
   '.svg': 'image/svg+xml',
 };
 
-/** Resolves inside either the configured Exports folder or the Asset Library (both under the
- * user's content directory) — the two places this app ever writes files a browser needs to load
- * back. Anything else is rejected, since this is the one route that turns an arbitrary string
- * into a filesystem read. */
+/** Resolves inside the configured Exports folder, the Asset Library, or the Video Library (all
+ * under the user's content directory) — the places this app ever writes files a browser needs to
+ * load back. Anything else is rejected, since this is the one route that turns an arbitrary
+ * string into a filesystem read. */
 function resolveSafePath(requested: string): string | null {
-  const allowedRoots = [path.resolve(settingsStore.load().outputFolder), path.resolve(getUserContentDir(), 'Assets')];
+  const allowedRoots = [
+    path.resolve(settingsStore.load().outputFolder),
+    path.resolve(getUserContentDir(), 'Assets'),
+    path.resolve(getUserContentDir(), 'Videos'),
+  ];
   const resolved = path.resolve(requested);
   const isInsideAnAllowedRoot = allowedRoots.some((root) => resolved === root || resolved.startsWith(root + path.sep));
   if (!isInsideAnAllowedRoot) return null;

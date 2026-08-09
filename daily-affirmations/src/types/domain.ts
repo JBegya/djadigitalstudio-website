@@ -15,7 +15,19 @@ export interface Settings {
   draftReminderDays?: number;
   /** Days after first publishing before the Marketing Library suggests a refresh. */
   refreshReminderDays?: number;
+  /** Narrator personality for a video's combined voiceover — applies to every future video, not
+   * stored per-video. */
+  voicePreset?: VoicePreset;
+  /** 'none' (default) renders every scene via the local Ken Burns fallback — no video-provider
+   * key is required to produce a finished video. The other values are listed now so Settings can
+   * offer them, but none has a concrete VideoProvider implementation yet (see
+   * videoProviderFactory.ts) — picking one currently still falls back to 'none'. */
+  videoProvider?: 'none' | 'runway' | 'veo' | 'kling' | 'pika' | 'luma' | 'openart';
+  videoProviderApiKey?: string;
 }
+
+export type VoicePreset = 'warm-female' | 'calm-female' | 'warm-male' | 'calm-male';
+export type SubtitlePosition = 'bottom' | 'center' | 'top';
 
 /** Category of a real, user-supplied screenshot — determines which device mockup it's composited into. */
 export type DeviceKind = 'iphone' | 'watch' | 'ipad' | 'mac';
@@ -406,4 +418,35 @@ export interface Storyboard {
   createdAt: string;
   /** Bumped on every scene edit — the only thing a person changes post-generation in v1. */
   updatedAt?: string;
+}
+
+/** Fixed execution order — mirrors STAGE_ORDER in videoOrchestrator.ts. */
+export type VideoJobStage = 'keyframes' | 'animate' | 'voiceover' | 'subtitles' | 'compose' | 'done' | 'failed';
+
+export interface VideoJobProgress {
+  stage: VideoJobStage;
+  percent: number;
+  message: string;
+}
+
+/**
+ * One AI-video-generation run for a single Storyboard — fs-backed, same singleton-store shape as
+ * StoryboardsStore. No denormalized productId/storyboard fields: resolved via
+ * storyboardsStore.get(storyboardId) at read time, exactly like Storyboard itself never
+ * denormalizes product/feature/pack names. A dangling storyboardId (its Storyboard was since
+ * deleted) degrades gracefully in the UI, the same pattern already used for a dangling productId.
+ * Multiple jobs per storyboard are allowed, unrestricted — generating always creates a new one.
+ */
+export interface VideoJob {
+  id: string;
+  storyboardId: string;
+  status: 'running' | 'complete' | 'failed';
+  progress: VideoJobProgress;
+  videoPath?: string;
+  /** sum(scene.durationSeconds) at generation time, for display only — never authoritative; the
+   * authoritative value is always re-derived from the live Storyboard via sumSceneDurations(). */
+  durationSeconds?: number;
+  error?: string;
+  createdAt: string;
+  updatedAt: string;
 }

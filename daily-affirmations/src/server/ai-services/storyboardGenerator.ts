@@ -3,6 +3,7 @@ import { retryWithBackoff } from '../utils/retry';
 import { MODELS } from '../config/models';
 import { isTestMode } from '../config/settings';
 import { flagScenes } from '@/lib/storyboards/flagScenes';
+import { DEFAULT_SCENE_DURATION_SECONDS } from '@/lib/storyboards/sceneDuration';
 import type { CustomerPersona, DeviceKind, FeatureMarketingProfile, MarketingIdentity, Settings, StoryboardScene } from '@/types/domain';
 
 export { flagScenes };
@@ -43,7 +44,6 @@ const GOAL_DURATION_DEFAULTS: { keyword: string; seconds: number }[] = [
   { keyword: 'cta', seconds: 3 },
   { keyword: 'call to action', seconds: 3 },
 ];
-const DEFAULT_SCENE_DURATION_SECONDS = 4;
 
 export function defaultDurationForGoal(goal: string): number {
   const normalized = goal.toLowerCase();

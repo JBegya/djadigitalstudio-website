@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Grid2x2, PlusSquare, FolderOutput, Clapperboard, PieChart, Settings } from 'lucide-react';
+import { LayoutDashboard, Grid2x2, PlusSquare, FolderOutput, Clapperboard, Video, PieChart, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: '/create', label: 'Create Advertisement', icon: PlusSquare },
   { href: '/exports', label: 'Marketing Library', icon: FolderOutput },
   { href: '/storyboards', label: 'Storyboards', icon: Clapperboard },
+  { href: '/videos', label: 'Videos', icon: Video },
   { href: '/coverage', label: 'Marketing Coverage', icon: PieChart },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];

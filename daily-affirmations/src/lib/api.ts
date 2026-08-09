@@ -1,6 +1,6 @@
-import type { AdCreation, DeviceKind, MarketingPack, MarketingPackObjective, ProductProfile, Settings, Storyboard } from '@/types/domain';
+import type { AdCreation, DeviceKind, MarketingPack, MarketingPackObjective, ProductProfile, Settings, Storyboard, VideoJob } from '@/types/domain';
 
-export type RedactedSettings = Settings & { hasOpenAiKey: boolean };
+export type RedactedSettings = Settings & { hasOpenAiKey: boolean; hasVideoProviderKey: boolean };
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -223,6 +223,47 @@ export async function updateStoryboard(id: string, patch: Partial<Storyboard>): 
 
 export async function deleteStoryboard(id: string): Promise<{ ok: boolean }> {
   return json(await fetch(`/api/storyboards/${encodeURIComponent(id)}`, { method: 'DELETE' }));
+}
+
+export async function generateVideo(payload: { storyboardId: string; sceneKeyframes: Array<{ sceneNumber: number; dataUrl: string }> }): Promise<{ jobId: string }> {
+  return json(
+    await fetch('/api/videos/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+  );
+}
+
+export async function listVideoJobs(): Promise<{ jobs: VideoJob[] }> {
+  return json(await fetch('/api/videos', { cache: 'no-store' }));
+}
+
+export async function getVideoJob(id: string): Promise<{ job: VideoJob }> {
+  return json(await fetch(`/api/videos/${encodeURIComponent(id)}`, { cache: 'no-store' }));
+}
+
+export async function deleteVideoJob(id: string): Promise<{ ok: boolean }> {
+  return json(await fetch(`/api/videos/${encodeURIComponent(id)}`, { method: 'DELETE' }));
+}
+
+/** Subscribes to a video job's live progress via Server-Sent Events. Returns an unsubscribe
+ * function; automatically closes once the job reaches a non-'running' status. */
+export function subscribeToVideoJob(id: string, onUpdate: (job: VideoJob) => void, onDone?: () => void): () => void {
+  const source = new EventSource(`/api/videos/${encodeURIComponent(id)}/stream`);
+  source.onmessage = (event) => {
+    const job = JSON.parse(event.data) as VideoJob;
+    onUpdate(job);
+    if (job.status !== 'running') {
+      source.close();
+      onDone?.();
+    }
+  };
+  source.onerror = () => {
+    source.close();
+    onDone?.();
+  };
+  return () => source.close();
 }
 
 export async function getHookSuggestions(payload: {

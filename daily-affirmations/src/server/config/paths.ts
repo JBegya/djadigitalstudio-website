@@ -53,6 +53,10 @@ export function getStoryboardsFilePath(): string {
   return path.join(getUserDataDir(), 'storyboards.json');
 }
 
+export function getVideoJobsFilePath(): string {
+  return path.join(getUserDataDir(), 'video-jobs.json');
+}
+
 /** Bundled seed Product Profile JSON — shipped like today's `assets/`, read-only. */
 export function getProductsDir(): string {
   return path.join(getAppRoot(), 'data', 'products');
@@ -100,6 +104,22 @@ const ASSET_CATEGORY_DIRS = { logo: 'Logos', icon: 'Icons', screenshot: 'Screens
 
 export function getAssetCategoryDir(productFolderName: string, category: keyof typeof ASSET_CATEGORY_DIRS): string {
   const dir = path.join(getAssetLibraryDir(productFolderName), ASSET_CATEGORY_DIRS[category]);
+  ensureDir(dir);
+  return dir;
+}
+
+/** Where finished videos live — a third root under getUserContentDir(), alongside Assets/ and the
+ * (user-configurable) output folder; see the added entry in /api/media's resolveSafePath. */
+export function getVideoLibraryDir(productFolderName: string): string {
+  const dir = path.join(getUserContentDir(), 'Videos', productFolderName);
+  ensureDir(dir);
+  return dir;
+}
+
+/** Scratch space for one video job's keyframes and intermediate per-scene clips — removed
+ * entirely when the job is deleted. */
+export function getVideoWorkDir(jobId: string): string {
+  const dir = path.join(getUserContentDir(), 'Videos', '.work', jobId);
   ensureDir(dir);
   return dir;
 }

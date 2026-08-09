@@ -293,9 +293,60 @@ editable advertisement) before the full product-management system exists:
       an already-timed storyboard instead of inventing its own pacing. Deterministic and
       app-assigned rather than AI-proposed, matching every other production/pacing concern in this
       app that isn't itself a copy-creativity question.
-- [ ] **M10 — AI Video Generation.** Connects a chosen storyboard to a video provider through a
-      provider-agnostic interface — OpenArt, Runway, Google Veo, Kling, Pika, and Luma are all
-      meant to be interchangeable without changing the rest of the app.
+- [x] **M10 — AI Video Generation.** The final pipeline stage: `Storyboard (M9) → Generate assets →
+      Generate voiceover → Generate subtitles → Compose video`. Renders a chosen storyboard into a
+      finished, watchable `.mp4` through a provider-agnostic `VideoProvider` interface
+      (`animateImage`/`checkStatus`), so Runway/Veo/Kling/Pika/Luma/OpenArt can in principle be
+      swapped in later as one more `case` in a factory function with zero changes elsewhere. **Scope
+      decision, confirmed with the user**: v1 ships the interface plus exactly one implementation —
+      a deterministic local FFmpeg Ken Burns pan/zoom renderer, used whenever no real provider is
+      configured (the only option today). No real provider is implemented in this pass; none are
+      reachable from this network-sandboxed environment, matching the same limitation that already
+      applied to live OpenAI calls in M8/M9. `durationSeconds` (M9) is the single source of truth
+      for every timing decision — total runtime is always `sum(scene.durationSeconds)`, never
+      persisted separately; there's no timeline/transitions/animations editor, no soundtrack mixer,
+      and no scene reordering — this stays a renderer, not a video editor.
+      Each scene's keyframe is a real, on-brand image — the storyboard scene becomes a synthetic
+      single-slide template rendered through the *existing* Fabric.js template engine (zero new
+      rendering code), so every frame is built from the product's actual screenshots/branding, never
+      AI-invented pixels. One continuous voiceover (not one per scene) is generated over all scenes'
+      text for natural prosody, `atempo`-conformed to exactly match the storyboard's total duration,
+      with word-level subtitles burned in via ASS/libass. Most of the audio/video engine —
+      TTS, Whisper-based subtitle timing with an estimation fallback, ASS generation, the FFmpeg
+      compositor — is resurrected and adapted from this app's own history: a "daily affirmations"
+      video generator existed before the M1 pivot to a static-ad tool, and its mature,
+      already-hardened pipeline (including two real bugs it had already found and fixed — an
+      `atempo` audio-duration mismatch and a `concat`-demuxer audio-desync bug, both inherited fixed
+      by resurrecting the same code rather than rewriting it) covers almost everything this
+      milestone needed. Same Test Mode philosophy as every other AI feature here: no OpenAI key
+      still produces a real, complete, watchable video — Ken Burns motion over real keyframes, a
+      synthesized voiceover at exactly the target duration, and estimated-timing subtitles, never a
+      stub. A fixed 9:16 canvas (1080×1920, 30fps) for v1, not user-configurable. Generation is
+      asynchronous (the first long-running, multi-minute pipeline in this app) — a "Generate Video"
+      action on each Storyboard kicks off a background job tracked in a new `/videos` library, with
+      Server-Sent Events streaming live stage-by-stage progress (`keyframes → animate → voiceover →
+      subtitles → compose`) to a per-job page until the finished player appears.
+      Three real bugs were found and fixed during manual end-to-end verification, none of them
+      caught by the type checker, linter, or unit tests: (1) `@ffmpeg-installer/ffmpeg` and
+      `@ffprobe-installer/ffprobe` resolve their platform binary via a dynamic `require()`, which
+      made Next's server webpack build bundle each package's *entire* directory — including
+      `README.md`/`tsconfig.json` — as a "sync require context" and fail trying to parse them as
+      JS; fixed by excluding both packages from the server bundle via
+      `experimental.serverComponentsExternalPackages` in `next.config.js`, so Next requires them
+      natively at runtime instead. (2) `VideoJobsStore` initially cached its state in memory forever
+      after the first read, copying the exact pattern `StoryboardsStore`/`MarketingPacksStore` already
+      use safely — but this store doubles as the *live progress* mechanism, polled by one route
+      while a background job (owned by a different route's module instance, per Next.js dev-mode's
+      per-route bundling) mutates the same file underneath it; the polling route's cached copy never
+      saw the update, so the SSE progress bar froze at its very first value forever. Fixed by making
+      this store always re-read the file from disk on every call — a deliberate divergence from the
+      other stores' permanent-cache pattern, justified by this store's specific liveness
+      requirement. (3) A malformed/corrupt keyframe image made FFmpeg's decoder spin forever inside
+      the Ken Burns filter graph with no natural exit condition, hanging the job indefinitely at
+      ~95% CPU instead of failing it — fixed with a bounded process timeout (120s) on every FFmpeg/
+      FFprobe call, with timeout-triggered failures explicitly marked non-retryable (retrying feeds
+      the same broken input and will only hang again) so a genuinely bad input now fails the job
+      cleanly with a visible error in well under two minutes instead of never.
 
 ## Test Mode — try it before adding an API key
 

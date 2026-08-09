@@ -21,6 +21,7 @@ function defaultSettings(): Settings {
     requiredPublishingPlatformKeysByProduct: {},
     draftReminderDays: DEFAULT_DRAFT_REMINDER_DAYS,
     refreshReminderDays: DEFAULT_REFRESH_REMINDER_DAYS,
+    videoProvider: 'none',
   };
 }
 
@@ -30,6 +31,9 @@ const SETTINGS_KEYS: Array<keyof Settings> = [
   'requiredPublishingPlatformKeysByProduct',
   'draftReminderDays',
   'refreshReminderDays',
+  'voicePreset',
+  'videoProvider',
+  'videoProviderApiKey',
 ];
 
 /** Reminder-day values are clamped server-side as defense in depth — a future API client, a
@@ -81,13 +85,15 @@ export class SettingsStore {
     return next;
   }
 
-  /** Settings safe to send to the renderer with secrets masked, plus a flag for whether the key is set. */
-  redacted(): Settings & { hasOpenAiKey: boolean } {
+  /** Settings safe to send to the renderer with secrets masked, plus flags for whether each key is set. */
+  redacted(): Settings & { hasOpenAiKey: boolean; hasVideoProviderKey: boolean } {
     const s = this.load();
     return {
       ...s,
       openaiApiKey: s.openaiApiKey ? maskKey(s.openaiApiKey) : '',
       hasOpenAiKey: Boolean(s.openaiApiKey),
+      videoProviderApiKey: s.videoProviderApiKey ? maskKey(s.videoProviderApiKey) : '',
+      hasVideoProviderKey: Boolean(s.videoProviderApiKey),
     };
   }
 

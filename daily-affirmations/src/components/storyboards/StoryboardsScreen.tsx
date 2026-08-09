@@ -2,18 +2,22 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { SceneCard } from '@/components/storyboards/SceneCard';
 import { Button } from '@/components/ui/button';
-import { deleteStoryboard, listMarketingPacks, listProducts, listStoryboards, updateStoryboard } from '@/lib/api';
+import { deleteStoryboard, generateVideo, listMarketingPacks, listProducts, listStoryboards, updateStoryboard } from '@/lib/api';
+import { renderSceneKeyframes } from '@/lib/editor/sceneKeyframes';
 import { flagScenes } from '@/lib/storyboards/flagScenes';
 import { groupStoryboardsByProductFeature } from '@/lib/storyboards/groupStoryboards';
 import type { MarketingPack, ProductProfile, Storyboard, StoryboardScene } from '@/types/domain';
 
 export function StoryboardsScreen() {
+  const router = useRouter();
   const [storyboards, setStoryboards] = useState<Storyboard[] | null>(null);
   const [packs, setPacks] = useState<MarketingPack[]>([]);
   const [products, setProducts] = useState<ProductProfile[]>([]);
+  const [generatingVideoStoryboardId, setGeneratingVideoStoryboardId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([listStoryboards(), listMarketingPacks(), listProducts()])
@@ -49,6 +53,24 @@ export function StoryboardsScreen() {
     } catch {
       toast.error('Could not delete that storyboard.');
       setStoryboards(prior);
+    }
+  }
+
+  async function handleGenerateVideo(storyboard: Storyboard) {
+    const product = products.find((p) => p.id === storyboard.productId);
+    if (!product) {
+      toast.error('Could not find this storyboard’s product.');
+      return;
+    }
+    setGeneratingVideoStoryboardId(storyboard.id);
+    try {
+      const sceneKeyframes = await renderSceneKeyframes(storyboard, product);
+      const { jobId } = await generateVideo({ storyboardId: storyboard.id, sceneKeyframes });
+      router.push(`/videos/${jobId}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not start video generation.');
+    } finally {
+      setGeneratingVideoStoryboardId(null);
     }
   }
 
@@ -97,9 +119,20 @@ export function StoryboardsScreen() {
                               <div key={storyboard.id} className="rounded-xl border border-dashed border-border p-4">
                                 <div className="flex items-center justify-between gap-2">
                                   <p className="text-xs text-muted-foreground">Generated {new Date(storyboard.createdAt).toLocaleDateString()}</p>
-                                  <Button type="button" size="sm" variant="ghost" onClick={() => handleDelete(storyboard.id)}>
-                                    Delete
-                                  </Button>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleGenerateVideo(storyboard)}
+                                      disabled={generatingVideoStoryboardId === storyboard.id}
+                                    >
+                                      {generatingVideoStoryboardId === storyboard.id ? 'Generating…' : 'Generate Video'}
+                                    </Button>
+                                    <Button type="button" size="sm" variant="ghost" onClick={() => handleDelete(storyboard.id)}>
+                                      Delete
+                                    </Button>
+                                  </div>
                                 </div>
                                 <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                   {storyboard.scenes.map((scene) => (

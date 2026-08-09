@@ -3,7 +3,18 @@
 export const MODELS = {
   /** Ad copy: headlines, captions, CTAs, hashtags, storyboard scene copy. */
   copy: process.env.DJA_COPY_MODEL || 'gpt-5.5',
+  /** Text-to-speech voiceover. */
+  tts: process.env.DJA_TTS_MODEL || 'tts-1-hd',
+  /** Word-level timestamp alignment of the generated voiceover, for subtitle sync. */
+  transcribe: process.env.DJA_TRANSCRIBE_MODEL || 'whisper-1',
 } as const;
+
+export const OPENAI_VOICE_MAP: Record<string, string> = {
+  'warm-female': 'shimmer',
+  'calm-female': 'nova',
+  'warm-male': 'onyx',
+  'calm-male': 'echo',
+};
 
 // Reasoning-tier models (the o-series, the gpt-5.x family) reject classic sampling knobs
 // entirely — `temperature`, `presence_penalty`, `frequency_penalty` all 400 with "Unsupported
