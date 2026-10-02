@@ -15,15 +15,16 @@ export function resolveFeatureScreenshot(product: ProductProfile, feature: Produ
 
 /**
  * Pure — resolves a product's selected feature plus already-resolved asset URLs into the flat
- * SlotContent shape templateToCanvas.ts understands. Fields with no honest source left unset
- * (featureBullets) fall through to templateToCanvas.ts's own generic placeholders rather than
- * being fabricated here from unrelated data.
+ * SlotContent shape templateToCanvas.ts understands. A field only falls through to
+ * templateToCanvas.ts's own generic placeholder when every real source below is genuinely empty —
+ * never fabricated here from unrelated data.
  *
- * Headline/subheadline prefer an explicit manual override first (already editable in Brand
- * Manager), then the M5 Marketing Intelligence for this feature (suggestedHook/corePromise —
- * this is the "Advertisement Intelligence Engine" auto-assembly: use what's already stored
- * instead of a generic fallback), then a persona's own story idea if one was selected and the
- * feature itself has nothing more specific, then the generic label/description as a last resort.
+ * Headline/subheadline/cta each prefer an explicit manual override first (already editable in
+ * Brand Manager), then stored Marketing Intelligence (suggestedHook/corePromise/painPoints+benefits
+ * for the feature, callToAction for the product — this is the "Advertisement Intelligence Engine"
+ * auto-assembly: use what's already stored instead of a generic fallback), then a persona's own
+ * story idea if one was selected and the feature itself has nothing more specific, then the
+ * generic label/description as a last resort.
  */
 export function buildSlotContentFromProduct(
   product: ProductProfile,
@@ -32,15 +33,21 @@ export function buildSlotContentFromProduct(
   logoUrl: string | undefined,
   persona?: CustomerPersona,
 ): SlotContent {
-  // marketing.suggestedHook/corePromise are required fields that default to '' when unset —
-  // treat empty string as "not provided" (?? alone wouldn't, since '' is neither null nor undefined).
+  // marketing.suggestedHook/corePromise/callToAction are required fields that default to '' when
+  // unset — treat empty string as "not provided" (?? alone wouldn't, since '' is neither null nor
+  // undefined).
   const suggestedHook = feature.marketing.suggestedHook || undefined;
   const corePromise = feature.marketing.corePromise || undefined;
+  const callToAction = product.marketingIdentity.callToAction || undefined;
+  // Pain points build tension before benefits resolve it, matching the Problem → Solution
+  // template's own bullet ordering — capped at 3 to match its "three feature bullets" layout.
+  const featureBullets = [...feature.marketing.painPoints, ...feature.marketing.benefits].filter((b) => b.trim()).slice(0, 3);
 
   return {
     headline: feature.headline ?? suggestedHook ?? persona?.storyIdeas[0] ?? feature.label,
     subheadline: feature.subheadline ?? corePromise ?? feature.description,
-    cta: feature.cta,
+    cta: feature.cta ?? callToAction,
+    featureBullets: featureBullets.length > 0 ? featureBullets : undefined,
     screenshotUrl,
     logoUrl,
     // A store badge button only when a real store URL exists to send someone to — never a link to

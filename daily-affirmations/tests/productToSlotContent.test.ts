@@ -153,6 +153,28 @@ describe('buildSlotContentFromProduct', () => {
     expect(buildSlotContentFromProduct(sampleProfile(), sampleFeature(), undefined, undefined).subheadline).toBe('Automatically calculates callback pay.');
   });
 
+  it('cta fallback chain: explicit feature cta > product marketingIdentity.callToAction > unset', () => {
+    const productWithCta = sampleProfile({ marketingIdentity: { ...DEFAULT_MARKETING_IDENTITY, callToAction: 'Download ShiftEarn Pro' } });
+    expect(buildSlotContentFromProduct(productWithCta, sampleFeature(), undefined, undefined).cta).toBe('Download ShiftEarn Pro');
+
+    const featureWithCta = sampleFeature({ cta: 'Try It Free' });
+    expect(buildSlotContentFromProduct(productWithCta, featureWithCta, undefined, undefined).cta).toBe('Try It Free');
+
+    expect(buildSlotContentFromProduct(sampleProfile(), sampleFeature(), undefined, undefined).cta).toBeUndefined();
+  });
+
+  it('featureBullets: combines painPoints then benefits from Marketing Intelligence, capped at 3', () => {
+    const feature = sampleFeature({
+      marketing: { ...DEFAULT_FEATURE_MARKETING, painPoints: ['Pain one', 'Pain two'], benefits: ['Benefit one', 'Benefit two'] },
+    });
+    expect(buildSlotContentFromProduct(sampleProfile(), feature, undefined, undefined).featureBullets).toEqual(['Pain one', 'Pain two', 'Benefit one']);
+  });
+
+  it('featureBullets filters out blank entries and stays unset when everything is blank', () => {
+    const feature = sampleFeature({ marketing: { ...DEFAULT_FEATURE_MARKETING, painPoints: ['', '  '], benefits: [] } });
+    expect(buildSlotContentFromProduct(sampleProfile(), feature, undefined, undefined).featureBullets).toBeUndefined();
+  });
+
   it('storeBadgeText: App Store text when that URL exists, Google Play as fallback, undefined when neither exists', () => {
     const withAppStore = sampleProfile({ appStoreUrl: 'https://apps.apple.com/app/shiftearn-pro' });
     expect(buildSlotContentFromProduct(withAppStore, sampleFeature(), undefined, undefined).storeBadgeText).toBe('Download on the App Store');

@@ -10,6 +10,15 @@ import { inter } from '@/lib/fonts';
 
 const GUIDE_COLOR = '#7c9cff';
 
+/** Fabric refuses to let two Canvas instances wrap the same `<canvas>` DOM element at once
+ * ("Trying to initialize a canvas that has already been initialized"). Normally there's only ever
+ * one, but React 18 Strict Mode's dev-only double-invoke (mount → cleanup → mount) can start a
+ * second effect run before the first one's async population has settled enough to safely dispose
+ * — tracked here per element so a new run waits for the previous one's disposal to actually finish
+ * before constructing its own Canvas on the same node. Empty/resolved for the common case (a
+ * never-before-used element, or production's single real mount), so this adds no real delay there. */
+const pendingDisposal = new WeakMap<HTMLCanvasElement, Promise<void>>();
+
 export interface EditorCanvasProps {
   template: TemplateDefinition;
   content: SlotContent;
@@ -38,42 +47,52 @@ export function EditorCanvas({ template, content, device, widthPx, heightPx, ini
   const guideLinesRef = useRef<Line[]>([]);
 
   useEffect(() => {
-    if (!canvasElRef.current) return undefined;
-    const canvas = new Canvas(canvasElRef.current, { width: widthPx, height: heightPx, preserveObjectStacking: true });
+    const el = canvasElRef.current;
+    if (!el) return undefined;
     let cancelled = false;
+    let canvas: Canvas | null = null;
 
     function hideGuides() {
+      if (!canvas) return;
       for (const line of guideLinesRef.current) canvas.remove(line);
       guideLinesRef.current = [];
     }
 
     function drawGuides(guides: ReturnType<typeof computeSnap>['guides']) {
+      const activeCanvas = canvas;
+      if (!activeCanvas) return;
       hideGuides();
       guideLinesRef.current = guides.map((guide) =>
         guide.orientation === 'vertical'
-          ? new Line([guide.position, 0, guide.position, canvas.getHeight()], { stroke: GUIDE_COLOR, strokeWidth: 1, selectable: false, evented: false, excludeFromExport: true })
-          : new Line([0, guide.position, canvas.getWidth(), guide.position], { stroke: GUIDE_COLOR, strokeWidth: 1, selectable: false, evented: false, excludeFromExport: true }),
+          ? new Line([guide.position, 0, guide.position, activeCanvas.getHeight()], { stroke: GUIDE_COLOR, strokeWidth: 1, selectable: false, evented: false, excludeFromExport: true })
+          : new Line([0, guide.position, activeCanvas.getWidth(), guide.position], { stroke: GUIDE_COLOR, strokeWidth: 1, selectable: false, evented: false, excludeFromExport: true }),
       );
-      guideLinesRef.current.forEach((line) => canvas.add(line));
-      canvas.requestRenderAll();
+      guideLinesRef.current.forEach((line) => activeCanvas.add(line));
+      activeCanvas.requestRenderAll();
     }
 
-    canvas.on('object:moving', (e) => {
-      const target = e.target;
-      if (!target) return;
-      const others = canvas
-        .getObjects()
-        .filter((o) => o !== target && !o.excludeFromExport)
-        .map(rectOf);
-      const result = computeSnap(rectOf(target), canvas.getWidth(), canvas.getHeight(), others);
-      if (result.left !== undefined) target.set('left', result.left);
-      if (result.top !== undefined) target.set('top', result.top);
-      if (result.guides.length > 0) drawGuides(result.guides);
-      else hideGuides();
-    });
-    canvas.on('object:modified', hideGuides);
+    // Wait for any still-in-flight disposal of a previous Canvas on this same DOM element (see
+    // pendingDisposal's doc comment) before constructing a new one — Fabric throws if two Canvas
+    // instances ever wrap the same element at once.
+    const ready = (pendingDisposal.get(el) ?? Promise.resolve()).then(async () => {
+      if (cancelled) return;
+      canvas = new Canvas(el, { width: widthPx, height: heightPx, preserveObjectStacking: true });
 
-    async function populate() {
+      canvas.on('object:moving', (e) => {
+        const target = e.target;
+        if (!target || !canvas) return;
+        const others = canvas
+          .getObjects()
+          .filter((o) => o !== target && !o.excludeFromExport)
+          .map(rectOf);
+        const result = computeSnap(rectOf(target), canvas.getWidth(), canvas.getHeight(), others);
+        if (result.left !== undefined) target.set('left', result.left);
+        if (result.top !== undefined) target.set('top', result.top);
+        if (result.guides.length > 0) drawGuides(result.guides);
+        else hideGuides();
+      });
+      canvas.on('object:modified', hideGuides);
+
       if (initialJson) {
         await canvas.loadFromJSON(initialJson);
       } else {
@@ -82,13 +101,22 @@ export function EditorCanvas({ template, content, device, widthPx, heightPx, ini
       if (cancelled) return;
       canvas.requestRenderAll();
       onReady(canvas);
-    }
-    void populate();
+    });
+    const readySettled = ready.catch(() => {});
 
     return () => {
       cancelled = true;
       onReady(null);
-      canvas.dispose();
+      // Deferred until population has actually settled — disposing a canvas the instant cleanup
+      // fires would race Fabric's still-running loadFromJSON/buildCanvasFromTemplate and throw
+      // "Cannot read properties of undefined (reading 'clearRect')" once it resumes against an
+      // already-torn-down context. React 18 Strict Mode's dev-only double-invoke (mount → cleanup
+      // → mount) reliably hits this, since the first effect's population is usually still pending
+      // when its own cleanup runs.
+      const disposal = readySettled.then(() => {
+        canvas?.dispose();
+      });
+      pendingDisposal.set(el, disposal);
     };
     // Rebuilding on every content keystroke would fight the user's live edits — this effect only
     // reruns when the template/device/canvas size/loaded-creation actually changes (a new object
