@@ -1,0 +1,250 @@
+{
+  "id": "shiftearn-pro",
+  "name": "ShiftEarn Pro",
+  "tagline": "Never miss a shift change again.",
+  "description": "Placeholder description — replace with real ShiftEarn Pro copy. Payroll accuracy for shift workers: tracks hours, pay rates, and callback/short-change detection across every shift.",
+  "brandColors": { "primary": "#7c9cff", "secondary": "#1b1030", "accent": "#f5a623" },
+  "brandGuidelines": { "cornerRadiusPx": 16, "buttonStyle": "rounded", "preferredBackground": "solid", "logoClearSpacePx": 16, "storeBadgeStyle": "black" },
+  "marketingIdentity": {
+    "whyThisAppExists": "Nobody should ever wonder whether they were paid correctly.",
+    "mission": "Help shift workers understand exactly what they have earned.",
+    "corePromise": "Know exactly what every shift is worth.",
+    "primaryAudience": ["Nurses", "Healthcare Assistants", "Support Workers", "FIFO Workers", "Emergency Services", "Retail", "Hospitality", "Security"],
+    "secondaryAudience": [],
+    "coreProblems": ["Not knowing if payroll is correct.", "Confusing payslips.", "Overtime uncertainty.", "Short changes.", "Leave calculation concerns."],
+    "painPoints": [],
+    "emotionalTriggers": ["Financial stress.", "Frustration.", "Uncertainty.", "Feeling undervalued."],
+    "benefits": ["Confidence.", "Peace of mind.", "Financial protection.", "Time saved."],
+    "transformation": { "from": "I hope I was paid correctly.", "to": "I know exactly what I should be paid." },
+    "buyingTriggers": ["Payroll mistake", "Underpaid overtime", "Confusing payslip", "Financial stress", "Tax season", "Performance review", "Changing jobs", "Second job"],
+    "objections": ["It's too expensive.", "I already use Excel.", "My employer already pays correctly.", "I don't have time.", "It looks complicated."],
+    "brandPersonality": ["Professional.", "Trustworthy.", "Accurate.", "Reliable.", "Empowering."],
+    "communicationStyle": "",
+    "wordsWePrefer": [],
+    "wordsWeAvoid": [],
+    "styleGuardrails": ["Never sensational.", "Never make claims that cannot be supported by the app."],
+    "coreMessage": "",
+    "callToAction": "Download ShiftEarn Pro",
+    "successStory": ""
+  },
+  "status": "draft",
+  "appStoreUrl": "",
+  "appStoreAvailability": "not-planned",
+  "googlePlayUrl": "",
+  "googlePlayAvailability": "not-planned",
+  "websiteUrl": "",
+  "privacyUrl": "",
+  "termsUrl": "",
+  "screenshots": [],
+  "features": [
+    {
+      "key": "short-change-detection",
+      "label": "Short Change Detection",
+      "description": "Flags when a paycheck doesn't match the hours actually worked.",
+      "marketing": {
+        "coreProblem": "A paycheck can be short without you ever noticing — nothing flags a mismatch between the hours you worked and the hours you were paid for.",
+        "corePromise": "Know the moment a shift doesn't match what you were paid for it.",
+        "painPoints": ["Payroll mistakes often go unnoticed until it's too late to query them.", "Comparing hours worked to pay received by hand is tedious and easy to get wrong."],
+        "benefits": ["Confidence.", "Financial protection."],
+        "transformation": { "from": "I hope I was paid correctly.", "to": "I know exactly what I should be paid." },
+        "supportingProof": "",
+        "suggestedHook": "Late finish. Early start. Confusing payslip. Were you paid for all of it?",
+        "linkedPersonaIds": ["registered-nurse"],
+        "suggestedEmotion": "Uncertainty.",
+        "suggestedStoryTypes": ["Payslip mismatch reveal"]
+      }
+    },
+    {
+      "key": "callback-pay",
+      "label": "Callback Pay",
+      "description": "Automatically calculates callback and on-call pay entitlements.",
+      "marketing": {
+        "coreProblem": "Callback and on-call pay rules are easy to miscalculate by hand, and a missed callback often goes unclaimed.",
+        "corePromise": "Every callback is calculated and tracked automatically — nothing gets missed.",
+        "painPoints": ["Callback pay rules are complex and inconsistent across shifts.", "It's easy to forget to log or claim a callback."],
+        "benefits": ["Confidence.", "Time saved."],
+        "transformation": { "from": "I'm not sure my callbacks were all paid.", "to": "Every callback is calculated and accounted for." },
+        "supportingProof": "",
+        "suggestedHook": "Callback. Overtime. Travel. Allowances. Know what each one is actually worth.",
+        "linkedPersonaIds": ["fifo-worker", "support-worker"],
+        "suggestedEmotion": "Frustration.",
+        "suggestedStoryTypes": ["Callback pay breakdown"]
+      }
+    },
+    {
+      "key": "leave-calculator",
+      "label": "Leave Calculator",
+      "description": "Tracks accrued leave balances in real time.",
+      "marketing": {
+        "coreProblem": "Leave entitlements differ by leave type and by country's leave law — it's easy to be unsure whether you're owed bereavement leave, family violence leave, or ordinary annual/sick leave, let alone how it should be paid.",
+        "corePromise": "See every leave type you're entitled to — including bereavement and family violence leave — calculated the correct way for your country.",
+        "painPoints": ["Not realizing you're entitled to bereavement or family violence leave.", "Not knowing how a leave day should be paid.", "Juggling separate rules for annual leave, sick leave, bereavement leave, and family violence leave."],
+        "benefits": ["Tracks accrued leave balances in real time.", "Confidence.", "Peace of mind."],
+        "transformation": { "from": "I don't know what leave I'm entitled to, or how it's paid.", "to": "I can see every leave type I'm owed and how it's calculated." },
+        "supportingProof": "Bereavement leave and family violence leave are both tracked alongside standard annual and sick leave, and priced under the correct leave law for your country (for example, New Zealand's Holidays Act or Australia's Fair Work Act).",
+        "suggestedHook": "Do you know if you're owed bereavement or family violence leave right now?",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "Uncertainty.",
+        "suggestedStoryTypes": ["Leave entitlement reveal"]
+      }
+    },
+    {
+      "key": "two-jobs",
+      "label": "Two Jobs",
+      "description": "Manages pay and shifts across more than one employer at once.",
+      "marketing": {
+        "coreProblem": "Working two jobs means two sets of pay rates, shifts, and payslips to keep straight.",
+        "corePromise": "See pay and shifts from every employer in one place.",
+        "painPoints": ["Switching between employers means switching between different pay rates and schedules.", "Nothing keeps the full picture of hours and pay across both jobs together."],
+        "benefits": ["Time saved.", "Confidence."],
+        "transformation": { "from": "I have to keep two jobs straight in my head.", "to": "I can see both jobs' pay and shifts in one place." },
+        "supportingProof": "",
+        "suggestedHook": "Switching between employers. Different pay rates. One app.",
+        "linkedPersonaIds": ["healthcare-assistant"],
+        "suggestedEmotion": "Overwhelmed.",
+        "suggestedStoryTypes": ["Two-job juggle, day in the life"]
+      }
+    },
+    {
+      "key": "fifo",
+      "label": "FIFO",
+      "description": "Built for fly-in fly-out rosters and irregular shift patterns.",
+      "marketing": {
+        "coreProblem": "FIFO rosters don't fit standard 'hours worked' pay logic — swings, rotations, and callback time make it easy to lose track of what a swing is actually worth.",
+        "corePromise": "Set your real roster pattern once, and every swing calculates pay from the actual days you worked — not a rough average.",
+        "painPoints": ["Standard payroll tools assume a regular week.", "Tracking swings and rotations by hand is error-prone.", "It's hard to tell if callback or travel time was paid correctly."],
+        "benefits": ["Six common roster patterns built in (2 weeks on/1 off, 2 on/2 off, 4 on/1 off, 4 on/2 off, 8 on/6 off, 5 on/2 off) plus a fully custom pattern.", "Pay is calculated from the actual days rostered on — never estimated.", "Leave balances still grow correctly even on an irregular roster."],
+        "transformation": { "from": "I have to guess whether my swing pay is right.", "to": "I set my pattern once and know exactly what each swing is worth." },
+        "supportingProof": "Pay is calculated directly from the days you were rostered on. The optional 'Nominal Hours Per On Day' setting only grows your annual/sick leave balance for each worked day — it never changes your pay calculation.",
+        "suggestedHook": "Your roster doesn't follow a normal week. Your pay app shouldn't assume it does.",
+        "linkedPersonaIds": ["fifo-worker"],
+        "suggestedEmotion": "Uncertainty.",
+        "suggestedStoryTypes": ["Roster day in the life", "Swing pay breakdown"]
+      }
+    },
+    {
+      "key": "apple-watch",
+      "label": "Apple Watch",
+      "description": "Clock in, clock out, and check pay from the wrist.",
+      "marketing": {
+        "coreProblem": "On a busy shift, pulling out a phone to clock in or check pay isn't always practical.",
+        "corePromise": "Clock in, clock out, and check pay right from your wrist.",
+        "painPoints": ["Reaching for a phone mid-shift isn't always possible or allowed."],
+        "benefits": ["Time saved.", "Confidence."],
+        "transformation": { "from": "I forget to clock in until I'm already on the floor.", "to": "I clock in from my wrist before I even start." },
+        "supportingProof": "",
+        "suggestedHook": "Busy shift. No time to pull out your phone. Check your watch instead.",
+        "suggestedDevice": "watch",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": ["Quick convenience demo"]
+      }
+    },
+    {
+      "key": "offline-privacy",
+      "label": "Offline Privacy",
+      "description": "Works fully offline — your pay data never leaves your device unless you choose to sync it.",
+      "marketing": {
+        "coreProblem": "Payroll and financial data feels sensitive, and many apps upload everything to the cloud by default.",
+        "corePromise": "Your pay data stays on your device unless you choose to sync it.",
+        "painPoints": ["Financial data handled by an app you don't trust with your privacy."],
+        "benefits": ["Peace of mind.", "Financial protection."],
+        "transformation": { "from": "I don't know where my pay data ends up.", "to": "My pay data stays on my device unless I choose otherwise." },
+        "supportingProof": "Works fully offline — pay data is never uploaded to a server unless you choose to sync it.",
+        "suggestedHook": "Your pay data is yours. It stays on your device unless you say otherwise.",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "Uncertainty.",
+        "suggestedStoryTypes": ["Privacy-first explainer"]
+      }
+    },
+    {
+      "key": "pdf-payslips",
+      "label": "PDF Payslips",
+      "description": "Generates clean, exportable PDF payslips for every pay period.",
+      "marketing": {
+        "coreProblem": "Payslips are often messy or hard to produce exactly when you need one — for a loan application, a visa, or a tax return.",
+        "corePromise": "Get a clean, exportable PDF payslip for every pay period, whenever you need one.",
+        "painPoints": ["Needing a payslip for a loan, visa, or tax return and not having a clean one on hand."],
+        "benefits": ["Time saved.", "Peace of mind."],
+        "transformation": { "from": "I don't have a clean payslip when I need one.", "to": "I can export a clean PDF payslip any time." },
+        "supportingProof": "",
+        "suggestedHook": "Need a payslip right now? Export a clean PDF in seconds.",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "",
+        "suggestedStoryTypes": ["Payslip-on-demand demo"]
+      }
+    },
+    {
+      "key": "15-countries",
+      "label": "15 Countries",
+      "description": "Supports pay rules and tax conventions across 15 countries.",
+      "marketing": {
+        "coreProblem": "Pay rules, leave entitlements, and tax conventions vary country to country — a shift worker who's moved, taken a second job abroad, or works for an international employer can't just use a generic calculator.",
+        "corePromise": "Built-in pay rules for 15 countries, so your calculations follow the right rules automatically.",
+        "painPoints": ["Generic payroll calculators assume one country's rules.", "Researching local pay and leave entitlements yourself takes real time."],
+        "benefits": ["Supports New Zealand, Australia, the UK, the US, Canada, the Philippines, Japan, Singapore, Taiwan, Germany, the UAE, Saudi Arabia, Kuwait, Qatar, and Timor-Leste, plus a general fallback for everywhere else.", "No manual lookup of local pay or leave rules."],
+        "transformation": { "from": "I don't know which country's rules even apply to me.", "to": "My country's pay rules are already built in." },
+        "supportingProof": "Pay rules and tax conventions are built in for 15 named countries — New Zealand, Australia, the UK, the US, Canada, the Philippines, Japan, Singapore, Taiwan, Germany, the UAE, Saudi Arabia, Kuwait, Qatar, and Timor-Leste — plus a general fallback for everywhere else.",
+        "suggestedHook": "Working shifts in one of 15 countries? Your pay rules are already built in.",
+        "linkedPersonaIds": [],
+        "suggestedEmotion": "Confidence.",
+        "suggestedStoryTypes": ["Country coverage showcase"]
+      }
+    }
+  ],
+  "personas": [
+    {
+      "id": "registered-nurse",
+      "name": "Registered Nurse",
+      "occupation": "Registered Nurse",
+      "environment": "",
+      "biggestProblems": ["I don't know if payroll paid me correctly."],
+      "biggestFears": [],
+      "biggestFrustrations": [],
+      "desiredOutcomes": [],
+      "emotionalTriggers": ["Frustration"],
+      "storyIdeas": ["Late finish. Early start. Confusing payslip."],
+      "preferredCommunicationStyle": ""
+    },
+    {
+      "id": "healthcare-assistant",
+      "name": "Healthcare Assistant",
+      "occupation": "Healthcare Assistant",
+      "environment": "",
+      "biggestProblems": ["I work two jobs."],
+      "biggestFears": [],
+      "biggestFrustrations": [],
+      "desiredOutcomes": [],
+      "emotionalTriggers": ["Overwhelmed"],
+      "storyIdeas": ["Switching between employers. Different pay rates."],
+      "preferredCommunicationStyle": ""
+    },
+    {
+      "id": "fifo-worker",
+      "name": "FIFO Worker",
+      "occupation": "FIFO Worker",
+      "environment": "",
+      "biggestProblems": ["I work long swings."],
+      "biggestFears": [],
+      "biggestFrustrations": [],
+      "desiredOutcomes": [],
+      "emotionalTriggers": [],
+      "storyIdeas": ["Callback. Overtime. Travel. Allowances."],
+      "preferredCommunicationStyle": ""
+    },
+    {
+      "id": "support-worker",
+      "name": "Support Worker",
+      "occupation": "Support Worker",
+      "environment": "",
+      "biggestProblems": ["I get called back all the time."],
+      "biggestFears": [],
+      "biggestFrustrations": [],
+      "desiredOutcomes": [],
+      "emotionalTriggers": [],
+      "storyIdeas": [],
+      "preferredCommunicationStyle": ""
+    }
+  ],
+  "keywords": ["payroll", "shift work", "timesheet", "pay accuracy", "callback pay"]
+}
