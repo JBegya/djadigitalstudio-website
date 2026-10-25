@@ -7,10 +7,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getSettings, listProducts, openLogsFolder, updateSettings, type RedactedSettings } from '@/lib/api';
 import { isElectron, pickFolder } from '@/lib/desktop';
 import { CONTENT_TYPES } from '@/server/config/contentTypes';
-import type { ProductProfile } from '@/types/domain';
+import type { ProductProfile, VideoProviderKind } from '@/types/domain';
+
+const VIDEO_PROVIDER_OPTIONS: { value: VideoProviderKind; label: string; hasAdapter: boolean }[] = [
+  { value: 'none', label: 'None — Ken Burns (local, no key needed)', hasAdapter: true },
+  { value: 'runway', label: 'Runway', hasAdapter: true },
+  { value: 'veo', label: 'Google Veo (not yet implemented)', hasAdapter: false },
+  { value: 'kling', label: 'Kling (not yet implemented)', hasAdapter: false },
+  { value: 'pika', label: 'Pika (not yet implemented)', hasAdapter: false },
+  { value: 'luma', label: 'Luma (not yet implemented)', hasAdapter: false },
+  { value: 'openart', label: 'OpenArt (not yet implemented)', hasAdapter: false },
+];
 
 const MIN_REMINDER_DAYS = 1;
 const MAX_REMINDER_DAYS = 3650;
@@ -88,6 +99,42 @@ export function SettingsScreen() {
                 onBlur={(e) => e.target.value !== settings.openaiApiKey && save({ openaiApiKey: e.target.value })}
               />
             </Field>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Video Generation</CardTitle>
+            <CardDescription>
+              Which engine animates each scene&rsquo;s keyframe into motion. Ken Burns renders locally at no cost; a real provider needs its own API key and
+              generally takes noticeably longer per video.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Field label="Provider">
+              <Select value={settings.videoProvider ?? 'none'} onValueChange={(v) => save({ videoProvider: v as VideoProviderKind })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {VIDEO_PROVIDER_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value} disabled={!o.hasAdapter}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            {settings.videoProvider && settings.videoProvider !== 'none' && (
+              <Field label="Video Provider API Key" hint={settings.hasVideoProviderKey ? 'Connected' : 'Not configured — video jobs will fail'}>
+                <Input
+                  type="password"
+                  placeholder="key…"
+                  defaultValue={settings.videoProviderApiKey}
+                  onBlur={(e) => e.target.value !== settings.videoProviderApiKey && save({ videoProviderApiKey: e.target.value })}
+                />
+              </Field>
+            )}
           </CardContent>
         </Card>
 

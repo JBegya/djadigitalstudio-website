@@ -14,6 +14,7 @@ import { escapeFilterPath } from '@/server/video-engine/ffmpegExpr';
 import { runFfmpeg } from '@/server/video-engine/ffmpeg';
 import { computeVoiceConformFactor, conformVoiceToDuration, rescaleWordTimings } from '@/server/video-engine/voiceConform';
 import { getVideoProvider } from '@/server/video-engine/videoProviderFactory';
+import type { VideoProvider } from '@/server/video-engine/videoProvider';
 import { sumSceneDurations, DEFAULT_SCENE_DURATION_SECONDS } from '@/lib/storyboards/sceneDuration';
 import { buildCombinedVoiceoverScript } from '@/lib/storyboards/voiceoverScript';
 import { VIDEO_CANVAS_WIDTH_PX, VIDEO_CANVAS_HEIGHT_PX } from '@/lib/video/constants';
@@ -23,6 +24,34 @@ const log = createLogger('videoOrchestrator');
 
 const STAGE_ORDER: VideoJobStage[] = ['keyframes', 'animate', 'voiceover', 'subtitles', 'compose'];
 const STAGE_START_PERCENT: Record<VideoJobStage, number> = { keyframes: 5, animate: 15, voiceover: 55, subtitles: 70, compose: 80, done: 100, failed: 0 };
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const PROVIDER_POLL_INTERVAL_MS = 5000;
+// Generous per-scene ceiling for a real generative provider (Runway et al. typically finish in
+// tens of seconds to a few minutes) — the Ken Burns renderer never reaches this since it completes
+// synchronously on the very first checkStatus() call below.
+const PROVIDER_POLL_TIMEOUT_MS = 8 * 60 * 1000;
+
+/** Polls a provider's checkStatus() until it reports complete/failed. The Ken Burns renderer
+ * already finishes synchronously (its animateImage() call blocks until the clip is rendered), so
+ * this resolves on the very first iteration for it — only a genuinely asynchronous provider
+ * (Runway, or any future one) actually loops here. Bounded so a provider that never reaches a
+ * terminal state fails the job cleanly instead of hanging it forever. */
+async function waitForProviderCompletion(provider: VideoProvider, jobId: string, sceneNumber: number): Promise<string> {
+  const start = Date.now();
+  while (true) {
+    const result = await provider.checkStatus({ jobId });
+    if (result.status === 'complete') return result.videoPath;
+    if (result.status === 'failed') throw new Error(`Scene ${sceneNumber} animation failed: ${result.error}`);
+    if (Date.now() - start > PROVIDER_POLL_TIMEOUT_MS) {
+      throw new Error(`Scene ${sceneNumber} animation timed out after ${Math.round(PROVIDER_POLL_TIMEOUT_MS / 1000)}s waiting on provider "${provider.name}"`);
+    }
+    await sleep(PROVIDER_POLL_INTERVAL_MS);
+  }
+}
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -84,10 +113,8 @@ async function runVideoJob(jobId: string, storyboardId: string, keyframePaths: R
       const clipPath = path.join(clipsDir, `scene-${scene.number}.mp4`);
       const durationSeconds = scene.durationSeconds ?? DEFAULT_SCENE_DURATION_SECONDS;
       const { jobId: providerHandle } = await provider.animateImage({ imagePath, motionPrompt: scene.visualDescription, durationSeconds, outputPath: clipPath });
-      const result = await provider.checkStatus({ jobId: providerHandle });
-      if (result.status === 'failed') throw new Error(`Scene ${scene.number} animation failed: ${result.error}`);
-      if (result.status !== 'complete') throw new Error(`Scene ${scene.number} animation did not complete synchronously (provider "${provider.name}" needs polling support)`);
-      clipPaths.push(result.videoPath);
+      const resolvedClipPath = await waitForProviderCompletion(provider, providerHandle, scene.number);
+      clipPaths.push(resolvedClipPath);
       const percentThroughStage = STAGE_START_PERCENT.animate + Math.round(((i + 1) / storyboard.scenes.length) * (STAGE_START_PERCENT.voiceover - STAGE_START_PERCENT.animate));
       emitProgress(jobId, 'animate', percentThroughStage, `Animated scene ${i + 1} of ${storyboard.scenes.length}`);
     }

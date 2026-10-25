@@ -19,12 +19,14 @@ export interface Settings {
    * stored per-video. */
   voicePreset?: VoicePreset;
   /** 'none' (default) renders every scene via the local Ken Burns fallback — no video-provider
-   * key is required to produce a finished video. The other values are listed now so Settings can
-   * offer them, but none has a concrete VideoProvider implementation yet (see
-   * videoProviderFactory.ts) — picking one currently still falls back to 'none'. */
-  videoProvider?: 'none' | 'runway' | 'veo' | 'kling' | 'pika' | 'luma' | 'openart';
+   * key is required to produce a finished video. Runway has a concrete implementation
+   * (RunwayVideoProvider); the rest are listed so Settings can offer them, but each still falls
+   * back to 'none' until it gets its own adapter the same way (see videoProviderFactory.ts). */
+  videoProvider?: VideoProviderKind;
   videoProviderApiKey?: string;
 }
+
+export type VideoProviderKind = 'none' | 'runway' | 'veo' | 'kling' | 'pika' | 'luma' | 'openart';
 
 export type VoicePreset = 'warm-female' | 'calm-female' | 'warm-male' | 'calm-male';
 export type SubtitlePosition = 'bottom' | 'center' | 'top';
